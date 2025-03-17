@@ -22,7 +22,7 @@ file( GLOB SOURCE_CODE "source/*.cpp" )
 # 打印源码文件宏
 message( STATUS "Source code: " ${SOURCE_CODE} )
 
-# 第三方库包含
+# 第三方库包
 find_package( 
     fmt REQUIRED # fmt 字符串格式化库
 )
@@ -47,6 +47,6 @@ target_link_libraries( ${PROJ_NAME}
 )
 
 # 添加不同编译模式下的宏定义
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")  
-    add_definitions(-DDEBUG) # DEBUG 宏
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )  
+    add_definitions( -DDEBUG ) # DEBUG 宏
 endif()  

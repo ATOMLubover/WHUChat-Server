@@ -1,6 +1,6 @@
 #ifdef DEBUG
 #include "config_mgr.hpp"
-#include "logic_mgr.hpp"
+#include "include/http_logic_mgr.hpp"
 #include "asio_iocontext_pool.hpp"
 #endif
 
