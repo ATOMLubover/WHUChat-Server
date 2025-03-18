@@ -7,7 +7,7 @@
 GateServer::GateServer()
     : ioc_server( IOC_THREAD_NUM )
     , acceptor( ioc_server, tcp::endpoint( tcp::v4() /* 这里是默认监听 0.0.0.0 */,
-        static_cast< std::uint16_t >( std::stoi( ( *ConfigMgr::GetInstance() )[ "gate_server" ][ "port" ] ) ) ) )
+        static_cast< std::uint16_t >( std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) ) ) )
 { }
 
 void GateServer::Run()

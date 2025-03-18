@@ -18,13 +18,16 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 # 设置源码集合
-file( GLOB SOURCE_CODE "source/*.cpp" )
+file( GLOB SOURCE_CODE "source/**/*.cpp" "source/*.cpp" )
 # 打印源码文件宏
 message( STATUS "Source code: " ${SOURCE_CODE} )
 
 # 第三方库包
 find_package( 
     fmt REQUIRED # fmt 字符串格式化库
+    # MySQL C++ 连接库
+    # boost 库
+    # redis C 连接库
 )
 
 # 创建目标
@@ -44,6 +47,7 @@ target_link_libraries( ${PROJ_NAME}
     PRIVATE 
         fmt::fmt # fmt 字符串格式化库
         mysqlcppconn # MySQL C++ 连接库
+        libhiredis.a # redis C 连接库
 )
 
 # 添加不同编译模式下的宏定义

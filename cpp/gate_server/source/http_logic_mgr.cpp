@@ -29,7 +29,10 @@ bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
 
     // 未找到则返回 false
     if ( iter_handler == get_handlers.end() )
+    {
+        std::cout << "HttpLogicMgr无法处理get url：" << conn->get_url << std::endl;
         return false;
+    }
 
     std::cout << "HttpLogicMgr处理get请求的HttpConn，其url：" << conn->get_url << std::endl;
     iter_handler->second( conn );
@@ -48,7 +51,10 @@ bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
 
     // 未找到则返回 false
     if ( iter_handler == post_handlers.end() )
+    {
+        std::cout << "HttpLogicMgr无法处理post url：" << conn->post_url << std::endl;
         return false;
+    }
 
     std::cout << "HttpLogicMgr处理post请求的HttpConn，其url：" << conn->post_url << std::endl;
     iter_handler->second( conn );

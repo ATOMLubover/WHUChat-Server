@@ -26,10 +26,15 @@ SubSection::SubSection( SubSection&& rhs )
 }
 
 #ifdef DEBUG
-const std::string ConfigMgr::SERVER_CONFIG_FILE = "../config/config.json";
+const std::string ConfigMgr::SERVER_CONFIG_FILE = "../resources/config/config.json";
 #else
-const std::string ConfigMgr::SERVER_CONFIG_FILE = "./config/config.json";
+const std::string ConfigMgr::SERVER_CONFIG_FILE = "./resources/config/config.json";
 #endif
+
+ConfigMgr& ConfigMgr::GetInstance()
+{
+    return *Singleton<ConfigMgr>::GetInstance();
+}
 
 ConfigMgr::~ConfigMgr()
 {

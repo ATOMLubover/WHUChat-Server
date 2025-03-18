@@ -5,7 +5,7 @@
 #include <json/json.hpp>
 #include <unordered_map>
 
-// 模仿 ini 文件，section 代表一个配置块
+// 模仿 ini 文件，一个 SubSection 代表一个配置块
 class SubSection
 {
 public:
@@ -36,6 +36,10 @@ class ConfigMgr
     : public Singleton<ConfigMgr>
 {
     friend class Singleton<ConfigMgr>;
+
+public:
+    // 隐藏了基类的 GetInstance 函数，使用直接返回引用的自己的 GetInstance 函数
+    static ConfigMgr& GetInstance();
 
 public:
     ~ConfigMgr();
