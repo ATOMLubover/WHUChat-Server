@@ -4,6 +4,8 @@
 #include <iostream>
 
 // Type 类的单例基类
+// 自带 std::enable_shared_from_this，可以在类内部使用 shared_from_this
+// 另外子类需要声明 Singleton<Type> 为友元类
 template<class Type>
 class Singleton
     : public std::enable_shared_from_this<Type>

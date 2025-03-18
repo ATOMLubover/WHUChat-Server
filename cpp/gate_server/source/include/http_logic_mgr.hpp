@@ -29,6 +29,6 @@ private:
     HttpLogicMgr();
 
 private:
-    std::map<std::string, HttpHandler> post_handlers;
-    std::map<std::string, HttpHandler> get_handlers;
+    std::map<std::string, HttpHandler> post_handlers; //.键：url，值：处理函数
+    std::map<std::string, HttpHandler> get_handlers; // 键：url，值：处理函数
 };

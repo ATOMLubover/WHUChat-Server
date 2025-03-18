@@ -17,9 +17,10 @@ using tcp = boost::asio::ip::tcp;			// from <boost/asio/ip/tcp.hpp>
 class HttpLogicMgr;
 
 // http 连接类
-// 管理一个 http 短连接
+// 封装 tcp::socket，管理一个 http 短连接
+// 用 asio 的回调异步处理 http 请求
 class HttpConn
-    : public std::enable_shared_from_this<HttpConn> // 由于有异步写入，所以允许 shared
+    : public std::enable_shared_from_this<HttpConn> // 由于有异步回调，所以允许 CRTP
 {
     friend class HttpLogicMgr;
 
@@ -29,17 +30,18 @@ public:
     ~HttpConn();
 
     // 异步监听读
-    void Start();
+    void AsyncReadAndHandle();
 
+    // 供 GateServer 调用，获取 socket 以异步 async_accept
     tcp::socket& GetSocket() { return socket; }
 
 private:
     // 异步检查连接是否超时
-    void CheckTimeout();
-    // 同步调用 HttpLogicMgr 处理请求，但是异步写回 response
-    void HandleRequest();
+    void AsyncCheckTimeout();
+    // 同步调用 HttpLogicMgr 处理请求，但是随后异步写回 response
+    void AsyncHandleRequest();
     // 异步写 response，写完后 beast 会自动发送
-    void WriteResponse();
+    void AsyncWriteResponse();
 
     std::string EncodeUrlHelper( const std::string& raw ) const;
     std::string DecodeUrlHelper( const std::string& url ) const;

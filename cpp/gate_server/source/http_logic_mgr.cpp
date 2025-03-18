@@ -7,12 +7,14 @@
 // #include "MySqlManager.h"
 // #include "StatusGrpcClient.h"
 
-#include <iostream>
 #include <fmt/core.h>
+
+#include <iostream>
+
 
 HttpLogicMgr::~HttpLogicMgr()
 {
-    std::cout << "HttpLogicMgr析构" << std::endl;
+    std::cout << "HttpLogicMgr被析构" << std::endl;
 }
 
 void HttpLogicMgr::RegisterGet( const std::string& url, HttpHandler handler )
@@ -29,6 +31,7 @@ bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
     if ( iter_handler == get_handlers.end() )
         return false;
 
+    std::cout << "HttpLogicMgr处理get请求的HttpConn，其url：" << conn->get_url << std::endl;
     iter_handler->second( conn );
     return true;
 }
@@ -47,6 +50,7 @@ bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
     if ( iter_handler == post_handlers.end() )
         return false;
 
+    std::cout << "HttpLogicMgr处理post请求的HttpConn，其url：" << conn->post_url << std::endl;
     iter_handler->second( conn );
     return true;
 }

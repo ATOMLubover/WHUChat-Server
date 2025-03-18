@@ -38,5 +38,4 @@ private:
     std::vector<IoService> io_services;
     std::vector<WorkPtr> works;
     std::vector<std::thread> working_threads;
-    std::size_t next_io_service; // 在轮询中记录下一个 io_context 的索引
 };

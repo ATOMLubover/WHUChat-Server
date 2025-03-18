@@ -47,7 +47,7 @@ private:
     ConfigMgr();
 
 private:
-    static const std::string CONFIG_FILE; // 使用相对路径标定的配置文件
+    static const std::string SERVER_CONFIG_FILE; // 使用相对路径标定的配置文件
 
     std::unordered_map<std::string, SubSection> sections; // 配置块 map
 };

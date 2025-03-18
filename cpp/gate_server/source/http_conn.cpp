@@ -12,10 +12,10 @@ HttpConn::HttpConn( boost::asio::io_context& ioc )
 
 HttpConn::~HttpConn()
 {
-    std::cout << "HttpConn析构" << std::endl;
+    std::cout << "HttpConn被析构" << std::endl;
 }
 
-void HttpConn::Start()
+void HttpConn::AsyncReadAndHandle()
 {
     auto self = shared_from_this(); // 由于有异步写入，所以需要在 lambda 中传入 shared_ptr
 
@@ -36,19 +36,19 @@ void HttpConn::Start()
             try
             {
                 // 当正常读取完后，开始处理请求
-                self->HandleRequest();
-                self->CheckTimeout();
+                self->AsyncHandleRequest();
+                self->AsyncCheckTimeout();
 
                 std::cout << "HttpConn读取并处理完成" << std::endl;
             }
             catch ( std::exception& exp )
             {
-                std::cout << "HttpConn Start()中出现异常: " << exp.what() << std::endl;
+                std::cout << "HttpConn AsyncReadAndHandle()中出现异常: " << exp.what() << std::endl;
             }
         } );
 }
 
-void HttpConn::CheckTimeout()
+void HttpConn::AsyncCheckTimeout()
 {
     auto self = shared_from_this();
 
@@ -66,7 +66,7 @@ void HttpConn::CheckTimeout()
         } );
 }
 
-void HttpConn::HandleRequest()
+void HttpConn::AsyncHandleRequest()
 {
     response.version( request.version() );
     response.keep_alive( false ); // 默认创建短连接
@@ -86,20 +86,23 @@ void HttpConn::HandleRequest()
             // beast::ostream( response.body() ) << "url not found\r\n";
             WriteRspBodyHelper( "url not found\r\n" );
 
-            WriteResponse();
+            AsyncWriteResponse();
             return;
         }
 
         // 正常处理时，大部分工作都交给 HandleGet()
         response.result( http::status::ok );
         response.set( http::field::server, "gate_server" );
-        WriteResponse();
+        AsyncWriteResponse();
         return;
     }
 
     // post 请求
     if ( request.method() == http::verb::post )
     {
+        // 先处理 post 请求的 url，然后再交给 HandlePost
+        post_url = request.target();
+
         bool is_successful
             = HttpLogicMgr::GetInstance()->HandlePost( shared_from_this() );
         // 如果请求的 url 不存在，返回 404
@@ -110,25 +113,26 @@ void HttpConn::HandleRequest()
             // beast::ostream( response.body() ) << "url not found\r\n";
             WriteRspBodyHelper( "url not found\r\n" );
 
-            WriteResponse();
+            AsyncWriteResponse();
             return;
         }
 
         // 同上 get 请求的处理
         response.result( http::status::ok );
         response.set( http::field::server, "gate_server" );
-        WriteResponse();
+        AsyncWriteResponse();
         return;
     }
 }
 
-void HttpConn::WriteResponse()
+void HttpConn::AsyncWriteResponse()
 {
     auto self = shared_from_this();
 
     response.content_length( response.body().size() );
 
-    http::async_write( socket, response,
+    http::async_write(
+        socket, response,
         [ self ] ( beast::error_code err, std::size_t size_bytes )
         {
             // whether the connection is successful, shutdown

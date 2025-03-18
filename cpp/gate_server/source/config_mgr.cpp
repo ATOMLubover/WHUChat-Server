@@ -26,9 +26,9 @@ SubSection::SubSection( SubSection&& rhs )
 }
 
 #ifdef DEBUG
-const std::string ConfigMgr::CONFIG_FILE = "../resources/config.json";
+const std::string ConfigMgr::SERVER_CONFIG_FILE = "../config/config.json";
 #else
-const std::string ConfigMgr::CONFIG_FILE = "./resources/config.json";
+const std::string ConfigMgr::SERVER_CONFIG_FILE = "./config/config.json";
 #endif
 
 ConfigMgr::~ConfigMgr()
@@ -54,7 +54,7 @@ SubSection ConfigMgr::operator[]( const std::string& section_name )
 ConfigMgr::ConfigMgr()
 {
     // 读取配置文件
-    std::ifstream ifs_cfg( CONFIG_FILE );
+    std::ifstream ifs_cfg( SERVER_CONFIG_FILE );
     if ( !ifs_cfg.is_open() )
     {
         std::cout << "open config file failed" << std::endl;
@@ -80,7 +80,7 @@ ConfigMgr::ConfigMgr()
     }
 
     std::cout
-        << "config loaded from " << CONFIG_FILE
+        << "config loaded from " << SERVER_CONFIG_FILE
         << " with: " << json_cfg.dump( 4 ) << std::endl;
 
     std::cout << "config manager constructed" << std::endl;

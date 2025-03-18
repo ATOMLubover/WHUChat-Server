@@ -2,15 +2,22 @@
 #include "config_mgr.hpp"
 #include "include/http_logic_mgr.hpp"
 #include "asio_iocontext_pool.hpp"
+#include "gate_server.hpp"
 #endif
 
 #include <iostream>
-#include <filesystem>
+// #include <filesystem>
 
 int main( int argc, char* argv[] )
 {
-    // 获取配置管理器
-    auto config_mgr = ConfigMgr::GetInstance();
+    try
+    {
+        std::make_shared<GateServer>()->Run();
+    }
+    catch ( const std::exception& exp )
+    {
+        std::cout << "main函数调用gate_server处产生异常：" << exp.what() << std::endl;
+    }
 
     return 0;
 }
