@@ -28,7 +28,12 @@ public:
 private:
     HttpLogicMgr();
 
+    // 测试能否正常相应浏览器的请求（使用login-test目录下的文件）
+    void Test_RegisterLoginTest();
+
 private:
+    static const std::string FRONTEND_STATIC_DIR; // 前端静态资源目录
+
     std::map<std::string, HttpHandler> post_handlers; //.键：url，值：处理函数
     std::map<std::string, HttpHandler> get_handlers; // 键：url，值：处理函数
 };
