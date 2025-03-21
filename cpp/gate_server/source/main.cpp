@@ -1,9 +1,7 @@
-#ifdef DEBUG
 #include "config_mgr.hpp"
-#include "include/http_logic_mgr.hpp"
+#include "http_logic_mgr.hpp"
 #include "asio_iocontext_pool.hpp"
 #include "gate_server.hpp"
-#endif
 
 #include <iostream>
 // #include <filesystem>

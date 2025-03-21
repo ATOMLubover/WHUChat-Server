@@ -1,6 +1,6 @@
 #include "http_logic_mgr.hpp"
 
-#include "FileMgr.hpp"
+#include "include/file_mgr.hpp"
 #include "http_conn.hpp"
 // #include "VerifyGrpcClient.h"
 // #include "RedisManager.h"
@@ -11,6 +11,9 @@
 #include <fmt/core.h>
 
 #include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem; // from <filesystem>
 
 #ifdef DEBUG
 const std::string HttpLogicMgr::FRONTEND_STATIC_DIR = "../resources/static/frontend";
@@ -26,8 +29,9 @@ HttpLogicMgr::~HttpLogicMgr()
 
 void HttpLogicMgr::RegisterGet( const std::string& url, HttpHandler handler )
 {
-    // get_handlers.insert( std::make_pair( name_handler, handler ) );
     get_handlers.emplace( url, handler );
+
+    std::cout << "注册url: " << url << std::endl;
 }
 
 bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
@@ -41,7 +45,7 @@ bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
         return false;
     }
 
-    std::cout << "HttpLogicMgr处理get请求的HttpConn，其url：" << conn->get_url << std::endl;
+    std::cout << "HttpLogicMgr处理get请求，其url：" << conn->get_url << std::endl;
     iter_handler->second( conn );
     return true;
 }
@@ -63,9 +67,60 @@ bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
         return false;
     }
 
-    std::cout << "HttpLogicMgr处理post请求的HttpConn，其url：" << conn->post_url << std::endl;
+    std::cout << "HttpLogicMgr处理post请求，其url：" << conn->post_url << std::endl;
     iter_handler->second( conn );
     return true;
+}
+
+void HttpLogicMgr::AutoRegDir( const std::string& dir )
+{
+    if ( dir.empty() )
+        return;
+
+    std::string full_dir = FRONTEND_STATIC_DIR + "/" + dir; // 完整相对路径
+
+    // 先手动注册 dir 本身的重定向
+    RegisterGet(
+        "/" + dir, // 根目录重定向到 index.html
+        [ full_dir ] ( std::shared_ptr<HttpConn> conn )
+        {
+            std::string index = full_dir + "index.html";
+
+            // 连接文件
+            auto filebody
+                = std::move( HttpLogicMgr::PrepareFileBodyHelper( index ) );
+
+            // 在此处创建好 response
+            conn->ConstructFileBody();
+
+            // 设置好 header 和 body
+            conn->file_response->keep_alive( false ); // 默认创建短连接
+            conn->file_response->set( http::field::content_type, HttpLogicMgr::GetMimeHelper( index ) );
+            conn->WriteRspBody( std::move( filebody ) );
+        } );
+
+    // 在逐个注册每个文件的获得
+    std::vector<std::string> files = GetAllFilesHelper( full_dir );
+    for ( const auto& rel_path : files )
+    {
+        std::string url = rel_path; // 后端获取文件的相对路径与实际上的前端 url 并不相通
+        url.erase( 0, FRONTEND_STATIC_DIR.size() );
+        RegisterGet(
+            url,
+            [ rel_path ] ( std::shared_ptr<HttpConn> conn )
+            {
+                auto filebody
+                    = std::move( HttpLogicMgr::PrepareFileBodyHelper( rel_path ) );
+
+                // 分配文件响应体
+                conn->ConstructFileBody();
+
+                // 设置好 header 和 body
+                conn->file_response->keep_alive( false ); // 默认创建短连接
+                conn->file_response->set( http::field::content_type, HttpLogicMgr::GetMimeHelper( rel_path ) );
+                conn->WriteRspBody( std::move( filebody ) );
+            } );
+    }
 }
 
 HttpLogicMgr::HttpLogicMgr()
@@ -77,63 +132,95 @@ HttpLogicMgr::HttpLogicMgr()
             "/get_test",
             [] ( std::shared_ptr<HttpConn> conn )
             {
-                conn->response.set( http::field::content_type, "text/plain; charset=utf-8" );
-
+                // 分配动态响应体
+                conn->ConstructDynamicBody();
                 // 随便写入一些内容
-                conn->WriteRspBodyHelper( "recieved /get_test request\n" );
+                conn->WriteRspBody( "recieved /get_test request\n" );
                 int i = 0;
                 for ( auto& elem : conn->get_params )
                 {
                     i++;
-                    conn->WriteRspBodyHelper( fmt::format( "param {}: key=\"{}\", val=\"{}\"\n",
+                    conn->WriteRspBody( fmt::format( "param {}: key=\"{}\", val=\"{}\"\n",
                         i, elem.first, elem.second ) );
                 }
             } );
 
         // 注册整个 login-test 页面
-        Test_RegisterLoginTest();
+        AutoRegDir( "login-test/" );
+
+        // // 注册整个 binary-test 页面
+        // AutoRegDir( FRONTEND_STATIC_DIR + "/binary-test/" );
     }
 
     std::cout << "HttpLogicMgr构造" << std::endl;
 }
 
-void HttpLogicMgr::Test_RegisterLoginTest()
+std::vector<std::string> HttpLogicMgr::GetAllFilesHelper( const std::string& dir )
 {
-    // 注册返回 login-test 的 index 页面
-    RegisterGet(
-        "/login-test", // 重定向到 /login-test/index.html
-        [] ( std::shared_ptr<HttpConn> conn )
+    fs::path dir_path( dir );
+
+    std::vector<fs::path> file_pathes;
+
+    // 检查路径是否存在并且是一个目录  
+    if ( fs::exists( dir_path ) && fs::is_directory( dir_path ) )
+    {
+        // 遍历目录  
+        for ( const auto& entry : fs::directory_iterator( dir_path ) )
         {
-            conn->response.set( http::field::content_type, "text/html; charset=utf-8" );
+            // 仅在文件时添加到文件路径列表  
+            if ( fs::is_regular_file( entry.path() ) )
+            {
+                file_pathes.push_back( entry.path() );
+            }
+            // 如果是目录，递归调用以获取其中的文件  
+            else if ( fs::is_directory( entry.path() ) )
+            {
+                auto nestedFiles = GetAllFilesHelper( entry.path().string() );
+                file_pathes.insert( file_pathes.end(), nestedFiles.begin(), nestedFiles.end() );
+            }
+        }
+    }
 
-            // 返回 login-test 的 index 页面
-            std::string index_html
-                = FileMgr::GetInstance()->GetFileContent( FRONTEND_STATIC_DIR + "/login-test/index.html" ).str();
-            conn->WriteRspBodyHelper( index_html );
-        } );
-    // 注册返回 login-test 的 css 文件
-    RegisterGet(
-        "/login-test/styles/main.css",
-        [] ( std::shared_ptr<HttpConn> conn )
-        {
-            conn->response.set( http::field::content_type, "text/css; charset=utf-8" );
+    std::vector<std::string> files( file_pathes.size() );
+    int idx = 0;
+    for ( auto& path : file_pathes )
+    {
+        files[ idx ] = file_pathes[ idx ].string();
+        idx++;
+    }
+    return files;
+}
 
-            // 返回 login-test 的 css 文件
-            std::string css
-                = FileMgr::GetInstance()->GetFileContent( FRONTEND_STATIC_DIR + "/login-test/styles/main.css" ).str();
-            conn->WriteRspBodyHelper( css );
-        } );
-    // 注册返回 login-test 的 js 文件
-    RegisterGet(
-        "/login-test/scripts/main.js",
-        [] ( std::shared_ptr<HttpConn> conn )
-        {
-            conn->response.set( http::field::content_type, "text/javascript; charset=utf-8" );
+http::file_body::value_type HttpLogicMgr::PrepareFileBodyHelper( const std::string& file )
+{
+    // 尝试打开文件
+    beast::error_code err;
+    http::file_body::value_type body;
+    body.open( file.c_str(), beast::file_mode::scan, err );
 
-            // 返回 login-test 的 js 文件
-            std::string js
-                = FileMgr::GetInstance()->GetFileContent( FRONTEND_STATIC_DIR + "/login-test/scripts/main.js" ).str();
-            conn->WriteRspBodyHelper( js );
-        } );
+    if ( err )
+    {
+        std::cout << "创建file_body::value_type失败：" << err.message() << std::endl;
+        return {};
+    }
 
+    return std::move( body );
+}
+
+std::string HttpLogicMgr::GetMimeHelper( const std::string& file )
+{
+    std::size_t last_dot = file.find_last_of( '.' );
+    // 没有找到 dot 的当做二进制传输
+    if ( last_dot == std::string::npos )
+        return "application/octet-stream";
+
+    std::string ext = file.substr( last_dot + 1 );
+    if ( ext == "txt" ) return "text/plain; charset=utf-8";
+    if ( ext == "html" || ext == "htm" ) return "text/html; charset=utf-8";
+    if ( ext == "js" ) return "application/js";
+    if ( ext == "css" ) return "text/css; charset=utf-8";
+    if ( ext == "jpg" || ext == "jpeg" ) return "image/jpeg";
+    if ( ext == "png" ) return "image/png";
+    if ( ext == "pdf" ) return "application/pdf";
+    return "application/octet-stream";
 }

@@ -6,6 +6,7 @@ HttpConn::HttpConn( boost::asio::io_context& ioc )
     : socket( ioc )
     , buf_recv( 8 * 1024 )
     , timer_timeout( socket.get_executor(), std::chrono::seconds( 20 ) )
+    , file_response( nullptr ), dynamic_response( nullptr )
 {
     std::cout << "HttpConn构造" << std::endl;
 }
@@ -68,9 +69,6 @@ void HttpConn::AsyncCheckTimeout()
 
 void HttpConn::AsyncHandleRequest()
 {
-    response.version( request.version() );
-    response.keep_alive( false ); // 默认创建短连接
-
     // get 请求
     if ( request.method() == http::verb::get )
     {
@@ -81,18 +79,34 @@ void HttpConn::AsyncHandleRequest()
         // 如果请求的 url 不存在，返回 404
         if ( !is_successful )
         {
-            response.result( http::status::not_found );
-            response.set( http::field::content_type, "text/plain; charset=utf-8" );
-            // beast::ostream( response.body() ) << "url not found\r\n";
-            WriteRspBodyHelper( "url not found\r\n" );
+            ConstructDynamicBody();
+
+            dynamic_response->result( http::status::not_found );
+            dynamic_response->set( http::field::content_type, "text/plain; charset=utf-8" );
+            WriteRspBody( "url not found\r\n" );
 
             AsyncWriteResponse();
             return;
         }
 
         // 正常处理时，大部分工作都交给 HandleGet()
-        response.result( http::status::ok );
-        response.set( http::field::server, "gate_server" );
+        if ( dynamic_response )
+        {
+            dynamic_response->result( http::status::ok );
+            dynamic_response->set( http::field::server, "GateServer" );
+        }
+        else if ( file_response )
+        {
+            file_response->result( http::status::ok );
+            file_response->set( http::field::server, "GateServer" );
+        }
+        else
+        {
+            std::cout << "HttpConn未产生响应，无法发送" << std::endl;
+            return;
+        }
+
+        // 最后异步写入
         AsyncWriteResponse();
         return;
     }
@@ -108,18 +122,35 @@ void HttpConn::AsyncHandleRequest()
         // 如果请求的 url 不存在，返回 404
         if ( !is_successful )
         {
-            response.result( http::status::not_found );
-            response.set( http::field::content_type, "text/plain; charset=utf-8" );
-            // beast::ostream( response.body() ) << "url not found\r\n";
-            WriteRspBodyHelper( "url not found\r\n" );
+            ConstructDynamicBody();
+
+            dynamic_response->result( http::status::not_found );
+            dynamic_response->set( http::field::content_type, "text/plain; charset=utf-8" );
+            WriteRspBody( "url not found\r\n" );
 
             AsyncWriteResponse();
             return;
         }
 
         // 同上 get 请求的处理
-        response.result( http::status::ok );
-        response.set( http::field::server, "gate_server" );
+        // 正常处理时，大部分工作都交给 HandleGet()
+        if ( dynamic_response )
+        {
+            dynamic_response->result( http::status::ok );
+            dynamic_response->set( http::field::server, "GateServer" );
+        }
+        else if ( file_response )
+        {
+            file_response->result( http::status::ok );
+            file_response->set( http::field::server, "GateServer" );
+        }
+        else
+        {
+            std::cout << "HttpConn未产生响应，无法发送" << std::endl;
+            return;
+        }
+
+        // 最后异步写入
         AsyncWriteResponse();
         return;
     }
@@ -129,19 +160,51 @@ void HttpConn::AsyncWriteResponse()
 {
     auto self = shared_from_this();
 
-    response.content_length( response.body().size() );
+    if ( dynamic_response )
+    {
+        dynamic_response->content_length( dynamic_response->body().size() );
 
-    http::async_write(
-        socket, response,
-        [ self ] ( beast::error_code err, std::size_t size_bytes )
-        {
-            // whether the connection is successful, shutdown
-            self->socket.shutdown( tcp::socket::shutdown_send, err ); // shutdown send end only
-            self->timer_timeout.cancel();
-        } );
+        http::async_write(
+            socket, *dynamic_response,
+            [ self ] ( beast::error_code err, std::size_t size_bytes )
+            {
+                // 关闭连接和计时器（仅发送端）
+                self->socket.shutdown( tcp::socket::shutdown_send, err );
+                self->timer_timeout.cancel();
+            } );
+
+        return;
+    }
+    if ( file_response )
+    {
+        file_response->prepare_payload();
+
+        http::async_write(
+            socket, *file_response,
+            [ self ] ( beast::error_code err, std::size_t size_bytes )
+            {
+                // 关闭连接和计时器（仅发送端）
+                self->socket.shutdown( tcp::socket::shutdown_send, err );
+                self->timer_timeout.cancel();
+            } );
+
+        return;
+    }
 }
 
-std::string HttpConn::EncodeUrlHelper( const std::string& raw ) const
+void HttpConn::ConstructDynamicBody()
+{
+    if ( !dynamic_response )
+        dynamic_response = std::make_unique<http::response<http::dynamic_body>>();
+}
+
+void HttpConn::ConstructFileBody()
+{
+    if ( !file_response )
+        file_response = std::make_unique<http::response<http::file_body>>();
+}
+
+std::string HttpConn::EncodeUrlHelper( const std::string& raw )
 {
     std::ostringstream oss_encoded;
 
@@ -168,7 +231,7 @@ std::string HttpConn::EncodeUrlHelper( const std::string& raw ) const
     return oss_encoded.str();
 }
 
-std::string HttpConn::DecodeUrlHelper( const std::string& url ) const
+std::string HttpConn::DecodeUrlHelper( const std::string& url )
 {
     std::ostringstream oss_decoded;
 
@@ -207,9 +270,16 @@ std::string HttpConn::DecodeUrlHelper( const std::string& url ) const
     return oss_decoded.str();
 }
 
-void HttpConn::WriteRspBodyHelper( const std::string& body )
+void HttpConn::WriteRspBody( const std::string& body )
 {
-    beast::ostream( response.body() ) << body;
+    ConstructDynamicBody();
+    beast::ostream( dynamic_response->body() ) << body;
+}
+
+void HttpConn::WriteRspBody( http::file_body::value_type&& body )
+{
+    ConstructFileBody();
+    file_response->body() = std::move( body );
 }
 
 void HttpConn::PreparseGetParamsHelper()

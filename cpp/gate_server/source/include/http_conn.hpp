@@ -41,11 +41,18 @@ private:
     // 异步写 response，写完后 beast 会自动发送
     void AsyncWriteResponse();
 
-    std::string EncodeUrlHelper( const std::string& raw ) const;
-    std::string DecodeUrlHelper( const std::string& url ) const;
+    // 分配动态响应体
+    void ConstructDynamicBody();
+    // 分配文件响应体
+    void ConstructFileBody();
 
-    // 封装 beast::ostream( response.body() ) << body 的操作
-    void WriteRspBodyHelper( const std::string& body );
+    static std::string EncodeUrlHelper( const std::string& raw );
+    static std::string DecodeUrlHelper( const std::string& url );
+
+    // 将简单的数据直接写入 dynamic_body 的响应中
+    void WriteRspBody( const std::string& body );
+    // 将文件响应体写入 file_response 中
+    void WriteRspBody( http::file_body::value_type&& body );
 
     // 预解析 get 请求的参数，结果存入 get_url 和 get_params
     void PreparseGetParamsHelper();
@@ -55,7 +62,8 @@ private:
 
     beast::flat_buffer buf_recv; // 设置缓冲区大小为 8KB，因为一次通常接受不超过 1500B
     http::request<http::dynamic_body> request;
-    http::response<http::dynamic_body> response;
+    std::unique_ptr<http::response<http::dynamic_body>> dynamic_response;
+    std::unique_ptr<http::response<http::file_body>> file_response;
 
     net::steady_timer timer_timeout; // 设置超时时间为 20s
 

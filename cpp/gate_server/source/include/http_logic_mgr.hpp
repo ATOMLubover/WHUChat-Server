@@ -1,10 +1,15 @@
 #pragma once
 
 #include "singleton.hpp"
+#include "aliases.h"
+
+#include <boost/beast/http.hpp>
 
 #include <functional>
 #include <map>
 #include <memory>
+#include <vector>
+#include <string>
 
 class HttpConn;
 using HttpHandler = std::function<void( std::shared_ptr<HttpConn> )>;
@@ -17,19 +22,27 @@ class HttpLogicMgr
 public:
     ~HttpLogicMgr();
 
-    // 注册 get 请求处理函数（url, handler）
-    void RegisterGet( const std::string& url, HttpHandler handler );
     bool HandleGet( std::shared_ptr<HttpConn> conn );
-
-    // 注册 post 请求处理函数（url, handler）
-    void RegisterPost( const std::string& url, HttpHandler handler );
     bool HandlePost( std::shared_ptr<HttpConn> conn );
 
 private:
     HttpLogicMgr();
 
-    // 测试能否正常相应浏览器的请求（使用login-test目录下的文件）
-    void Test_RegisterLoginTest();
+    // 注册 get 请求处理函数（url, handler）
+    void RegisterGet( const std::string& url, HttpHandler handler );
+    // 注册 post 请求处理函数（url, handler）
+    void RegisterPost( const std::string& url, HttpHandler handler );
+
+    // 自动注册前端文件夹下，整个文件夹的文件（会自动增加前端文件夹的前缀）
+    // dir 需要以 “/” 结尾
+    void AutoRegDir( const std::string& dir );
+
+    // 得到某个文件夹下所有文件的名称（注意不包含 dir 文件夹）
+    static std::vector<std::string> GetAllFilesHelper( const std::string& dir );
+    // 获得用于 file_body 的响应体的内容
+    static http::file_body::value_type PrepareFileBodyHelper( const std::string& file );
+    // 获得某个文件的 content-type
+    static std::string GetMimeHelper( const std::string& file );
 
 private:
     static const std::string FRONTEND_STATIC_DIR; // 前端静态资源目录

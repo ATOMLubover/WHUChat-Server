@@ -40,7 +40,7 @@ ConfigMgr::~ConfigMgr()
 {
     sections.clear();
 
-    std::cout << "config manager destructed" << std::endl;
+    std::cout << "ConfigMgr被析构" << std::endl;
 }
 
 SubSection ConfigMgr::operator[]( const std::string& section_name )
@@ -85,8 +85,8 @@ ConfigMgr::ConfigMgr()
     }
 
     std::cout
-        << "config loaded from " << SERVER_CONFIG_FILE
-        << " with: " << json_cfg.dump( 4 ) << std::endl;
+        << "加载配置文件：" << SERVER_CONFIG_FILE
+        << "，结果：" << json_cfg.dump( 4 ) << std::endl;
 
-    std::cout << "config manager constructed" << std::endl;
+    std::cout << "ConfigMgr被构造" << std::endl;
 }

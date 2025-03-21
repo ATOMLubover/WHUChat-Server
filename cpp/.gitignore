@@ -1,5 +1,5 @@
 # 所有的 CMake build 文件夹
 **/build/
 
-# 所有的用于测试的文件夹
-**/text/
+# 所有的 vscode 的文件夹
+**/.vscode/
