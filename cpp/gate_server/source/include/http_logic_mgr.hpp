@@ -33,9 +33,9 @@ private:
     // 注册 post 请求处理函数（url, handler）
     void RegisterPost( const std::string& url, HttpHandler handler );
 
-    // 自动注册前端文件夹下，整个文件夹的文件（会自动增加前端文件夹的前缀）
+    // 自动注册前端文件夹下，整个文件夹的文件
     // dir 需要以 “/” 结尾
-    void AutoRegDir( const std::string& dir );
+    void AutoRegDir( const std::string& prefix_offset, const std::string& url_dir );
 
     // 得到某个文件夹下所有文件的名称（注意不包含 dir 文件夹）
     static std::vector<std::string> GetAllFilesHelper( const std::string& dir );

@@ -1,6 +1,6 @@
 document.getElementById('loadImageBtn').addEventListener('click', function () {
     // 后端API的URL
-    const apiUrl = 'assets/portrait.png'; // 替换为你的后端API地址
+    const apiUrl = 'assets/portrait.jpg'; // 替换为你的后端API地址
 
     // 使用fetch请求数据
     fetch(apiUrl, {

@@ -72,16 +72,16 @@ bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
     return true;
 }
 
-void HttpLogicMgr::AutoRegDir( const std::string& dir )
+void HttpLogicMgr::AutoRegDir( const std::string& prefix_offset, const std::string& url_dir )
 {
-    if ( dir.empty() )
+    if ( url_dir.empty() )
         return;
 
-    std::string full_dir = FRONTEND_STATIC_DIR + "/" + dir; // 完整相对路径
+    std::string full_dir = prefix_offset + "/" + url_dir; // 完整相对路径
 
     // 先手动注册 dir 本身的重定向
     RegisterGet(
-        "/" + dir, // 根目录重定向到 index.html
+        "/" + url_dir, // 根目录重定向到 index.html
         [ full_dir ] ( std::shared_ptr<HttpConn> conn )
         {
             std::string index = full_dir + "index.html";
@@ -134,6 +134,8 @@ HttpLogicMgr::HttpLogicMgr()
             {
                 // 分配动态响应体
                 conn->ConstructDynamicBody();
+
+                conn->dynamic_response->set( http::field::content_type, "text/plain; charset=utf-8" );
                 // 随便写入一些内容
                 conn->WriteRspBody( "recieved /get_test request\n" );
                 int i = 0;
@@ -146,10 +148,10 @@ HttpLogicMgr::HttpLogicMgr()
             } );
 
         // 注册整个 login-test 页面
-        AutoRegDir( "login-test/" );
+        AutoRegDir( FRONTEND_STATIC_DIR, "login-test/" );
 
-        // // 注册整个 binary-test 页面
-        // AutoRegDir( FRONTEND_STATIC_DIR + "/binary-test/" );
+        // 注册整个 binary-test 页面
+        AutoRegDir( FRONTEND_STATIC_DIR, "binary-test/" );
     }
 
     std::cout << "HttpLogicMgr构造" << std::endl;
