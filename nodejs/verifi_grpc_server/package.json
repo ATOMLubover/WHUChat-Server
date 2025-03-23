@@ -1,0 +1,18 @@
+{
+  "name": "verfi_grpc_server",
+  "version": "0.1.0",
+  "description": "nodejs-based server for verification code  auto sending",
+  "main": "source/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "lbbbbbb",
+  "license": "MIT",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.1",
+    "@grpc/proto-loader": "^0.7.13",
+    "ioredis": "^5.6.0",
+    "nodemailer": "^6.10.0",
+    "uuid": "^11.1.0"
+  }
+}
