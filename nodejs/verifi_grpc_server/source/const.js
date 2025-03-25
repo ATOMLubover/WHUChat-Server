@@ -11,4 +11,4 @@ const EnumError =
     Exception: 103      // 其他异常
 };
 
-export default { CODE_PREFIX, EnumError };
+module.exports = { CODE_PREFIX, EnumError };

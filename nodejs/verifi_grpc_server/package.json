@@ -4,7 +4,7 @@
   "description": "nodejs-based server for verification code  auto sending",
   "main": "source/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "node source/index.js"
   },
   "author": "lbbbbbb",
   "license": "MIT",

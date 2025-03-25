@@ -1,9 +1,9 @@
 /// verifi_grpc_server main源文件 ///
 
-import { default as CONST_MOD } from './const';
-import { default as CONFIG_MOD } from './config';
-import { default as PROTO_MSG } from './proto_resolution';
-import { default as AsyncSendMail } from './email_service';
+const CONST_MOD = require('./const');
+const CONFIG_MOD = require('./config');
+const PROTO_MSG = require('./proto_resolution');
+const AsyncSendMail = require('./email_service');
 const redis_module = require('./redis_service');
 
 const { v4: uuidv4 } = require('uuid'); // 生成 unique user id 的库
@@ -19,8 +19,8 @@ async function GetVerifyCode(req, rsp) {
         // 以 “code_{email}” 作为 key 值存在 redis，返回值是对应的验证码
         let get_result
             = await redis_module.GetRedis(
-                const_module.code_prefix + req.request.email);
-        console.log(" 查询该email的结果为: ", get_result);
+                CONST_MOD.CODE_PREFIX + req.request.email);
+        console.log("查询该email的结果为: ", get_result);
 
         let uuid;
         // 如果 get_result 为空，则说明之前没有对该邮箱发送验证码
@@ -96,13 +96,12 @@ async function GetVerifyCode(req, rsp) {
             }
         );
     }
-
 }
 
 function main() {
     let server = new grpc.Server();
     server.addService(
-        PROTO_MSG.VerifyService.service,
+        PROTO_MSG.VerifiService.service,
         { GetVerifyCode: GetVerifyCode }
     );
     // 启动异步监听

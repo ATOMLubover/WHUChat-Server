@@ -1,5 +1,5 @@
-import CONFIG_MOD from './config';
-import nodemailer from 'nodemailer'; // nodemailer 代理邮件发送库
+const CONFIG_MOD = require('./config');
+const nodemailer = require('nodemailer'); // nodemailer 代理邮件发送库
 
 // 创建发送邮件的代理
 let transporter = nodemailer.createTransport(
@@ -19,7 +19,7 @@ let transporter = nodemailer.createTransport(
  * @param {*} mail_options 发送邮件的参数
  * @returns {Promise} 返回一个 Promise 对象
  */
-export default function AyncSendMail(mail_options) {
+function AyncSendMail(mail_options) {
     // 封装为同步地处理发送邮件（通过Promise的阻塞）
     return new Promise(
         (resolve, reject) => {
@@ -43,3 +43,5 @@ export default function AyncSendMail(mail_options) {
         }
     );
 }
+
+module.exports = AyncSendMail;

@@ -1,6 +1,6 @@
-import { join } from 'path'; // 文件路径库
-import { loadPackageDefinition } from '@grpc/grpc-js'; // grpc-js 通讯库
-import { loadSync } from '@grpc/proto-loader'; // grpc 预处理 proto 库
+const { join } = require('path'); // 文件路径库
+const { loadPackageDefinition } = require('@grpc/grpc-js'); // grpc-js 通讯库
+const { loadSync } = require('@grpc/proto-loader'); // grpc 预处理 proto 库
 
 // message.proto 所在路径
 const PROTO_PATH = join(__dirname, '../resources/message.proto');
@@ -20,4 +20,4 @@ const PACKAGE_DEF = loadSync(
 // 然后再加载成 grpc 能够使用的 js 对象
 const PROTO_DESC = loadPackageDefinition(PACKAGE_DEF);
 // 最后生成供收发使用的协议对象
-export default PROTO_DESC.message;
+module.exports = PROTO_DESC.message;

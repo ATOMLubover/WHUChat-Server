@@ -1,5 +1,5 @@
-import CONFIG_MOD from './config';
-import { Redis as redis } from 'ioredis' // 包含 redis 的客户端
+const CONFIG_MOD = require('./config');
+const { Redis: redis } = require('ioredis'); // 包含 redis 的客户端
 
 /**
  * 根据 key 值获取 value
