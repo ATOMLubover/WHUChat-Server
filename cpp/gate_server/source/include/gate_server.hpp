@@ -10,7 +10,7 @@
 #include <memory>
 #include <cctype>
 
-// 门户服务器类（基于 HTTP 协议）
+// 门户服务器类（基于 HTTP 协议）controller
 // 用于接收客户端的 http 连接，并以此创建 HttpConn 连接处理请求
 // 由于使用异步回调，故使用 CRTP（注意使用时必须要使用 std::make_shared<GateServer> 创建实例）
 class GateServer
@@ -18,7 +18,7 @@ class GateServer
 {
 public:
     GateServer();
-    ~GateServer() = default;
+    ~GateServer();
 
     // 开始运行服务器
     void Run();

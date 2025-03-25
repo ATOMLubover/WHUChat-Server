@@ -2,7 +2,7 @@
     "gate_server": {
         "port": "8080"
     },
-    "verify_server": {
+    "vrf_server": {
         "port": "50051"
     },
     "status_server": {

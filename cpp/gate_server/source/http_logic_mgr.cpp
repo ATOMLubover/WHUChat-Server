@@ -2,13 +2,14 @@
 
 #include "include/file_mgr.hpp"
 #include "http_conn.hpp"
-// #include "VerifyGrpcClient.h"
+#include "verifi_grpc_mgr.hpp"
 // #include "RedisManager.h"
 // #include "ConfigManager.h"
 // #include "MySqlManager.h"
 // #include "StatusGrpcClient.h"
 
 #include <fmt/core.h>
+#include <json/json.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -31,7 +32,7 @@ void HttpLogicMgr::RegisterGet( const std::string& url, HttpHandler handler )
 {
     get_handlers.emplace( url, handler );
 
-    std::cout << "注册url: " << url << std::endl;
+    std::cout << "注册GET URL: " << url << std::endl;
 }
 
 bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
@@ -52,8 +53,9 @@ bool HttpLogicMgr::HandleGet( std::shared_ptr<HttpConn> conn )
 
 void HttpLogicMgr::RegisterPost( const std::string& url, HttpHandler handler )
 {
-    // post_handlers.insert( std::make_pair( url, handler ) );
     post_handlers.emplace( url, handler );
+
+    std::cout << "注册POST URL：" << url << std::endl;
 }
 
 bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
@@ -94,8 +96,8 @@ void HttpLogicMgr::AutoRegDir( const std::string& prefix_offset, const std::stri
             conn->ConstructFileBody();
 
             // 设置好 header 和 body
-            conn->file_response->keep_alive( false ); // 默认创建短连接
-            conn->file_response->set( http::field::content_type, HttpLogicMgr::GetMimeHelper( index ) );
+            conn->file_response->set(
+                http::field::content_type, HttpLogicMgr::GetMimeHelper( index ) );
             conn->WriteRspBody( std::move( filebody ) );
         } );
 
@@ -116,8 +118,8 @@ void HttpLogicMgr::AutoRegDir( const std::string& prefix_offset, const std::stri
                 conn->ConstructFileBody();
 
                 // 设置好 header 和 body
-                conn->file_response->keep_alive( false ); // 默认创建短连接
-                conn->file_response->set( http::field::content_type, HttpLogicMgr::GetMimeHelper( rel_path ) );
+                conn->file_response->set(
+                    http::field::content_type, HttpLogicMgr::GetMimeHelper( rel_path ) );
                 conn->WriteRspBody( std::move( filebody ) );
             } );
     }
@@ -135,7 +137,8 @@ HttpLogicMgr::HttpLogicMgr()
                 // 分配动态响应体
                 conn->ConstructDynamicBody();
 
-                conn->dynamic_response->set( http::field::content_type, "text/plain; charset=utf-8" );
+                conn->dynamic_response->set(
+                    http::field::content_type, "text/plain; charset=utf-8" );
                 // 随便写入一些内容
                 conn->WriteRspBody( "recieved /get_test request\n" );
                 int i = 0;
@@ -152,7 +155,82 @@ HttpLogicMgr::HttpLogicMgr()
 
         // 注册整个 binary-test 页面
         AutoRegDir( FRONTEND_STATIC_DIR, "binary-test/" );
+
+        // POST 处理发送验证码的请求
+        RegisterPost(
+            "/login-test/post_verification",
+            [] ( std::shared_ptr<HttpConn> conn )
+            {
+                std::string str_req_body = beast::buffers_to_string( conn->request.body().data() );
+                std::cout << "获得POST请求体：" << str_req_body << std::endl;
+
+                // 由于是传输 json 返回，所以分配动态响应体
+                conn->ConstructDynamicBody();
+                nlohmann::json json_rsp_body;
+
+                // 将请求体转化为 json 格式
+                nlohmann::json json_req_body;
+                try
+                {
+                    json_req_body = nlohmann::json::parse( str_req_body );
+                }
+                catch ( std::exception& exp )
+                {
+                    std::cout << "HttpLogicMgr 解析发送email的json处异常：" << exp.what() << std::endl;
+
+                    // 返回 ErrorJson
+                    json_rsp_body.emplace( "error", ( int ) EnumErrorCode::ErrorJson );
+                    conn->WriteRspBody( json_rsp_body.dump() );
+
+                    return;
+                }
+
+                // 成功转换之后，提取 email
+                std::string email = json_req_body[ "email" ].get<std::string>();
+
+                // 调用 VerifiGrpcMgr 处理发送验证码的工作
+                message::GetVerifiResponse verifi_rsp;
+                try
+                {
+                    verifi_rsp = VerifiGrpcMgr::GetInstance()->GetVerificationCode( email );
+                }
+                catch ( std::exception& exp )
+                {
+                    std::cout << "VerifiGrpcMgr处理发送邮件处异常：" << exp.what() << std::endl;
+
+                    // 返回 ErrorGrpc
+                    json_rsp_body.emplace( "error", ( int ) EnumErrorCode::ErrorGrpc );
+                    conn->WriteRspBody( json_rsp_body.dump() );
+
+                    return;
+                }
+
+                // 如果一切正常
+                json_rsp_body.emplace( "email", email );
+                json_rsp_body.emplace( "error", verifi_rsp.error() );
+
+                conn->WriteRspBody( json_rsp_body.dump() );
+
+                return;
+            } );
     }
+
+    // GET 返回网站 icon
+    const std::string ICO_URL = "/favicon.ico";
+    RegisterGet(
+        ICO_URL,
+        [ ICO_URL ] ( std::shared_ptr<HttpConn> conn )
+        {
+            const std::string REL_PATH = HttpLogicMgr::FRONTEND_STATIC_DIR + ICO_URL;
+            auto filebody =
+                std::move( HttpLogicMgr::PrepareFileBodyHelper( REL_PATH ) );
+
+            // 分配文件响应体
+            conn->ConstructFileBody();
+            conn->file_response->set(
+                http::field::content_type, HttpLogicMgr::GetMimeHelper( REL_PATH ) );
+            conn->WriteRspBody( std::move( filebody ) );
+        } );
 
     std::cout << "HttpLogicMgr构造" << std::endl;
 }

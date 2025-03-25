@@ -8,7 +8,15 @@ GateServer::GateServer()
     : ioc_server( IOC_THREAD_NUM )
     , acceptor( ioc_server, tcp::endpoint( tcp::v4() /* 这里是默认监听 0.0.0.0 */,
         static_cast< std::uint16_t >( std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) ) ) )
-{ }
+{
+    std::cout << "GateServer构造，监听于：0.0.0.0:"
+        << std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) << std::endl;
+}
+
+GateServer::~GateServer()
+{
+    std::cout << "GateServer被析构退出" << std::endl;
+}
 
 void GateServer::Run()
 {

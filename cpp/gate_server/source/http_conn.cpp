@@ -81,6 +81,7 @@ void HttpConn::AsyncHandleRequest()
         {
             ConstructDynamicBody();
 
+            dynamic_response->keep_alive( false );
             dynamic_response->result( http::status::not_found );
             dynamic_response->set( http::field::content_type, "text/plain; charset=utf-8" );
             WriteRspBody( "url not found\r\n" );
@@ -92,11 +93,13 @@ void HttpConn::AsyncHandleRequest()
         // 正常处理时，大部分工作都交给 HandleGet()
         if ( dynamic_response )
         {
+            dynamic_response->keep_alive( false );
             dynamic_response->result( http::status::ok );
             dynamic_response->set( http::field::server, "GateServer" );
         }
         else if ( file_response )
         {
+            file_response->keep_alive( false );
             file_response->result( http::status::ok );
             file_response->set( http::field::server, "GateServer" );
         }
