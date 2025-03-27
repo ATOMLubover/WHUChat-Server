@@ -1,5 +1,6 @@
-#接口说明
+# 接口说明
 - 示例
+```
 {
     "model_type": "chatgpt",
     "model_class": "gpt-4o-mini",
@@ -16,3 +17,4 @@
     "api_key": null,
     "URL": null
 }
+```
