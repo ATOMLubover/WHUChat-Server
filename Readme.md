@@ -1,2 +1,18 @@
 #接口说明
-- 见example.json
+- 示例
+{
+    "model_type": "chatgpt",
+    "model_class": "gpt-4o-mini",
+    "promote_list": [
+        {
+            "role": "system",
+            "content": "你好，你想让我做什么？"
+        },
+        {
+            "role": "user",
+            "content": "1+1等于几？"
+        }
+    ],
+    "api_key": null,
+    "URL": null
+}
