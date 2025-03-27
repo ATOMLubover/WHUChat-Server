@@ -42,22 +42,40 @@ port ：**8080**
 
 ## ` GateServer ` 已实现的接口
 
+> 删除线标注的为暂时不应使用的部分  
+> 斜体字为注释 
+
 **GET**
 
 | URI | 参数描述 | 返回值 | 功能 |
 | :- | :- | :- | :- |
 | /favicon.ico | 无参数 | application/octet-stream | 返回 favicon.ico 网站图标 |
+| /login/~~index.html~~ | 无参数 | html | 返回登录页面的 index.html |
+| /register/~~index.html~~ | 无参数 | html | 返回注册页面的 index.html |
+
+**POST**
+
+| URI | 参数描述 | 返回值 | 功能 |
+| :- | :- | :- | :- |
+| /try_login | JSON { "email", "password" } | JSON { "target_email" *：完成操作的对应邮箱*, "error", ~~"token"~~ } | 尝试登录用户，如果登录成功返回 token（**特别注意："password" 和 "repassword" 应该在前端就进行加密，后端会直接存储加密后的密码**） |
+| /try_register | JSON { "username", "email", "password", "repassword" } | JSON { "target_username", "target_email", "error" } | 尝试注册用户（**特别注意："password" 应该在前端就进行加密，后端会直接查询加密后的密码**） |
 
 ## HTTP POST 请求反馈错误码一览
 
-> 如果返回体是 JSON 格式，则会以 "error" 字段存储
+> 如果返回体是 JSON 格式，则会以 "error" 字段存储  
+> 斜体的 *trs* 表示是转发其他服务器的错误码
 
 | int32值 | 名称 | 描述 |
 | :- | :- | :- |
 | 0 | Success | 正常处理请求 |
+| 1 | ErrorException | ` GateServer ` 中产生未定义错误 |
 | 101 | ErrorRedis *trs* | ` VrfGrpcServer ` 调用 Redis 出现错误 |
 | 102 | ErrorSend *trs* | ` VrfGrpcServer ` 未能成功发送验证邮件  |
 | 103 | ErrorException *trs* | ` VrfGrpcServer ` 未定义异常 |
 | 1001 | ErrorServerNotResponding | ` GateServer ` 未收到其他服务器的响应 |
 | 1002 | ErrorGrpc | ` GateServer ` 调用 gRPC 出现错误 |
-| 1003 | ErrorJson | ` GateServer ` 处理前端传输的  JSON 出现错误 |
+| 1003 | ErrorJson | ` GateServer ` 处理前端传输  JSON 出现错误 |
+| 1004 | ErrorMySql | ` GateServer ` 调用 MySQL 时发生异常 |
+| 1005 | ErrorUsernameExists | ` GateServer ` 无法注册新用户：用户名已存在 |
+| 1006 | ErrorEmailConflicts | ` GateServer ` 无法注册新用户：email已被注册 |
+| 1007 | ErrorPwdIncorreponds | ` GateServer ` 无法注册新用户：密码不一致 |
