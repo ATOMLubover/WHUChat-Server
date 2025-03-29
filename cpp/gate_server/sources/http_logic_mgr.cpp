@@ -1,8 +1,8 @@
-#include "http_logic_mgr.hpp"
+#include "include/http_logic_mgr.hpp"
 
 #include "include/file_mgr.hpp"
-#include "http_conn.hpp"
-#include "verifi_grpc_mgr.hpp"
+#include "include/http_conn.hpp"
+#include "include/verifi_grpc_mgr.hpp"
 // #include "RedisManager.h"
 // #include "ConfigManager.h"
 // #include "MySqlManager.h"
@@ -76,12 +76,24 @@ bool HttpLogicMgr::HandlePost( std::shared_ptr<HttpConn> conn )
 
 void HttpLogicMgr::AutoRegDir( const std::string& prefix_offset, const std::string& url_dir )
 {
-    if ( url_dir.empty() )
+    if ( url_dir.empty() || url_dir.back() != '/' )
         return;
 
-    std::string full_dir = prefix_offset + "/" + url_dir; // 完整相对路径
+    std::string full_dir = prefix_offset + "/" + url_dir; // 完整静态文件相对路径
+    std::string root = url_dir; // 裸路径（无最后斜杠）
+    root.pop_back();
 
     // 先手动注册 dir 本身的重定向
+    RegisterGet(
+        "/" + root, // 去除尾部的斜杠
+        [ full_dir, url_dir ] ( std::shared_ptr<HttpConn> conn )
+        {
+            conn->ConstructDynamicBody();
+
+            // 控制进行永久重定向
+            conn->dynamic_response->result( 301 );
+            conn->dynamic_response->set( http::field::location, "/" + url_dir + "/index.html" );
+        } );
     RegisterGet(
         "/" + url_dir, // 根目录重定向到 index.html
         [ full_dir ] ( std::shared_ptr<HttpConn> conn )
@@ -121,6 +133,10 @@ void HttpLogicMgr::AutoRegDir( const std::string& prefix_offset, const std::stri
                 conn->file_response->set(
                     http::field::content_type, HttpLogicMgr::GetMimeHelper( rel_path ) );
                 conn->WriteRspBody( std::move( filebody ) );
+
+                // 最后设定状态
+                conn->file_response->keep_alive( false );
+                conn->file_response->result( http::status::ok );
             } );
     }
 }
@@ -148,6 +164,10 @@ HttpLogicMgr::HttpLogicMgr()
                     conn->WriteRspBody( fmt::format( "param {}: key=\"{}\", val=\"{}\"\n",
                         i, elem.first, elem.second ) );
                 }
+
+                // 最后设置状态
+                conn->dynamic_response->keep_alive( false );
+                conn->dynamic_response->result( http::status::ok );
             } );
 
         // 注册整个 login-test 页面

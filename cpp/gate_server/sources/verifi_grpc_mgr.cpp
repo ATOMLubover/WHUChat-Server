@@ -1,7 +1,7 @@
 #include "include/verifi_grpc_mgr.hpp"
 
-#include "aliases.h"
-#include "config_mgr.hpp"
+#include "include/aliases.h"
+#include "include/config_mgr.hpp"
 
 GetVerifiResponse VerifiGrpcMgr::GetVerificationCode( const std::string& email )
 {
@@ -12,7 +12,7 @@ GetVerifiResponse VerifiGrpcMgr::GetVerificationCode( const std::string& email )
 
     request.set_email( email );
 
-    auto stub = conn_pool.TakeConnection();
+    auto stub = conn_pool.TakeConn();
     Status status = stub->GetVerifyCode( &context, request, &reply );
 
     if ( !status.ok() )
@@ -20,7 +20,7 @@ GetVerifiResponse VerifiGrpcMgr::GetVerificationCode( const std::string& email )
         reply.set_error( static_cast< int >( EnumErrorCode::ErrorGrpc ) );
     }
 
-    conn_pool.ReturnConnection( std::move( stub ) );
+    conn_pool.ReturnConn( std::move( stub ) );
     return reply;
 }
 

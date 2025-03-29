@@ -1,6 +1,6 @@
-#include "http_conn.hpp"
+#include "include/http_conn.hpp"
 
-#include "http_logic_mgr.hpp"
+#include "include/http_logic_mgr.hpp"
 
 HttpConn::HttpConn( boost::asio::io_context& ioc )
     : socket( ioc )
@@ -93,14 +93,10 @@ void HttpConn::AsyncHandleRequest()
         // 正常处理时，大部分工作都交给 HandleGet()
         if ( dynamic_response )
         {
-            dynamic_response->keep_alive( false );
-            dynamic_response->result( http::status::ok );
             dynamic_response->set( http::field::server, "GateServer" );
         }
         else if ( file_response )
         {
-            file_response->keep_alive( false );
-            file_response->result( http::status::ok );
             file_response->set( http::field::server, "GateServer" );
         }
         else

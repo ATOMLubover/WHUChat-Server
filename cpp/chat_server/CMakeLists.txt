@@ -18,17 +18,17 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
 # 设置源码集合
-file( GLOB SOURCE_CODE "sources/**/*.cpp" "sources/**/*.cc" "sources/*.cpp" )
+file( GLOB SOURCE_CODE "sourcs/**/*.cpp" "sources/*.cpp" )
 # 打印源码文件宏
 message( STATUS "Source code: " ${SOURCE_CODE} )
 
 # 第三方库包
 find_package( Threads REQUIRED )                        # 使用 CMake 的线程库
 find_package( fmt REQUIRED )                            # fmt 字符串格式化库
-find_package( Protobuf CONFIG REQUIRED )                # protocol buffer 库
-message( STATUS "Using protobuf ${Protobuf_VERSION}" )
-find_package( gRPC CONFIG REQUIRED )                    # gRPC 库（依赖 Protobuf）
-message( STATUS "Using gRPC ${gRPC_VERSION}" )
+# find_package( Protobuf CONFIG REQUIRED )                # protocol buffer 库
+# message( STATUS "Using protobuf ${Protobuf_VERSION}" )
+# find_package( gRPC CONFIG REQUIRED )                    # gRPC 库（依赖 Protobuf）
+# message( STATUS "Using gRPC ${gRPC_VERSION}" )
 
 # 创建目标
 add_executable( ${PROJ_NAME} )
@@ -51,9 +51,9 @@ target_include_directories( ${PROJ_NAME}
 target_link_libraries( ${PROJ_NAME}
     PRIVATE 
         fmt::fmt                    # fmt 字符串格式化库
-        gRPC::grpc++                # gRPC C++ 库
-        gRPC::grpc++_reflection     # gRPC C++ 反射库
-        protobuf::libprotobuf       # protobuf 库（必须在 gRPC 链接后链接）
+        # gRPC::grpc++                # gRPC C++ 库
+        # gRPC::grpc++_reflection     # gRPC C++ 反射库
+        # protobuf::libprotobuf       # protobuf 库（必须在 gRPC 链接后链接）
         mysqlcppconn                # MySQL C++ 连接库
         hiredis                     # redis C 连接库
 )

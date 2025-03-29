@@ -1,53 +1,53 @@
-#include "grpc_conn_pool.hpp"
+#include "include/grpc_conn_pool.hpp"
 
 GrpcConnectionPool::~GrpcConnectionPool()
 {
-    std::lock_guard<std::mutex> guard( mtx_queconn );
+    std::lock_guard<std::mutex> guard( mtx_questub );
 
     ClosePool();
-    if ( connections.empty() )
-        connections.pop(); // 由于是智能指针，所以弹出后不用手动 delete
+    if ( que_stub.empty() )
+        que_stub.pop(); // 由于是智能指针，所以弹出后不用手动 delete
 }
 
-std::unique_ptr<message::VerifiService::Stub> GrpcConnectionPool::TakeConnection()
+std::unique_ptr<message::VerifiService::Stub> GrpcConnectionPool::TakeConn()
 {
-    std::unique_lock<std::mutex> lock( mtx_queconn );
+    std::unique_lock<std::mutex> lock( mtx_questub );
 
     // 此处决定线程是否挂起并释放锁：若连接池不空或者连接池已经停止
-    cv_queconn.wait(
+    cv_questub.wait(
         lock,
         [ this ] ()
         {
             if ( this->is_stopped )
                 return true;
 
-            return !this->connections.empty();
+            return !this->que_stub.empty();
         } );
 
     if ( is_stopped )
         return nullptr;
 
-    auto stub = std::move( connections.front() );
-    connections.pop();
+    auto stub = std::move( que_stub.front() );
+    que_stub.pop();
     return std::move( stub );
 }
 
-void GrpcConnectionPool::ReturnConnection( std::unique_ptr<message::VerifiService::Stub>&& connection )
+void GrpcConnectionPool::ReturnConn( std::unique_ptr<message::VerifiService::Stub>&& connection )
 {
-    std::lock_guard<std::mutex> guard( mtx_queconn );
+    std::lock_guard<std::mutex> guard( mtx_questub );
 
-    // 当连接池已经停止，则没必要重新再回收到 connections 中
+    // 当连接池已经停止，则没必要重新再回收到 que_stub 中
     if ( is_stopped )
         return;
 
-    connections.emplace( std::move( connection ) );
-    cv_queconn.notify_one(); // 如果有线程在等待取用，则有一个幸运儿可以获得
+    que_stub.emplace( std::move( connection ) );
+    cv_questub.notify_one(); // 如果有线程在等待取用，则有一个幸运儿可以获得
 }
 
 void GrpcConnectionPool::ClosePool()
 {
     is_stopped = true;
-    cv_queconn.notify_all();
+    cv_questub.notify_all();
 }
 
 GrpcConnectionPool::GrpcConnectionPool( std::size_t size, std::string host, std::string port )
@@ -62,6 +62,6 @@ GrpcConnectionPool::GrpcConnectionPool( std::size_t size, std::string host, std:
             = grpc::CreateChannel( target, grpc::InsecureChannelCredentials() );
         std::cout << "新grpc channel已创建在: " << target << std::endl;
         // 将新的 stub 创建在 该 channel 底下
-        connections.emplace( message::VerifiService::NewStub( channel ) );
+        que_stub.emplace( message::VerifiService::NewStub( channel ) );
     }
 }

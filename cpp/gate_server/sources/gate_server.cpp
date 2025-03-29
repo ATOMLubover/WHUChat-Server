@@ -45,7 +45,7 @@ void GateServer::Run()
 
 void GateServer::AsyncListen()
 {
-    auto self = shared_from_this(); // keep self from being destructed
+    auto self = shared_from_this();
 
     auto& ioc_conn = AsioIoContextPool::GetInstance()->GetIoService();
     std::shared_ptr<HttpConn> conn = std::make_shared<HttpConn>( ioc_conn );

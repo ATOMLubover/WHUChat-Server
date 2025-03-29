@@ -21,20 +21,20 @@ public:
     ~GrpcConnectionPool();
 
     // 由于 stub 不可复制，所以直接移动指向其的 unique_ptr
-    std::unique_ptr<message::VerifiService::Stub> TakeConnection();
+    std::unique_ptr<message::VerifiService::Stub> TakeConn();
     // 还回 grpc 连接（锁同步）
-    void ReturnConnection( std::unique_ptr<message::VerifiService::Stub>&& connection );
+    void ReturnConn( std::unique_ptr<message::VerifiService::Stub>&& connection );
 
 private:
     void ClosePool();
 
 private:
     std::size_t size;
-    std::queue<std::unique_ptr<message::VerifiService::Stub>> connections;
+    std::queue<std::unique_ptr<message::VerifiService::Stub>> que_stub;
 
     std::atomic<bool> is_stopped;
-    std::condition_variable cv_queconn;
-    std::mutex mtx_queconn;
+    std::condition_variable cv_questub;
+    std::mutex mtx_questub;
 
     std::string host;
     std::string port;

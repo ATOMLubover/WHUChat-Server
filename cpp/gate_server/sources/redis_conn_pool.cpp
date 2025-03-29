@@ -1,6 +1,6 @@
-#include "redis_conn_pool.hpp"
+#include "include/redis_conn_pool.hpp"
 
-#include "redis_reply.hpp"
+#include "include/redis_reply.hpp"
 
 #include <hiredis/hiredis.h>
 
@@ -40,7 +40,7 @@ RedisConnPool::~RedisConnPool()
         que_conn.pop();
 }
 
-RedisContext::Raw* RedisConnPool::TakeConnection()
+RedisContext::Raw* RedisConnPool::TakeConn()
 {
     std::unique_lock<std::mutex> lock( mtx_queconn );
 
@@ -62,7 +62,7 @@ RedisContext::Raw* RedisConnPool::TakeConnection()
     return context;
 }
 
-void RedisConnPool::ReturnConnection( RedisContext::Raw* context )
+void RedisConnPool::ReturnConn( RedisContext::Raw* context )
 {
     std::lock_guard<std::mutex> guard( mtx_queconn );
 

@@ -20,9 +20,9 @@ public:
     ~RedisConnPool();
 
     // 获取一个 redis 连接（条件变量同步）
-    RedisContext::Raw* TakeConnection();
+    RedisContext::Raw* TakeConn();
     // 还回一个 redis 连接（锁同步）
-    void ReturnConnection( RedisContext::Raw* context );
+    void ReturnConn( RedisContext::Raw* context );
 
     void ClosePool();
 
