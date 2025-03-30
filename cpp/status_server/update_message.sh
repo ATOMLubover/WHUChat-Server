@@ -3,7 +3,7 @@
 # 定义路径等变量
 PROTO_DIR="./resources/config/"
 PROTO_FILE="./resources/config/message.proto"
-OUTPUT_DIR="./sources/thirdparty/"
+OUTPUT_DIR="./sources/thirdparty"
 CURR_DIR=$(pwd)
 GRPC_PLUGIN_PATH=$(which grpc_cpp_plugin)
 

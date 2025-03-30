@@ -2,10 +2,6 @@
 
 #include "include/http_conn.hpp"
 #include "include/verifi_grpc_mgr.hpp"
-// #include "RedisManager.h"
-// #include "ConfigManager.h"
-// #include "MySqlManager.h"
-// #include "StatusGrpcClient.h"
 
 #include <fmt/core.h>
 #include <json/json.hpp>
