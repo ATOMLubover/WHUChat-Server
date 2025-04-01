@@ -22,10 +22,13 @@ StatusServiceImpl::StatusServiceImpl()
     {
         const std::string prefix = "chat_server_";
         std::string serial = std::to_string( i );
-        list_chatsrv_info.push_back(
-            ChatServerInfo{
+        ChatServerInfo info{
                 ConfigMgr::GetInstance()[ prefix + serial ][ "host" ],
-                ConfigMgr::GetInstance()[ prefix + serial ][ "port" ] } );
+                ConfigMgr::GetInstance()[ prefix + serial ][ "port" ] };
+        list_chatsrv_info.push_back( info );
+
+        std::cout << "ChatServer第" << i << "号信息载入："
+            << info.host << ":" << info.port << std::endl;
     }
 }
 

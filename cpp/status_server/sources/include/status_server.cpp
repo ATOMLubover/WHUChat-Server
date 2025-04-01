@@ -15,7 +15,7 @@
 
 StatusServer::StatusServer()
     : server_addr(
-        ConfigMgr::GetInstance()[ "status_server" ][ "host" ]
+        ConfigMgr::GetInstance()[ "status_server" ][ "host" ] + ":"
         + ConfigMgr::GetInstance()[ "status_server" ][ "port" ] )
 { }
 

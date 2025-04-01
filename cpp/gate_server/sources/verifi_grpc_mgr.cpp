@@ -4,7 +4,7 @@
 #include "config_mgr.hpp"
 #include "defer.hpp"
 
-GetVerifiResponse VerifiGrpcMgr::GetVerificationCode( const std::string& email )
+GetVerifiResponse VerifiGrpcMgr::GetVerifiCode( const std::string& email )
 {
     ClientContext context;
 

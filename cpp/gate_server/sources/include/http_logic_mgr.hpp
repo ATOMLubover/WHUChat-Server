@@ -4,6 +4,7 @@
 #include "aliases.h"
 
 #include <boost/beast/http.hpp>
+#include <json/json.hpp>
 
 #include <functional>
 #include <map>
@@ -43,6 +44,9 @@ private:
     static http::file_body::value_type PrepareFileBodyHelper( const std::string& file );
     // 获得某个文件的 content-type
     static std::string GetMimeHelper( const std::string& file );
+
+    // 辅助转换 string 为 JSON
+    static nlohmann::json ParseJsonHelper( const std::string& str );
 
 private:
     static const std::string FRONTEND_STATIC_DIR; // 前端静态资源目录

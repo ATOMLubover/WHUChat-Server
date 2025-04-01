@@ -11,11 +11,16 @@ class MySqlDao
 public:
     MySqlDao();
 
-    /**
-     * 事例过程，用于 注册新用户，如果用户存在则会返回错误码
-     * @returns 错误码：-2 未能找到结果，-1 MySQL 事务执行异常，
-     * 0 成功执行，1 用户已存在，2 邮箱重复
-     */
+    /// @brief 通过 email 查找对应 uuid
+    /// @returns -1 未找到，0 未定义，大于 0 则是正常的 uuid
+    int SelectUserUuid( const std::string& email );
+    /// @brief 通过 email 查找对应密码
+    /// @returns 空字符串 未找到，非空则为正常的 password
+    std::string SelectUserPwd( const std::string& email );
+
+    /// @brief 事例过程，用于 注册新用户，如果用户存在则会返回错误码
+    /// @return 错误码：-2 未能找到结果，-1 MySQL 事务执行异常，
+    /// 0 成功执行，1 用户已存在，2 邮箱重复
     int ProcRegisterUser( const MySqlUsersElem& new_user );
 
 private:

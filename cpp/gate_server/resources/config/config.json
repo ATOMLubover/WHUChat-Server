@@ -10,16 +10,16 @@
         "host": "127.0.0.1",
         "port": "50052"
     },
-    "redis_server": {
+    "redis": {
         "host": "127.0.0.1",
         "port": "6379",
         "password": "lbbbbbb"
     },
     "mysql": {
-        "host": "127.0.0.1",
+        "host": "172.21.144.1",
         "post": "3308",
         "user": "root",
         "password": "248313",
-        "schema": "chat"
+        "schema": "whuchat"
     }
 }

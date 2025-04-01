@@ -22,7 +22,7 @@ class VerifiGrpcMgr
     friend class Singleton<VerifiGrpcMgr>;
 
 public:
-    GetVerifiResponse GetVerificationCode( const std::string& email );
+    GetVerifiResponse GetVerifiCode( const std::string& email );
 
 private:
     VerifiGrpcMgr();

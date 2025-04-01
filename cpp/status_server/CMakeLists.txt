@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 3.10 )
 message( STATUS "CMake curr dir: " ${CMAKE_CURRENT_SOURCE_DIR} )
 
 # 项目名称宏定义
-set( PROJ_NAME "gate_server" )
+set( PROJ_NAME "status_server" )
 
 # 设置项目基础属性
 project( ${PROJ_NAME}

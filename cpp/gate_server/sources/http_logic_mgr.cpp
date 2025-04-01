@@ -1,7 +1,11 @@
-#include "include/http_logic_mgr.hpp"
+#include "http_logic_mgr.hpp"
 
 #include "include/http_conn.hpp"
-#include "include/verifi_grpc_mgr.hpp"
+#include "verifi_grpc_mgr.hpp"
+#include "defer.hpp"
+#include "redis_mgr.hpp"
+#include "mysql_mgr.hpp"
+#include "status_grpc_mgr.hpp"
 // #include "RedisManager.h"
 // #include "ConfigManager.h"
 // #include "MySqlManager.h"
@@ -203,7 +207,7 @@ HttpLogicMgr::HttpLogicMgr()
                 message::GetVerifiResponse verifi_rsp;
                 try
                 {
-                    verifi_rsp = VerifiGrpcMgr::GetInstance()->GetVerificationCode( email );
+                    verifi_rsp = VerifiGrpcMgr::GetInstance()->GetVerifiCode( email );
                 }
                 catch ( std::exception& exp )
                 {
@@ -224,6 +228,8 @@ HttpLogicMgr::HttpLogicMgr()
 
                 return;
             } );
+
+
     }
 
     // GET 返回网站 icon
@@ -242,6 +248,203 @@ HttpLogicMgr::HttpLogicMgr()
                 http::field::content_type, HttpLogicMgr::GetMimeHelper( REL_PATH ) );
             conn->WriteRspBody( std::move( filebody ) );
         } );
+
+    // POST 部分
+    {
+        // 注册
+        RegisterPost(
+            "/api/v1/register",
+            [] ( std::shared_ptr<HttpConn> conn )
+            {
+                conn->ConstructDynamicBody();
+                conn->dynamic_response->set( http::field::content_type, "application/json; charset=utf-8" );
+                nlohmann::json json_rsp; // 响应体为 JSON
+
+                std::string str_req = beast::buffers_to_string( conn->request.body().data() );
+                std::cout << "/api/v1/register收到数据：" << str_req << std::endl;
+
+                // 为了保证能够写入内容，使用 Defer
+                Defer defer_write(
+                    [ conn, &json_rsp ] ()
+                    {
+                        conn->dynamic_response->result( http::status::ok );
+                        conn->WriteRspBody( json_rsp.dump() );
+                    } );
+
+                // 解析请求体
+                nlohmann::json json_req = HttpLogicMgr::ParseJsonHelper( str_req );
+                if ( json_req.is_null() )
+                {
+                    std::cout << "/api/v1/register解析JSON出错" << std::endl;
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+                    return;
+                }
+
+                std::string username = json_req[ "username" ].get<std::string>();
+                std::string email = json_req[ "email" ].get<std::string>();
+                std::string password = json_req[ "password" ].get<std::string>();
+                std::string repassword = json_req[ "repassword" ].get<std::string>();
+                std::string vrf_code = json_req[ "vrf_code" ].get<std::string>();
+
+                // 检查密码是否相同
+                if ( password != repassword )
+                {
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorPwdIncorreponds );
+                    return;
+                }
+
+                // 检查验证码是否有效
+                if ( RedisMgr::GetInstance()->CheckVrfValid( email, vrf_code ) )
+                {
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorVrfInvalid );
+                    return;
+                }
+
+                // 最后尝试注册
+                UserInfo info{
+                    username,
+                    email,
+                    password };
+                int result = MySqlMgr::GetInstance()->RegisterUser( info );
+                switch ( result )
+                {
+                    case -3: // email 已存在
+                        json_rsp.emplace( "error", EnumErrorCode::ErrorEmailConflicts );
+                        break;
+
+                    case -2: // 用户名已存在
+                        json_rsp.emplace( "error", EnumErrorCode::ErrorUsernameExists );
+                        break;
+
+                    case -1: // MySQL 或者程序错误
+                        json_rsp.emplace( "error", EnumErrorCode::ErrorMySql );
+                        break;
+
+                    case 0: // 未定义错误
+                        json_rsp.emplace( "error", EnumErrorCode::ErrorException );
+                        break;
+
+                    default: // 当返回值大于 0 时，是 uuid
+                        json_rsp.emplace( "target_uuid", result );
+                        json_rsp.emplace( "target_email", email );
+                        json_rsp.emplace( "error", EnumErrorCode::Success );
+
+                        // 特别注意的是，必须在此处废弃之前的验证码
+                        RedisMgr::GetInstance()->DelVrfEmail( email );
+                        break;
+                }
+            } );
+
+        // 登录
+        RegisterPost(
+            "/api/v1/login",
+            [] ( std::shared_ptr<HttpConn> conn )
+            {
+                conn->ConstructDynamicBody();
+                conn->dynamic_response->set( http::field::content_type, "application/json; charset=utf-8" );
+                nlohmann::json json_rsp; // 响应体为 JSON
+
+                std::string str_req = beast::buffers_to_string( conn->request.body().data() );
+                std::cout << "/api/v1/login收到数据：" << str_req << std::endl;
+
+                // 为了保证能够写入内容，使用 Defer
+                Defer defer_write(
+                    [ conn, &json_rsp ] ()
+                    {
+                        conn->dynamic_response->result( http::status::ok );
+                        conn->WriteRspBody( json_rsp.dump() );
+                    } );
+
+                // 解析请求体
+                nlohmann::json json_req = HttpLogicMgr::ParseJsonHelper( str_req );
+                if ( json_req.is_null() )
+                {
+                    std::cout << "/api/v1/login解析JSON出错" << std::endl;
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+                    return;
+                }
+
+                std::string email = json_req[ "email" ].get<std::string>();
+                std::string password = json_req[ "password" ].get<std::string>();
+
+                // 先查看是否有对应 email 被注册
+                int uuid = MySqlMgr::GetInstance()->SelectUserUuid( email );
+                if ( uuid <= 0 )
+                {
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorEmailInvalid );
+                    return;
+                }
+
+                // 验证密码是否与存储的一致
+                std::string pwd = MySqlMgr::GetInstance()->SelectUserPwd( email );
+                if ( pwd != password )
+                {
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorPwdWrong );
+                    return;
+                }
+
+                // 最后调用 StatusServer 分配 ChatServer
+                auto grpc_rsp
+                    = StatusGrpcMgr::GetInstance()->GetChatServer( uuid );
+                if ( grpc_rsp.error() != ( std::int32_t ) EnumErrorCode::Success )
+                {
+                    json_rsp.emplace( "error", grpc_rsp.error() );
+                    return;
+                }
+
+                // 若分配成功，则返回响应
+                json_rsp.emplace( "uuid", uuid );
+                json_rsp.emplace( "error", grpc_rsp.error() );
+                json_rsp.emplace( "token", grpc_rsp.token() );
+                json_rsp.emplace( "host", grpc_rsp.host() );
+                json_rsp.emplace( "port", grpc_rsp.port() );
+            } );
+
+        // 发送验证码
+        RegisterPost(
+            "/api/v1/send_vrf",
+            [] ( std::shared_ptr<HttpConn> conn )
+            {
+                conn->ConstructDynamicBody();
+                conn->dynamic_response->set( http::field::content_type, "application/json; charset=utf-8" );
+                nlohmann::json json_rsp; // 响应体为 JSON
+
+                std::string str_req = beast::buffers_to_string( conn->request.body().data() );
+                std::cout << "/api/v1/login收到数据：" << str_req << std::endl;
+
+                // 为了保证能够写入内容，使用 Defer
+                Defer defer_write(
+                    [ conn, &json_rsp ] ()
+                    {
+                        conn->dynamic_response->result( http::status::ok );
+                        conn->WriteRspBody( json_rsp.dump() );
+                    } );
+
+                // 解析请求体
+                nlohmann::json json_req = HttpLogicMgr::ParseJsonHelper( str_req );
+                if ( json_req.is_null() )
+                {
+                    std::cout << "/api/v1/login解析JSON出错" << std::endl;
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+                    return;
+                }
+
+                std::string email = json_req[ "email" ].get<std::string>();
+
+                // 发送验证码
+                auto result
+                    = VerifiGrpcMgr::GetInstance()->GetVerifiCode( email );
+                if ( result.error() != ( std::int32_t ) EnumErrorCode::Success )
+                {
+                    json_rsp.emplace( "error", result.error() );
+                    return;
+                }
+
+                // 若是一切正常，则返回响应
+                json_rsp.emplace( "target_email", email );
+                json_rsp.emplace( "error", result.error() );
+            } );
+    }
 
     std::cout << "HttpLogicMgr构造" << std::endl;
 }
@@ -314,4 +517,21 @@ std::string HttpLogicMgr::GetMimeHelper( const std::string& file )
     if ( ext == "png" ) return "image/png";
     if ( ext == "pdf" ) return "application/pdf";
     return "application/octet-stream";
+}
+
+nlohmann::json HttpLogicMgr::ParseJsonHelper( const std::string& str )
+{
+    // 将请求体转化为 json 格式
+    nlohmann::json json;
+    try
+    {
+        json = nlohmann::json::parse( str );
+    }
+    catch ( std::exception& exp )
+    {
+        std::cout << "HttpLogicMgr ParseJsonHelper处异常：" << exp.what() << std::endl;
+        return {};
+    }
+
+    return json;
 }

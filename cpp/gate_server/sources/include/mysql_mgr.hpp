@@ -13,10 +13,22 @@ class MySqlMgr
 public:
     MySqlMgr( const MySqlMgr& ) = delete;
     MySqlMgr& operator=( const MySqlMgr& ) = delete;
-    ~MySqlMgr();
+    ~MySqlMgr() = default;
 
+    // 直接返回 email 对应的 uuid
+    int SelectUserUuid( const std::string& email );
+    // 返回 email 对应的 password
+    std::string SelectUserPwd( const std::string& email );
+
+    /// @brief 尝试注册用户
+    /// @param user_info 
+    /// @return -3 email 已存在， -2 用户名已存在，-1 异常，
+    /// 0 为未定义值，大于 0 的值即为注册成功的 uuid
     int RegisterUser( const UserInfo& user_info );
 
 private:
-    MySqlMgr();
+    MySqlMgr() = default;
+
+private:
+    MySqlDao dao;
 };
