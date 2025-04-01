@@ -43,24 +43,26 @@ port ：**8080**
 ## ` GateServer ` 已实现的接口
 
 > 删除线标注的为暂时不应使用的部分  
-> 斜体字为注释 
+> 斜体字为注释  
+> 所有 text 类型的返回值默认是 UTF-8 编码
 
 **GET**
 
 | URI | 参数描述 | 返回值 | 功能 |
 | :- | :- | :- | :- |
 | /favicon.ico | 无参数 | application/octet-stream | 返回 favicon.ico 网站图标 |
-| /login/~~index.html~~ | 无参数 | html | 返回登录页面的 index.html |
-| /register/~~index.html~~ | 无参数 | html | 返回注册页面的 index.html |
+| /login/~~index.html~~ | 无参数 | text/html | 返回登录页面的 index.html |
+| /register/~~index.html~~ | 无参数 | text/html | 返回注册页面的 index.html |
 
 **POST**
 
 | URI | 参数描述 | 返回值 | 功能 |
 | :- | :- | :- | :- |
-| /try_login | JSON { "email", "password" } | JSON { "target_email" *：完成操作的对应邮箱*, "error", ~~"token"~~ } | 尝试登录用户，如果登录成功返回 token（**特别注意："password" 和 "repassword" 应该在前端就进行加密，后端会直接存储加密后的密码**） |
-| /try_register | JSON { "username", "email", "password", "repassword" } | JSON { "target_username", "target_email", "error" } | 尝试注册用户（**特别注意："password" 应该在前端就进行加密，后端会直接查询加密后的密码**） |
+| /api/v1/login | JSON { "email", "password" } | JSON { "uuid", "error", "token", "host", "port" } | 尝试登录用户 |
+| /api/v1/send_vrf | JSON { "email" } | JSON {  "target_email", "error" } | 请求发送验证码 |
+| /api/v1/register | JSON { "username", "email", "password", "repassword", "vrf_code" } | JSON { "target_uuid", "target_email", "error" } | 尝试注册用户（**特别注意："password" 应该在前端就进行加密，后端会直接存储加密后的密码**） |
 
-## HTTP POST 请求反馈错误码一览
+## HTTP 请求反馈错误码一览
 
 > 如果返回体是 JSON 格式，则会以 "error" 字段存储  
 > 斜体的 *trs* 表示是转发其他服务器的错误码
@@ -79,3 +81,6 @@ port ：**8080**
 | 1005 | ErrorUsernameExists | ` GateServer ` 无法注册新用户：用户名已存在 |
 | 1006 | ErrorEmailConflicts | ` GateServer ` 无法注册新用户：email已被注册 |
 | 1007 | ErrorPwdIncorreponds | ` GateServer ` 无法注册新用户：密码不一致 |
+| 1008 | ErrorVrfInvalid | ` GateServer ` 无法注册新用户：验证码无效 |
+| 1009 | ErrorPwdWrong | ` GateServer ` 无法登录用户：密码错误 |
+| 1010 | ErrorEmailInvalid | ` GateServer ` 无法登录用户：email 未注册 |
