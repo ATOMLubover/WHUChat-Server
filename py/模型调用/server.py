@@ -54,13 +54,28 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
                     result = default.get_chat_completion(api_key,base_url,model_type, promote_list)
 
 
-            # 发送响应
+            # 设置响应头
             self.send_response(200)
-            self.send_header('Content-type', 'application/json')
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Transfer-Encoding', 'chunked')  # 启用流式传输
             self.end_headers()
-            response = {"message": "接收成功", "model_type": model_type,"result": result}
-            self.wfile.write(json.dumps(response).encode('utf-8'))
 
+            # 逐步写入流数据
+            for chunk in result:
+                if isinstance(chunk, dict):  # 可能返回字典
+                    chunk_text = json.dumps(chunk)
+                else:
+                    chunk_text = str(chunk)
+
+                chunk_bytes = chunk_text.encode('utf-8')
+                self.wfile.write(f"{len(chunk_bytes):X}\r\n".encode('utf-8'))  # 发送块大小（十六进制）
+                self.wfile.write(chunk_bytes)  # 发送块数据
+                self.wfile.write(b"\r\n")  # 发送块结束标志
+                self.wfile.flush()  # 确保数据实时发送
+
+            # 发送流结束标记
+            self.wfile.write(b"0\r\n\r\n")
+            self.wfile.flush()
         except json.JSONDecodeError:
             self.send_response(400)
             self.send_header('Content-type', 'application/json')

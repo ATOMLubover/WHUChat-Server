@@ -7,8 +7,11 @@ def chatgpt_chat(model="gpt-3.5-turbo",messages=None):
         response = client.chat.completions.create(
         model=model,
         messages=messages,
+        stream=True
         )
-        return response
+        for chunk in response:
+            if chunk.choices[0].delta.content is not None:
+                yield(chunk.choices[0].delta.content)
     except openai.APIError as e:
         return(f"OpenAI API 调用出错: {e}")
     except openai.AuthenticationError as e:

@@ -10,9 +10,12 @@ def deepseek_chat(messages, model="deepseek-chat"):
         client = OpenAI(api_key=API_KEY, base_url=base_url)
         response = client.chat.completions.create(
             model=model,
-            messages=messages  # 使用 messages 参数
+            messages=messages,  # 使用 messages 参数
+            stream=True
         )
-        return response.choices[0].message.content
+        for chunk in response:
+            if chunk.choices[0].delta.content is not None:
+                yield(chunk.choices[0].delta.content)
     except Exception as e:
         print(f"错误信息：{e}")
         return None

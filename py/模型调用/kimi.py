@@ -10,7 +10,9 @@ def get_chat_completion(api_key, model, messages, temperature=0.3):
     completion = client.chat.completions.create(
         model=model,
         messages=messages,
-        temperature=temperature,
+        stream=True
     )
     
-    return completion.choices[0].message.content
+    for chunk in completion:
+        if chunk.choices[0].delta.content is not None:
+            yield(chunk.choices[0].delta.content)

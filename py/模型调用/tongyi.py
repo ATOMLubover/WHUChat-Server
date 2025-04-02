@@ -11,9 +11,12 @@ def tongyi_chat( model="qwen-plus",messages=None):
 
         completion = client.chat.completions.create(
             model=model,
-            messages=messages
+            messages=messages,
+            stream=True
         )
-        return completion.choices[0].message.content
+        for chunk in completion:
+            if chunk.choices[0].delta.content is not None:
+                yield(chunk.choices[0].delta.content)
     except Exception as e:
         print(f"错误信息：{e}")
         print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
