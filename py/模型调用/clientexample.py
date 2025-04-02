@@ -1,16 +1,23 @@
-import requests
+import asyncio
+import websockets
+import json
 
-url = "http://127.0.0.1:8000"
-data = {
-    "model": "gemini-2.0-flash",
-    "class": "gemini",
-    "promote": ["Hello, how are you?"],
-    "api_key": "your-api-key",
-    "base_url": "your-base-url"
-}
+async def test_websocket():
+    uri = "ws://127.0.0.1:8000"
+    
+    async with websockets.connect(uri) as websocket:
+        # 发送请求
+        request_data = {
+            "model": "qwen-plus",
+            "class": "tongyi",
+            "promote": [ {"role": "system", "content": "你是一个 AI 助手"},{"role": "user", "content": "你好"}],
+        }
+        print("发送请求:", request_data)
+        await websocket.send(json.dumps(request_data))
+        
+        # 逐步接收流式返回数据
+        while True:
+            response = await websocket.recv()
+            print("服务器返回:", response)
 
-response = requests.post(url, json=data, stream=True)
-
-for chunk in response.iter_content(None):
-    if chunk:
-        print(chunk.decode(), end="")
+asyncio.run(test_websocket())
