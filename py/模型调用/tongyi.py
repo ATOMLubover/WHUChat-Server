@@ -21,13 +21,3 @@ def tongyi_chat( model="qwen-plus",messages=None):
         print(f"错误信息：{e}")
         print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
         return None
-
-# 示例调用
-#if __name__ == "__main__":
-    messages = [
-        {'role': 'system', 'content': 'You are a helpful assistant.'},
-        {'role': 'user', 'content': '你是谁？'}
-    ]
-    response = get_chat_completion(messages=messages)
-    if response:
-        print(response)
