@@ -53,6 +53,15 @@ async def handle_websocket(websocket):
                 else:
                     chunk_text = str(chunk)
                 await websocket.send(chunk_text)
+            
+            # 发送结束标识
+            end_message = json.dumps({"end": True})
+            await websocket.send(end_message)
+            logging.info("数据流发送完毕，发送结束标识")
+
+            # 服务器主动关闭连接
+            await websocket.close()
+            logging.info("WebSocket 连接已关闭")
 
     except websockets.exceptions.ConnectionClosed:
         logging.info("WebSocket 连接已关闭")

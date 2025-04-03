@@ -16,15 +16,16 @@ async def test_websocket():
         await websocket.send(json.dumps(request_data))
         
         # 逐步接收流式返回数据
-#        while True:
-#            response = await websocket.recv()
-#            print("服务器返回:", response)
-        try:
-            while True:
-                response = await asyncio.wait_for(websocket.recv(), timeout=5) 
-                print("服务器返回:", response)
-        except asyncio.TimeoutError:
-            print("超时未收到数据，断开连接")
-            await websocket.close()
+        while True:
+            response = await websocket.recv()
+            print("服务器返回:", response)
+            try:
+                response_data = json.loads(response)
+                if response_data.get("end"):
+                    print("数据流接收完毕，发送结束标识")
+                    break
+            except json.JSONDecodeError:
+                pass
+
 
 asyncio.run(test_websocket())
