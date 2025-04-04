@@ -10,29 +10,31 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <set>
 
 class HttpConn;
 using HttpHandler = std::function<void( std::shared_ptr<HttpConn> )>;
 
+class WebsockConn;
+using WsHandler = std::function<void( std::shared_ptr<WebsockConn> )>;
+
 // http 和 Websocket 的逻辑独立形成的类
-class NetLogicSystem
-    : public Singleton<NetLogicSystem>
+class HttpLogicSystem
+    : public Singleton<HttpLogicSystem>
 {
-    friend class Singleton<NetLogicSystem>;
+    friend class Singleton<HttpLogicSystem>;
 
 public:
-    ~NetLogicSystem();
+    ~HttpLogicSystem();
 
     bool HandleGet( std::shared_ptr<HttpConn> conn );
     bool HandlePost( std::shared_ptr<HttpConn> conn );
 
-    // 判断是否是 Websocket 升级请求
-    bool IsWebsockUpgrade( std::shared_ptr<HttpConn> conn );
     // 将 HttpConn 升级为 WebsockConn（原链接应当被废弃）
-    void HandleUpgrade( std::shared_ptr<HttpConn> conn );
+    bool HandleUpgrade( std::shared_ptr<HttpConn> conn );
 
 private:
-    NetLogicSystem();
+    HttpLogicSystem();
 
     // 注册 get 请求处理函数（url, handler）
     void RegisterGet( const std::string& url, HttpHandler handler );

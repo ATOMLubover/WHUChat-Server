@@ -10,7 +10,7 @@ namespace net = boost::asio;				// from <boost/asio.hpp>
 namespace boost::asio::ip { class tcp; }
 using tcp = boost::asio::ip::tcp;			// from <boost/asio/ip/tcp.hpp>
 
-// 用于标识 http 处理过程中的错误码
+// 用于标识处理过程中的错误码
 enum class EnumErrorCode
 {
     Success = 0,                          // 正常处理请求

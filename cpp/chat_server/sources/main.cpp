@@ -1,3 +1,5 @@
+#define BOOST_BEAST_DEBUG
+
 #include "gate_server.hpp"
 
 #include <iostream>

@@ -4,9 +4,14 @@
 #include "config_mgr.hpp"
 #include "defer.hpp"
 
+#include <chrono>
+#include <exception>
+
 GetChatServerResponse StatusGrpcMgr::GetChatServer( std::int32_t uuid )
 {
     ClientContext context;
+    // 设置 10 秒的超时
+    context.set_deadline( std::chrono::seconds( 10 ) );
 
     GetChatServerResponse reply;
     GetChatServerRequest request;
@@ -16,7 +21,17 @@ GetChatServerResponse StatusGrpcMgr::GetChatServer( std::int32_t uuid )
     auto stub = conn_pool.TakeConn();
     Defer defer( [ this, &stub ] () { this->conn_pool.ReturnConn( std::move( stub ) ); } );
 
-    Status status = stub->GetChatServer( &context, request, &reply );
+    Status status;
+    try
+    {
+        status = stub->GetChatServer( &context, request, &reply );
+    }
+    catch ( std::out_of_range& exp )
+    {
+        std::cout << "StatusServer超时未应答" << std::endl;
+        reply.set_error( static_cast< int >( EnumErrorCode::ErrorServerNotResponding ) );
+        return reply;
+    }
 
     if ( !status.ok() )
     {

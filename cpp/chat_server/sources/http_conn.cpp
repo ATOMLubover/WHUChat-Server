@@ -1,7 +1,9 @@
 #include "http_conn.hpp"
 
-#include "net_logic_system.hpp"
+#include "http_logic_system.hpp"
+#include "websock_mgr.hpp"
 
+#include <fmt/format.h>
 #include <boost/beast/http.hpp>
 // #include <boost/algorithm/string.hpp>
 
@@ -75,19 +77,35 @@ void HttpConn::SyncHandle()
     // GET 请求
     if ( request.method() == http::verb::get )
     {
+        PreparseGetParamsHelper( request.target() );
+
         // 首先查看是否是 WebSocket 升级请求
-        if ( NetLogicSystem::GetInstance()->IsWebsockUpgrade( shared_from_this() ) )
+        // 但是注意这这是截断，不进入 http 的逻辑部分，实际上是否创建 Websockt 不在这里决定
+        if ( websocket::is_upgrade( request ) )
         {
             // 处理完升级请求后，该 HttpConn 已经没有 socket 可以使用，应该析构
-            NetLogicSystem::GetInstance()->HandleUpgrade( shared_from_this() );
+            bool is_successful
+                = HttpLogicSystem::GetInstance()->HandleUpgrade( shared_from_this() );
+            // 如果不成功，发送失败的响应
+            if ( !is_successful )
+            {
+                response.keep_alive( false );
+                response.result( http::status::bad_request );
+                response.set( http::field::content_type, "application/json" );
+                WriteRspBody(
+                    fmt::format( "{ \"error\": {} }",
+                        ( std::int32_t ) EnumErrorCode::ErrorWebsocketUpgradeDinied ) );
+
+                AsyncWriteResponse();
+                return;
+            }
+
             return;
         }
 
         // 如果不是升级请求，那就继续执行正常的 GET 处理逻辑
-        PreparseGetParamsHelper( request.target() );
-
         bool is_successful
-            = NetLogicSystem::GetInstance()->HandleGet( shared_from_this() );
+            = HttpLogicSystem::GetInstance()->HandleGet( shared_from_this() );
         // 如果请求的 url 不存在，返回 404
         if ( !is_successful )
         {
@@ -118,7 +136,7 @@ void HttpConn::SyncHandle()
         post_url = request.target();
 
         bool is_successful
-            = NetLogicSystem::GetInstance()->HandlePost( shared_from_this() );
+            = HttpLogicSystem::GetInstance()->HandlePost( shared_from_this() );
         // 如果请求的 url 不存在，返回 404
         if ( !is_successful )
         {
@@ -242,6 +260,7 @@ void HttpConn::PreparseGetParamsHelper( const std::string uri )
 
     get_url = uri.substr( 0, query_pos );
     std::string query_string = uri.substr( query_pos + 1 );
+    get_raw_params = query_string; // 原本的参数部分
     query_string += "&"; // add "&" to simplify the check conditions
 
     std::string key, val;

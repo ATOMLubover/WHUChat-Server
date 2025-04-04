@@ -12,7 +12,7 @@
 #include <map>
 #include <chrono>
 
-class NetLogicSystem;
+class HttpLogicSystem;
 
 // http 连接类
 // 封装 tcp::socket，管理一个 http 短连接
@@ -20,10 +20,10 @@ class NetLogicSystem;
 class HttpConn
     : public std::enable_shared_from_this<HttpConn> // 由于有异步回调，所以允许 CRTP
 {
-    friend class NetLogicSystem;
+    friend class HttpLogicSystem;
 
 public:
-    // HttpConn 所绑定的 ioc 由 NetLogicSystem 提供
+    // HttpConn 所绑定的 ioc 由 HttpLogicSystem 提供
     HttpConn( boost::asio::io_context& ioc );
     ~HttpConn();
 
@@ -32,11 +32,20 @@ public:
 
     // 供 GateServer 调用，获取 socket 以异步 async_accept
     tcp::socket& GetSocket() { return socket; }
+    // 获取原生 http request
+    http::request<http::string_body> GetRequest() const { return request; }
+
+    // 获取 GET 请求参数列表
+    std::map<std::string, std::string>& GetParams() { return get_params; }
+    // 获取根路由 URI
+    std::string GetUri() const { return get_url; }
+    // 获取字符串形式的 GET 参数列表
+    std::string GetRawParams() const { return get_raw_params; }
 
 private:
     // 异步检查连接是否超时
     void AsyncCheckTimeout();
-    // 同步调用 NetLogicSystem 处理请求，但是随后异步写回 response
+    // 同步调用 HttpLogicSystem 处理请求，但是随后异步写回 response
     void SyncHandle();
     // 异步写 response，写完后 beast 会自动发送
     void AsyncWriteResponse();
@@ -60,7 +69,7 @@ private:
     net::steady_timer timer_timeout; // 设置超时时间为 20s
 
     std::string get_url; // get 请求的根路由
-    std::string get_raw_params; // 用于重定向时的原始路由（含 root 和参数）
+    std::string get_raw_params; // 用于重定向时的原始路由（仅含参数，不含问号）
     std::map<std::string, std::string> get_params; // get 请求的参数
 
     std::string post_url; // post 请求的根路由

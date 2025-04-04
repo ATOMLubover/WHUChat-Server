@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 3.10 )
 message( STATUS "CMake curr dir: " ${CMAKE_CURRENT_SOURCE_DIR} )
 
 # 项目名称宏定义
-set( PROJ_NAME "gate_server" )
+set( PROJ_NAME "chat_server" )
 
 # 设置项目基础属性
 project( ${PROJ_NAME}
@@ -44,7 +44,7 @@ target_include_directories( ${PROJ_NAME}
     PRIVATE 
         "./sources/include/"                         # 自己编写的头文件
         "./sources/thirdparty/"                      # 第三方工具生成的代码
-        "/home/lubover/code_resources/thirdparty/"  # 下载的第三方 dev 源码
+        "/home/lubover/code_resources/thirdparty/"   # 下载的第三方 dev 源码
 )
 
 # 设定所需链接第三方库
