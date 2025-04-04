@@ -12,7 +12,6 @@
 ` GateServer ` 通过 gRPC 调用 C++ 开发的 ` StatusServer ` 进行客户端分配，
 随后指示客户端转接到 ` ChatServer `  
 
-
 ---
 
 ## 后端代理前端文件的组织形式
@@ -60,7 +59,7 @@ port ：**8080**
 
     无
 
-- 返回值（application/octet-stream） 
+- 返回值（application/octet-stream）
 
     返回网站图标二进制文件
 
@@ -145,18 +144,18 @@ port ：**8080**
 - 请求参数（JSON）
 
     | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
-    | :------------ | :----- | :--- | :-----------------------------| :------------------- |
-    | `username`    | string | 是   | 用户名（4-20字符）            | `"new_user"`         |
-    | `email`       | string | 是   | 注册邮箱                      | `"user@domain.com"`  |
-    | `password`    | string | 是   | 前端加密后的密码（SHA-256）   | `"6cgj__qtz3"`      |
-    | `repassword`  | string | 是   | 重复加密后的密码              | `"6cgj__qtz3"`      |
-    | `vrf_code`    | string | 是   | 6位数字验证码                 | `"198273"`           |
+    | :------------ | :----- | :--- | :-----------------| :------------------- |
+    | `username`    | string | 是   | 用户名            | `"new_user"`         |
+    | `email`       | string | 是   | 注册邮箱          | `"user@domain.com"`  |
+    | `password`    | string | 是   | 前端加密后的密码   | `"6cgj__qtz3"`      |
+    | `repassword`  | string | 是   | 重复加密后的密码   | `"6cgj__qtz3"`      |
+    | `vrf_code`    | string | 是   | 4位数字验证码      | `"19nj"`           |
 
 - 返回值（JSON）
 
     | 参数名           | 类型   | 说明                          | 示例值                     |
     | :--------------- | :----- | :---------------------------- | :------------------------- |
-    | `target_uuid`    | int | 新创建用户的UUID              | `2`              |
+    | `target_uuid`    | int | 新创建用户的 uuid              | `2`              |
     | `target_email`   | string | 实际注册的邮箱地址            | `"user@domain.com"`        |
     | `error`          | int | 错误信息（成功时为空）        | `1003`          |
 
@@ -170,19 +169,23 @@ port ：**8080**
 
 **GET**
 
-*Websocket 升级请求*
+`/trans_ans` *WebSocket Upgrade*
 
 - 请求参数  
 
-    无
+    | 参数名        | 必填 | 说明                          | 示例值               |
+    | :------------ | :--- | :-----------------------------| :------------------- |
+    | `from`        |  是   | 标识升级请求方          | `api_server`         |
+    | `session_id`       | 是   | 用于链接对应 Websocket 进行转发 | `1145`  |
 
 - 返回值  
 
-   无
+    Websocket 的自动升级响应
 
 - 补充  
 
-    协议自动处理，无须特定 URI 和特别处理
+    需要传参  
+    `from` 参数只能是 `api_server` 或者 `client`
 
 ## HTTP 请求反馈错误码一览
 
@@ -207,8 +210,9 @@ port ：**8080**
 | 1008 | ErrorVrfInvalid | ` GateServer ` 无法注册新用户：验证码无效 |
 | 1009 | ErrorPwdWrong | ` GateServer ` 无法登录用户：密码错误 |
 | 1010 | ErrorEmailInvalid | ` GateServer ` 无法登录用户：email 未注册 |
+| 2001 | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket |
 
-## 对 Python 部分服务器希望的接口
+## 对 Python ` ApiServer ` 希望的接口
 
 > 斜体是暂时不确定的部分
 
@@ -220,7 +224,7 @@ port ：**8080**
 
     | 参数名       | 类型   | 必填 | 说明                                                            | 示例值                    |
     | :----------- | :------ | :---- | :--------------------------------------------------------------- | :------------------------- |
-    | `session_id` | int | 是 | 当前话语内容所属的对话 ID |
+    | `session_id` | int | 是 | 当前话语内容所属的对话 ID |  `1145` |
     | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
     | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
     | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
