@@ -14,10 +14,13 @@ public:
     MySqlMgr& operator=( const MySqlMgr& ) = delete;
     ~MySqlMgr() = default;
 
-    // 直接返回 email 对应的 uuid
-    int SelectUserUuid( const std::string& email );
-    // 返回 email 对应的 password
-    std::string SelectUserPwd( const std::string& email );
+    // 查询特定 uuid 是否存在
+    bool CheckUuidExisting( int uuid );
+    // 查询特定 session_id 是否存在
+    bool CheckSessionExisting( int ssn_id );
+
+    // 新建特定 session
+    bool CreateSession( int uuid );
 
 private:
     MySqlMgr() = default;

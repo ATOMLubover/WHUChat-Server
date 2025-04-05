@@ -1,6 +1,7 @@
 #include "websock_msg_pipe.hpp"
 
-const std::string WebsockMsgPipe::PIPE_URI = "/trans_ans";
+const std::string WebsockMsgPipe::PIPE_URI_CLI = "/trans_ans";
+const std::string WebsockMsgPipe::PIPE_URI_API = "/send_ans";
 
 WebsockMsgPipe::WebsockMsgPipe( int ssn_id )
     : session_id( ssn_id )

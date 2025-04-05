@@ -12,9 +12,10 @@
     },
     "api_server": {
         "host": "127.0.0.1",
-        "port": "8090"
+        "port": "8090",
+        "token": "api_server"
     },
-    "redis_server": {
+    "redis": {
         "host": "127.0.0.1",
         "port": "6379",
         "password": "lbbbbbb"
@@ -24,6 +25,6 @@
         "post": "3308",
         "user": "root",
         "password": "248313",
-        "schema": "chat"
+        "schema": "whuchat"
     }
 }

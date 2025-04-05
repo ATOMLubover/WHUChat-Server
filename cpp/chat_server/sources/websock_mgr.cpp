@@ -3,6 +3,9 @@
 #include "websock_conn.hpp"
 #include "http_conn.hpp"
 #include "websock_msg_pipe.hpp"
+#include "mysql_mgr.hpp"
+#include "redis_mgr.hpp"
+#include "config_mgr.hpp"
 
 #include <iostream>
 #include <regex>
@@ -28,7 +31,8 @@ void WebsockMgr::RmvConn( const std::string& uuid )
     if ( iter != map_conn.end() )
     {
         // 如果删除的链接是属于管道的，则检查删除这个链接会不会导致有的管道悬空
-        if ( iter->second->mission == WebsockMsgPipe::PIPE_URI )
+        if ( iter->second->mission == WebsockMsgPipe::PIPE_URI_CLI
+            || iter->second->mission == WebsockMsgPipe::PIPE_URI_API )
             TryDelPipe( iter->second );
 
         // 先关闭连接
@@ -51,8 +55,11 @@ bool WebsockMgr::CheckValidUpgrade( std::shared_ptr<HttpConn> http_conn )
         return false;
 
     // 如果是管道升级接口，则保证其格式合理，否则返回 false
-    if ( *iter == WebsockMsgPipe::PIPE_URI
-        && !CheckPipeFormat( http_conn->GetRawParams() ) )
+    if ( *iter == WebsockMsgPipe::PIPE_URI_CLI
+        && !CheckPipeCliFormat( http_conn ) )
+        return false;
+    if ( *iter == WebsockMsgPipe::PIPE_URI_API
+        && !CheckPipeApiFormat( http_conn ) )
         return false;
 
     std::cout << "收到Websocket升级请求："
@@ -84,18 +91,13 @@ std::shared_ptr<WebsockConn> WebsockMgr::CreateConn( std::shared_ptr<HttpConn> h
 
 WebsockMgr::WebsockMgr()
 {
-    set_uri = { "/trans_ans" };
+    set_uri = { "/trans_ans", "/send_ans" };
 
     std::cout << "WebsockMgr构造" << std::endl;
 }
 
 void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
 {
-    std::string uri = WebsockMsgPipe::PIPE_URI;
-
-    if ( conn->mission != uri )
-        return;
-
     try
     {
         // 由于 WebsockConn 的建立是客户端自行决定时机的
@@ -119,8 +121,7 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
 
         // 然后再检查来源
         // 如果来自 ApiServer，则绑定 input
-        // TODO: 可能要防止重复连接
-        if ( conn->get_params[ "from" ] == "api_server" )
+        if ( conn->mission == WebsockMsgPipe::PIPE_URI_API )
         {
             iter->second->BindInput( conn );
             std::cout << "WebsockMsgPipe（session_id：" << session_id << "）"
@@ -128,7 +129,7 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
             return;
         }
         // 如果来自 web client，则绑定 output
-        if ( conn->get_params[ "from" ] == "client" )
+        if ( conn->mission == WebsockMsgPipe::PIPE_URI_CLI )
         {
             iter->second->BindOutput( conn );
             std::cout << "WebsockMsgPipe（session_id：" << session_id << "）"
@@ -143,11 +144,68 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
     }
 }
 
-bool WebsockMgr::CheckPipeFormat( const std::string& get_raw_params )
+bool WebsockMgr::CheckPipeCliFormat( std::shared_ptr<HttpConn> conn )
 {
-    // 定义正则表达式，匹配参数字符串应该要有 from 和 session_id
-    std::regex pattern( R"(^from=(api_server|client)&session_id=(\d+)$)" );
-    return std::regex_match( get_raw_params, pattern );
+    // 定义正则表达式，匹配参数字符串应该要有 uuid、token 和 session_id
+    std::regex pattern( R"(^uuid=(\d+)&token=([a-z0-9-]+)&session_id=(\d+)$)" );
+    std::string raw_params = conn->GetRawParams();
+    if ( !std::regex_match( raw_params, pattern ) )
+        return false;
+
+    try
+    {
+        // 获取参数
+        int uuid = std::stoi( conn->GetParams()[ "uuid" ] );
+        std::string token = conn->GetParams()[ "token" ];
+        int session_id = std::stoi( conn->GetParams()[ "session_id" ] );
+
+        // 先检查 uuid 是否有效
+        if ( !MySqlMgr::GetInstance()->CheckUuidExisting( uuid ) )
+            return false;
+        // 如果 uuid 有效，则确定 token 是否有效
+        if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, token ) )
+            return false;
+        // 最后确定是否存在对应会话
+        if ( !MySqlMgr::GetInstance()->CheckSessionExisting( session_id ) )
+            return false;
+    }
+    catch ( std::exception& exp )
+    {
+        std::cout << "WebsockMgr检查客户端升级参数处异常：" << exp.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool WebsockMgr::CheckPipeApiFormat( std::shared_ptr<HttpConn> conn )
+{
+    // 定义正则表达式，匹配参数字符串应该要有 token 和 session_id
+    std::regex pattern( R"(^token=api_server&session_id=(\d+)$)" );
+    std::string raw_params = conn->GetRawParams();
+    if ( !std::regex_match( raw_params, pattern ) )
+        return false;
+
+    try
+    {
+        // 获取参数
+        std::string token = conn->GetParams()[ "token" ];
+        int session_id = std::stoi( conn->GetParams()[ "session_id" ] );
+
+        // 确定 token 是否有效
+        if ( token != ConfigMgr::GetInstance()[ "api_server" ][ "token" ] )
+            return false;
+        // 确定是否存在对应会话
+        if ( !MySqlMgr::GetInstance()->CheckSessionExisting( session_id ) )
+            return false;
+    }
+    catch ( std::exception& exp )
+    {
+        std::cout << "WebsockMgr检查ApiServer端升级参数处异常：" << exp.what() << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 void WebsockMgr::TryDelPipe( std::shared_ptr<WebsockConn> conn )

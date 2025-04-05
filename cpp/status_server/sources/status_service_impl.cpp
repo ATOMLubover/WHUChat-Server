@@ -2,10 +2,14 @@
 
 #include "aliases.h"
 #include "config_mgr.hpp"
+#include "redis_mgr.hpp"
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <fmt/format.h>
+
+#include <iostream>
 
 std::string ChatServerInfo::GenUuidHelper()
 {
@@ -36,14 +40,45 @@ Status StatusServiceImpl::GetChatServer( ServerContext* context, const GetChatSe
 {
     // 以轮询的方式负载均衡
     static int server_idx = 0;
-    server_idx = ( server_idx++ ) % ( list_chatsrv_info.size() );
-    auto& server = list_chatsrv_info[ server_idx ];
+
+    // 挑选一个可以使用的服务器信息（暂时使用普通轮询）
+    ChatServerInfo server;
+    {
+        std::lock_guard<std::mutex> guard( mtx_servers );
+
+        server_idx = ( server_idx++ ) % ( list_chatsrv_info.size() );
+        server = list_chatsrv_info[ server_idx ];
+    }
 
     // 设置 reply 的内容，gRPC 底层会自动在设置完成后发送
-    reply->set_host( server.host );
-    reply->set_port( server.port );
-    reply->set_error( ( int32_t ) EnumErrorCode::Success );
-    reply->set_token( ChatServerInfo::GenUuidHelper() );
+    try
+    {
+        reply->set_host( server.host );
+        reply->set_port( server.port );
+        reply->set_error( ( int32_t ) EnumErrorCode::Success );
+
+        // 查找之前是否缓存了对应的 token
+        std::string token
+            = RedisMgr::GetInstance()->QueryChatServerToken( request->uuid() );
+        if ( token == "" )
+        {
+            token = ChatServerInfo::GenUuidHelper();
+            CacheToken( request->uuid(), token );
+        }
+        reply->set_token( token );
+    }
+    catch ( std::exception& exp )
+    {
+        std::cout << "StatusServiveImpl获取ChatServer处异常：" << exp.what() << std::endl;
+        return Status::CANCELLED;
+    }
 
     return Status::OK;
+}
+
+void StatusServiceImpl::CacheToken( int uuid, const std::string& token )
+{
+    RedisMgr::GetInstance()->SetChatServerToken( uuid, token );
+    std::cout << fmt::format( "uuid： {}，插入对应token：{}",
+        uuid, token ) << std::endl;
 }

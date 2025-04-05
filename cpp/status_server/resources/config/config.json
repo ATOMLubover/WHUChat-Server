@@ -21,7 +21,7 @@
         "host": "127.0.0.1",
         "port": "50052"
     },
-    "redis_server": {
+    "redis": {
         "host": "127.0.0.1",
         "port": "6379",
         "password": "lbbbbbb"

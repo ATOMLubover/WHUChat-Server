@@ -40,8 +40,10 @@ private:
 
     // 检查并尝试建立 WebsockMsgPipe
     void TryBuildPipe( std::shared_ptr<WebsockConn> conn );
-    // 检查一个 Websocket 升级请求的格式是否合适于 WebsockMsgPipe 的建立要求
-    bool CheckPipeFormat( const std::string& get_raw_params );
+    // 检查一个 Websocket 升级请求的格式是否合适于 WebsockMsgPipe 的 client 建立要求
+    bool CheckPipeCliFormat( std::shared_ptr<HttpConn> conn  );
+    // 检查一个 Websocket 升级请求的格式是否合适于 WebsockMsgPipe 的 client 建立要求
+    bool CheckPipeApiFormat( std::shared_ptr<HttpConn> conn  );
     // 检查并尝试删除管道
     void TryDelPipe( std::shared_ptr<WebsockConn> conn );
 

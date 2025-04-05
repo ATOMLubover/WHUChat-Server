@@ -1,11 +1,33 @@
 #include "mysql_mgr.hpp"
 
-int MySqlMgr::SelectUserUuid( const std::string& email )
+bool MySqlMgr::CheckUuidExisting( int uuid )
 {
-    return dao.SelectUserUuid( email );
+    switch ( dao.SelectUuid( uuid ) )
+    {
+        case -1:
+        case 1:
+            return false;
+
+        case 0: // 只有返回 0 才是正常找到
+            return true;
+
+        default:
+            return false;
+    }
 }
 
-std::string MySqlMgr::SelectUserPwd( const std::string& email )
+bool MySqlMgr::CheckSessionExisting( int ssn_id )
 {
-    return dao.SelectUserPwd( email );
+    switch ( dao.SelectSsnId( ssn_id ) )
+    {
+        case -1:
+        case 1:
+            return false;
+
+        case 0: // 只有返回 0 才是正常找到
+            return true;
+
+        default:
+            return false;
+    }
 }

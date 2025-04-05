@@ -1,6 +1,7 @@
 #include "redis_dao.hpp"
 
 #include "config_mgr.hpp"
+#include "defer.hpp"
 
 #include <format>
 
@@ -34,6 +35,12 @@ bool RedisDao::Get( const std::string& input_key, std::string* output_value )
     if ( !connection )
         return false;
 
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
+
     std::string command = std::format( "GET {}", input_key );
     std::string log_failure = std::format( "[ {} ] failed ", command );
 
@@ -51,8 +58,6 @@ bool RedisDao::Get( const std::string& input_key, std::string* output_value )
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     if ( output_value )
         *output_value = reply->str; // 返回 key 对应的 value
 
@@ -64,6 +69,12 @@ bool RedisDao::Set( const std::string& key, const std::string& value )
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "SET {} {}", key, value );
     std::string log_failure = std::format( "[ {} ] failed ", command );
@@ -84,8 +95,6 @@ bool RedisDao::Set( const std::string& key, const std::string& value )
     }
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
-
-    connection_pool->ReturnConn( connection );
 
     return true;
 }
@@ -115,6 +124,12 @@ bool RedisDao::LeftPush( const std::string& key, const std::string& value )
     if ( !connection )
         return false;
 
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
+
     std::string command = std::format( "LPUSH {} {}", key, value );
     std::string log_failure = std::format( "[ {} ] failed", command );
 
@@ -133,8 +148,6 @@ bool RedisDao::LeftPush( const std::string& key, const std::string& value )
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     return true;
 }
 
@@ -143,6 +156,12 @@ bool RedisDao::LeftPop( const std::string& input_key, std::string* output_value_
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "LPOP {}", input_key );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -161,8 +180,6 @@ bool RedisDao::LeftPop( const std::string& input_key, std::string* output_value_
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     if ( output_value_popped )
         *output_value_popped = reply->str;
 
@@ -174,6 +191,12 @@ bool RedisDao::RightPush( const std::string& key, const std::string& value )
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "RPUSH {} {}", key, value );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -193,8 +216,6 @@ bool RedisDao::RightPush( const std::string& key, const std::string& value )
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     return true;
 }
 
@@ -203,6 +224,12 @@ bool RedisDao::RightPop( const std::string& input_key, std::string* output_value
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "LPOP {}", input_key );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -221,8 +248,6 @@ bool RedisDao::RightPop( const std::string& input_key, std::string* output_value
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     if ( output_value_popped )
         *output_value_popped = reply->str;
 
@@ -234,6 +259,12 @@ bool RedisDao::HashSet( const std::string& key1, const std::string& key2, const 
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "HSET {} {} {}", key1, key2, value );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -252,8 +283,6 @@ bool RedisDao::HashSet( const std::string& key1, const std::string& key2, const 
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     return true;
 }
 
@@ -264,6 +293,12 @@ bool RedisDao::HashSet(
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string str_data( value_data, value_len );
     std::string command_log = std::format( "HSET {} {} <{} bytes data>", key1, key2, value_len );
@@ -283,8 +318,6 @@ bool RedisDao::HashSet(
     std::string log_success = std::format( "[ {} ] executed successfully", command_log );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     return true;
 }
 
@@ -293,6 +326,12 @@ bool RedisDao::HashGet( const std::string& input_key1, const std::string& input_
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "HGET {} {}", input_key1, input_key2 );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -311,8 +350,6 @@ bool RedisDao::HashGet( const std::string& input_key1, const std::string& input_
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     if ( output_value )
         *output_value = reply->str;
 
@@ -324,6 +361,12 @@ bool RedisDao::Delete( const std::string& key )
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "DEL {}", key );
     std::string log_failure = std::format( "[ {} ] failed", command );
@@ -342,8 +385,6 @@ bool RedisDao::Delete( const std::string& key )
     std::string log_success = std::format( "[ {} ] executed successfully", command );
     std::cout << log_success << std::endl;
 
-    connection_pool->ReturnConn( connection );
-
     return true;
 }
 
@@ -352,6 +393,12 @@ bool RedisDao::IsKeyExisting( const std::string& key )
     RedisContext::Raw* connection = connection_pool->TakeConn();
     if ( !connection )
         return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
 
     std::string command = std::format( "exists {}", key );
 
@@ -366,9 +413,37 @@ bool RedisDao::IsKeyExisting( const std::string& key )
         std::cout << std::format( "Not found [ Key = {} ]", key ) << std::endl;
         return false;
     }
-    std::cout << std::format( "Found [ Key = {} ]", command ) << std::endl;
+    std::cout << std::format( "Found [ Key = {} ]", key ) << std::endl;
 
-    connection_pool->ReturnConn( connection );
+    return true;
+}
+
+bool RedisDao::SetExpire( const std::string& key, int seconds )
+{
+    RedisContext::Raw* connection = connection_pool->TakeConn();
+    if ( !connection )
+        return false;
+
+    Defer defer(
+        [ this, &connection ] ()
+        {
+            connection_pool->ReturnConn( connection );
+        } );
+
+    std::string command = std::format( "EXPIRE {} {}", key, seconds );
+
+    RedisReply reply( SendCommand( connection, command ) );
+    if ( !reply )
+    {
+        std::cout << std::format( "Unable to expire [ Key = {} ]", key ) << std::endl;
+        return false;
+    }
+    if ( reply->type != REDIS_REPLY_INTEGER || reply->integer == 0 )
+    {
+        std::cout << std::format( "Unable to expire [ Key = {} ]", key ) << std::endl;
+        return false;
+    }
+    std::cout << std::format( "expire successfully [ {} ]", command ) << std::endl;
 
     return true;
 }

@@ -48,6 +48,9 @@ private:
     // 辅助转换 string 为 JSON
     static nlohmann::json ParseJsonHelper( const std::string& str );
 
+    // 生成登录 cookie 字符串
+    static std::string GenLoginCookieHelper( int uuid, const std::string& domain, int expire_day );
+
 private:
     static const std::string FRONTEND_STATIC_DIR; // 前端静态资源目录
 

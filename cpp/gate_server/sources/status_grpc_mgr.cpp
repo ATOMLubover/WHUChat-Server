@@ -10,8 +10,8 @@
 GetChatServerResponse StatusGrpcMgr::GetChatServer( std::int32_t uuid )
 {
     ClientContext context;
-    // 设置 10 秒的超时
-    context.set_deadline( std::chrono::seconds( 10 ) );
+    // // 设置 10 秒的超时
+    // context.set_deadline( std::chrono::seconds( 10 ) );
 
     GetChatServerResponse reply;
     GetChatServerRequest request;

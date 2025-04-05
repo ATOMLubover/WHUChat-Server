@@ -14,12 +14,8 @@ public:
     RedisMgr& operator=( const RedisMgr& ) = delete;
     ~RedisMgr();
 
-    /// @brief 缓存用于用来访问 ChatServer 的 token，有效时间为 3 天
-    /// @returns 是否成功设置
-    bool SetChatServerToken( int uuid, const std::string& token );
-    /// @brief 查询当前用户是否已经有访问 token
-    /// @returns 如果返回空串则是未找到
-    std::string QueryChatServerToken( int uuid );
+    // 查询 uuid 与其 token 是否吻合
+    bool QueryChatServerToken( int uuid, const std::string& token );
 
 private:
     RedisMgr();

@@ -40,8 +40,6 @@ public:
 
     bool Delete( const std::string& key );
 
-    bool SetExpire( const std::string& key, int seconds );
-
     bool IsKeyExisting( const std::string& key );
 
 private:

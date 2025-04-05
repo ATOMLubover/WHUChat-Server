@@ -5,7 +5,9 @@
 
 #include <fmt/format.h>
 #include <boost/beast/http.hpp>
-// #include <boost/algorithm/string.hpp>
+#include <json/json.hpp>
+
+#include <format>
 
 HttpConn::HttpConn( net::io_context& ioc )
     : socket( ioc )
@@ -92,9 +94,10 @@ void HttpConn::SyncHandle()
                 response.keep_alive( false );
                 response.result( http::status::bad_request );
                 response.set( http::field::content_type, "application/json" );
-                WriteRspBody(
-                    fmt::format( "{ \"error\": {} }",
-                        ( std::int32_t ) EnumErrorCode::ErrorWebsocketUpgradeDinied ) );
+
+                nlohmann::json json_body;
+                json_body.emplace( "error", EnumErrorCode::ErrorWebsocketUpgradeDinied );
+                WriteRspBody( json_body.dump() );
 
                 AsyncWriteResponse();
                 return;

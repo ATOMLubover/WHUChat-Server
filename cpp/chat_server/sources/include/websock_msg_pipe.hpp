@@ -41,7 +41,8 @@ private:
     void DoOutputSend( const std::string& msg );
 
 public:
-    static const std::string PIPE_URI;
+    static const std::string PIPE_URI_CLI;
+    static const std::string PIPE_URI_API;
 
 private:
     int session_id;
