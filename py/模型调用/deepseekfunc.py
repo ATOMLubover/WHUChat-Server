@@ -5,13 +5,14 @@ from openai import OpenAI
 API_KEY = "sk-176d442796bf4b4f9cf28afdb03d25ae"
 base_url = "https://api.deepseek.com"
 
-def deepseek_chat(model,messages):
+def deepseek_chat(model,messages,temperature=0.7):
     try:
         client = OpenAI(api_key=API_KEY, base_url=base_url)
         response = client.chat.completions.create(
             model=model,
             messages=messages,  # 使用 messages 参数
-            stream=True
+            stream=True,
+            temperature=temperature
         )
         for chunk in response:
             if chunk.choices[0].delta.content is not None:
@@ -19,3 +20,12 @@ def deepseek_chat(model,messages):
     except Exception as e:
         print(f"错误信息：{e}")
         return None
+
+if __name__ == "__main__":
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello!"}
+    ]
+    for chunk in deepseek_chat("deepseek-reasoner", messages,1.0):
+        print(chunk, end="")
+    print()

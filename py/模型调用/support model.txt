@@ -40,7 +40,7 @@ models/gemini-embedding-exp-03-07
 models/gemini-embedding-exp
 
 deepseek：
-可用deepseek_chat & deepseek_reasoner
+可用deepseek-chat & deepseek-reasoner
 
 tongyi：
 deepseek-v3

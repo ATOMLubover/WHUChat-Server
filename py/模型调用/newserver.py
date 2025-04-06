@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import websockets
-
+import gptreadimage
 import deepseekfunc
 import gptfunc
 import tongyi
@@ -25,26 +25,36 @@ async def handle_websocket(websocket):
         async for message in websocket:
             print(f"收到消息: {message}")
             data = json.loads(message)
-            model_type = data.get("model", "未提供")
-            model_class = data.get("class", "未提供")
-            promote_list = data.get("promote", [])
-            api_key = data.get("api_key", "未提供")
-            base_url = data.get("base_url", "未提供")
+            talkdata = data.get("talkdata", {})
+            model_type = talkdata.get("model", "未提供")
+            model_class = talkdata.get("class", "未提供")
+            promote_list = talkdata.get("promote", [])
+            api_key = talkdata.get("api_key", "未提供")
+            base_url = talkdata.get("base_url", "未提供")
+            temperature = talkdata.get("temperature", 0.7)
+            talktype = talkdata.get("type", "未提供")
 
-            # 选择 AI 模型
-            match model_class:
-                case "deepseek":
-                    result = deepseekfunc.deepseek_chat(model_type, promote_list)
-                case "chatgpt":
-                    result = gptfunc.chatgpt_chat(model_type, promote_list)
-                case "tongyi":
-                    result = tongyi.tongyi_chat(model_type, promote_list)
-                case "gemini":
-                    result = gemini.gemini_chat(model_type, promote_list)
-                case "doubao":
-                    result = doubao.get_chat_completion(model_type, promote_list)
-                case _:
-                    result = default.get_chat_completion(api_key, base_url, model_type, promote_list)
+
+            match talktype:
+                case "word":            # 选择 AI 模型
+                    match model_class:
+                        case "deepseek":
+                            result = deepseekfunc.deepseek_chat(model_type, promote_list, temperature)
+                        case "chatgpt":
+                            result = gptfunc.chatgpt_chat(model_type, promote_list,temperature)
+                        case "tongyi":
+                            result = tongyi.tongyi_chat(model_type, promote_list,temperature)
+                        case "gemini":
+                            result = gemini.gemini_chat(model_type, promote_list,temperature)
+                        case "doubao":
+                            result = doubao.get_chat_completion(model_type, promote_list,temperature)
+                        case _:
+                            result = default.get_chat_completion(api_key, base_url, model_type, promote_list,temperature)
+                        
+                case "image":            # 选择 AI 模型
+                    match model_class:
+                        case "chatgpt":
+                            result = gptreadimage.chatgpt_chat(model_type, promote_list,temperature)
 
             # 逐步发送流式响应
             for chunk in result:
