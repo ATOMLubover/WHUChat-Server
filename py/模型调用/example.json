@@ -1,4 +1,4 @@
-{
+data ={
     "model_type": "chatgpt",
     "model_class": "gpt-4o-mini",
     "promote_list": [
@@ -12,35 +12,11 @@
         }
     ],
     "api_key": null,
-    "URL": null
+    "URL": null,
+    "temperature": 0.7
 }
-{
-    messages=[
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "text",
-          "text": "What are in these images? Is there any difference between them?"
-        },
-        {
-          "type": "image_url",
-          "image_url": {
-            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-          },
-        },
-        {
-          "type": "image_url",
-          "image_url": {
-            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-          },
-        },
-      ],
-    }
-  ],
-}
-#识图contents
-payload = {
+//识图contents
+data = {
     "model": "gpt-4o",
     "messages": [
       {
