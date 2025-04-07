@@ -25,6 +25,7 @@ async def handle_websocket(websocket):
         async for message in websocket:
             print(f"收到消息: {message}")
             data = json.loads(message)
+            session_id = data.get("session_id", "未提供")
             talkdata = data.get("talkdata", {})
             model_type = talkdata.get("model", "未提供")
             model_class = talkdata.get("class", "未提供")
