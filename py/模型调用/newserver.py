@@ -31,7 +31,8 @@ async def handle_websocket(websocket):
             promote_list = talkdata.get("promote", [])
             api_key = talkdata.get("api_key", "未提供")
             base_url = talkdata.get("base_url", "未提供")
-            temperature = talkdata.get("temperature", 0.7)
+            parameters = talkdata.get("parameters", {})
+            temperature = parameters.get("temperature", 0.7)
             talktype = talkdata.get("type", "未提供")
 
 
