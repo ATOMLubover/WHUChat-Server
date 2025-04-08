@@ -37,6 +37,7 @@ public:
 
 private:
     void CacheToken( int uuid, const std::string& token );
+    void CacheChatServer( int uuid, const std::string& host, const std::string& port );
 
 private:
     std::vector<ChatServerInfo> list_chatsrv_info; // 存储了 ChatServer 的信息

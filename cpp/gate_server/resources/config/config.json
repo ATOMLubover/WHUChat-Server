@@ -21,5 +21,8 @@
         "user": "root",
         "password": "248313",
         "schema": "whuchat"
+    },
+    "encrypt_key": {
+        "login_token": "3"
     }
 }

@@ -20,11 +20,17 @@ public:
     // 返回 email 对应的 password
     std::string SelectUserPwd( const std::string& email );
 
+    // 更新 uuid 对应的 updated_at
+    bool UpdateUserUpdatedAt( int uuid );
+
     /// @brief 尝试注册用户
     /// @param user_info 
     /// @return -3 email 已存在， -2 用户名已存在，-1 异常，
     /// 0 为未定义值，大于 0 的值即为注册成功的 uuid
     int RegisterUser( const UserInfo& user_info );
+
+    // 获取用户的上次登录时间
+    std::string SelectUserLastLoginTime( int uuid );
 
 private:
     MySqlMgr() = default;

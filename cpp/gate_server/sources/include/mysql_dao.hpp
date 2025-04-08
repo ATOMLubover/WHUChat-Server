@@ -18,10 +18,21 @@ public:
     /// @returns 空字符串 未找到，非空则为正常的 password
     std::string SelectUserPwd( const std::string& email );
 
+    // 更新指定 uuid 对应用户的 updated_at
+    void UpdateUserUpdatedAt( int uuid );
+    // 获得指定用户上一次更新时间
+    std::string SelectUserUpdatedAt( int uuid );
+
     /// @brief 事例过程，用于 注册新用户，如果用户存在则会返回错误码
     /// @return 错误码：-2 未能找到结果，-1 MySQL 事务执行异常，
     /// 0 成功执行，1 用户已存在，2 邮箱重复
     int ProcRegisterUser( const MySqlUsersElem& new_user );
+
+    /// @brief 事例过程，用于检查 token 是否有效，当 token 有效时会自动更新 updated_at
+    /// @param last_update_time token 中的 last_update_time
+    /// @param old_update_time 数据库中记录的 updated_at
+    /// @returns 错误码：-1 MySQL 事务执行异常，0 成功执行，1 uuid 无效，2 token 不匹配
+    int ProcTryUpdateUser( int uuid, const std::string& last_update_time, std::string* old_update_time );
 
 private:
     const int SIZE_CONN_POOL = 4; // 连接池的大小

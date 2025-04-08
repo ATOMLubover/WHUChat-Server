@@ -20,6 +20,8 @@ public:
     /// @brief 查询当前用户是否已经有访问 token
     /// @returns 如果返回空串则是未找到
     std::string QueryChatServerToken( int uuid );
+    /// @brief 设置特定用户的 ChatServer 信息
+    bool SetUserChatServer( int uuid, const std::string& host, const std::string& port );
 
 private:
     RedisMgr();

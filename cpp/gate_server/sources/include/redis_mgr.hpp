@@ -21,6 +21,9 @@ public:
     // 查询验证码是否存在
     bool CheckVrfValid( const std::string& email, const std::string vrf );
 
+    // 获取用户对应的聊天服务器地址
+    std::string GetChatServerAddr( int uuid );
+
 private:
     RedisMgr() = default;
 

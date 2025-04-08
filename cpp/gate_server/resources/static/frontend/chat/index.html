@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美化聊天框</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Improved font stack */
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            /* Subtle background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Ensure body takes full height for centering */
+        }
+
+        .chat-container {
+            width: 400px;
+            /* Slightly wider */
+            max-width: 100%;
+            border: none;
+            /* Remove border, rely on shadow */
+            border-radius: 12px;
+            /* Smoother corners */
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            /* Softer, deeper shadow */
+            display: flex;
+            flex-direction: column;
+            /* Ensure vertical layout */
+        }
+
+        .messages {
+            padding: 20px;
+            /* More padding */
+            max-height: 450px;
+            /* Increased max height */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            /* Slightly more gap */
+            flex-grow: 1;
+            /* Allow message area to grow */
+        }
+
+        .message {
+            padding: 12px 18px;
+            /* Adjusted padding */
+            border-radius: 18px;
+            /* More rounded */
+            max-width: 75%;
+            /* Slightly wider max-width */
+            word-wrap: break-word;
+            line-height: 1.4;
+            /* Improved readability */
+        }
+
+        .user-message {
+            background: linear-gradient(to bottom right, #007bff, #0056b3);
+            /* Gradient blue */
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            /* Tailored corner */
+        }
+
+        .system-message {
+            background-color: #e9ecef;
+            /* Lighter gray */
+            color: #333;
+            /* Darker text for contrast */
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            /* Tailored corner */
+        }
+
+        .input-area {
+            padding: 15px;
+            /* More padding */
+            display: flex;
+            gap: 10px;
+            /* More gap */
+            background-color: #f8f9fa;
+            /* Slightly different background */
+            border-top: 1px solid #dee2e6;
+            /* Subtle separator */
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            /* Increased padding */
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            /* Pill shape */
+            font-size: 14px;
+            outline: none;
+            /* Remove default outline */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            /* Smooth focus */
+        }
+
+        .input-area input:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+
+        .input-area button {
+            padding: 10px 18px;
+            /* Adjusted padding */
+            background: linear-gradient(to bottom right, #28a745, #218838);
+            /* Gradient green */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            /* Pill shape */
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            /* Slightly bolder */
+            transition: background 0.2s ease-in-out, transform 0.1s ease;
+            /* Smooth transitions */
+        }
+
+        .input-area button:hover {
+            background: linear-gradient(to bottom right, #218838, #1e7e34);
+            /* Darker gradient */
+        }
+
+        .input-area button:active {
+            transform: scale(0.98);
+            /* Slight press effect */
+        }
+
+        /* Custom Scrollbar Styles */
+        .messages::-webkit-scrollbar {
+            width: 6px;
+            /* Slimmer scrollbar */
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            /* Lighter thumb */
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #888;
+            /* Darker on hover */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="messages">
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="输入消息...">
+            <button id="sendButton">发送</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.querySelector('.messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // --- New Logic: Fetch data on page load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Document loaded. Fetching chat server info...');
+            fetch('http://localhost:8080/api/v1/get_chatserver') // Make sure your server is running and accessible
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json(); // Or response.text() depending on what the server sends
+                })
+                .then(data => {
+                    console.log('Successfully fetched data from chat server:', data);
+                    // You can now use the 'data' object if the server returns useful info
+                    // For example, display a welcome message from the server:
+                    // displaySystemMessage("连接成功: " + (data.message || "服务器已连接"));
+                })
+                .catch(error => {
+                    console.error('Error fetching from chat server:', error);
+                    // Optionally display an error message in the chat
+                    displaySystemMessage("无法连接到聊天服务器。");
+                });
+        });
+
+        // --- Existing Chat Logic ---
+
+        // Function to display any system message (can be reused)
+        function displaySystemMessage(text) {
+            const systemMessage = document.createElement('div');
+            systemMessage.className = 'message system-message';
+            systemMessage.textContent = text;
+            messagesContainer.appendChild(systemMessage);
+            scrollToBottom();
+        }
+
+        // Function to display user message
+        function displayUserMessage(text) {
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = text;
+            messagesContainer.appendChild(userMessage);
+            scrollToBottom();
+        }
+
+        // 发送消息函数
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (messageText === '') return;
+
+            // Display user message immediately
+            displayUserMessage(messageText);
+
+            // Clear input field
+            messageInput.value = '';
+
+            // Simulate system reply (replace with actual API call if needed)
+            setTimeout(() => {
+                // Example reply simulation
+                displaySystemMessage('系统回复：消息 “' + messageText + '” 已收到');
+            }, 1000);
+
+            // Ensure input is focused after sending (optional ux improvement)
+            messageInput.focus();
+        }
+
+        // 滚动到底部函数
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            // Send message on Enter key press, but not Shift+Enter (for multiline)
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent default Enter behavior (like adding a new line)
+                sendMessage();
+            }
+        });
+
+        // Initialize scrollbar position and focus on input
+        scrollToBottom();
+        messageInput.focus(); // Focus input field on load
+
+    </script>
+</body>
+
+</html>

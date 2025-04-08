@@ -12,7 +12,7 @@ message GetVerifiRequest {
   string email = 1;
 }
 
-// 响应由 VerifiServer 返回，包含错误码、确认发送的 email、？
+// 响应由 verfi_grpc_server 返回，包含错误码、确认发送的 email、？
 message GetVerifiResponse {
   int32 error = 1;
   string email = 2;
@@ -29,10 +29,8 @@ message GetChatServerRequest {
   int32 uuid = 1;
 }
 
-// 响应由 StatusServer 返回，包含对应 ChatServer 的地址端口和验证 token
+// 响应由 StatusServer 返回，包含对应 ChatServer 的验证 token
 message GetChatServerResponse {
   int32 error = 1;
-  string host = 2;
-  string port = 3;
-  string token = 4;
+  string token = 2;
 }

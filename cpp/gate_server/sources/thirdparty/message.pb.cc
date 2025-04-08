@@ -87,12 +87,6 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
 inline constexpr GetChatServerResponse::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
-        host_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
-        port_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
         token_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
@@ -193,13 +187,9 @@ const ::uint32_t
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::message::GetChatServerResponse, _impl_.error_),
-        PROTOBUF_FIELD_OFFSET(::message::GetChatServerResponse, _impl_.host_),
-        PROTOBUF_FIELD_OFFSET(::message::GetChatServerResponse, _impl_.port_),
         PROTOBUF_FIELD_OFFSET(::message::GetChatServerResponse, _impl_.token_),
-        3,
-        0,
         1,
-        2,
+        0,
 };
 
 static const ::_pbi::MigrationSchema
@@ -207,7 +197,7 @@ static const ::_pbi::MigrationSchema
         {0, 9, -1, sizeof(::message::GetVerifiRequest)},
         {10, 21, -1, sizeof(::message::GetVerifiResponse)},
         {24, 33, -1, sizeof(::message::GetChatServerRequest)},
-        {34, 46, -1, sizeof(::message::GetChatServerResponse)},
+        {34, 44, -1, sizeof(::message::GetChatServerResponse)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::message::_GetVerifiRequest_default_instance_._instance,
@@ -221,20 +211,19 @@ const char descriptor_table_protodef_message_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "uest\022\r\n\005email\030\001 \001(\t\"\?\n\021GetVerifiResponse"
     "\022\r\n\005error\030\001 \001(\005\022\r\n\005email\030\002 \001(\t\022\014\n\004code\030\003"
     " \001(\t\"$\n\024GetChatServerRequest\022\014\n\004uuid\030\001 \001"
-    "(\005\"Q\n\025GetChatServerResponse\022\r\n\005error\030\001 \001"
-    "(\005\022\014\n\004host\030\002 \001(\t\022\014\n\004port\030\003 \001(\t\022\r\n\005token\030"
-    "\004 \001(\t2Y\n\rVerifiService\022H\n\rGetVerifyCode\022"
-    "\031.message.GetVerifiRequest\032\032.message.Get"
-    "VerifiResponse\"\0002a\n\rStatusService\022P\n\rGet"
-    "ChatServer\022\035.message.GetChatServerReques"
-    "t\032\036.message.GetChatServerResponse\"\000b\006pro"
-    "to3"
+    "(\005\"5\n\025GetChatServerResponse\022\r\n\005error\030\001 \001"
+    "(\005\022\r\n\005token\030\002 \001(\t2Y\n\rVerifiService\022H\n\rGe"
+    "tVerifyCode\022\031.message.GetVerifiRequest\032\032"
+    ".message.GetVerifiResponse\"\0002a\n\rStatusSe"
+    "rvice\022P\n\rGetChatServer\022\035.message.GetChat"
+    "ServerRequest\032\036.message.GetChatServerRes"
+    "ponse\"\000b\006proto3"
 };
 static ::absl::once_flag descriptor_table_message_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_message_2eproto = {
     false,
     false,
-    443,
+    415,
     descriptor_table_protodef_message_2eproto,
     "message.proto",
     &descriptor_table_message_2eproto_once,
@@ -1109,8 +1098,6 @@ PROTOBUF_NDEBUG_INLINE GetChatServerResponse::Impl_::Impl_(
     const ::message::GetChatServerResponse& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0},
-        host_(arena, from.host_),
-        port_(arena, from.port_),
         token_(arena, from.token_) {}
 
 GetChatServerResponse::GetChatServerResponse(
@@ -1134,8 +1121,6 @@ PROTOBUF_NDEBUG_INLINE GetChatServerResponse::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0},
-        host_(arena),
-        port_(arena),
         token_(arena) {}
 
 inline void GetChatServerResponse::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
@@ -1150,8 +1135,6 @@ inline void GetChatServerResponse::SharedDtor(MessageLite& self) {
   GetChatServerResponse& this_ = static_cast<GetChatServerResponse&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.host_.Destroy();
-  this_._impl_.port_.Destroy();
   this_._impl_.token_.Destroy();
   this_._impl_.~Impl_();
 }
@@ -1199,16 +1182,16 @@ const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetChatServerRes
   return GetChatServerResponse_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 0, 51, 2>
+const ::_pbi::TcParseTable<1, 2, 0, 43, 2>
 GetChatServerResponse::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_._has_bits_),
     0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
+    2, 8,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
+    4294967292,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
+    2,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     GetChatServerResponse_class_data_.base(),
@@ -1218,40 +1201,26 @@ GetChatServerResponse::_table_ = {
     ::_pbi::TcParser::GetTable<::message::GetChatServerResponse>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // string token = 4;
+    // string token = 2;
     {::_pbi::TcParser::FastUS1,
-     {34, 2, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.token_)}},
+     {18, 0, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.token_)}},
     // int32 error = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GetChatServerResponse, _impl_.error_), 3>(),
-     {8, 3, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.error_)}},
-    // string host = 2;
-    {::_pbi::TcParser::FastUS1,
-     {18, 0, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.host_)}},
-    // string port = 3;
-    {::_pbi::TcParser::FastUS1,
-     {26, 1, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.port_)}},
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GetChatServerResponse, _impl_.error_), 1>(),
+     {8, 1, 0, PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.error_)}},
   }}, {{
     65535, 65535
   }}, {{
     // int32 error = 1;
-    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.error_), _Internal::kHasBitsOffset + 3, 0,
+    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.error_), _Internal::kHasBitsOffset + 1, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
-    // string host = 2;
-    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.host_), _Internal::kHasBitsOffset + 0, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
-    // string port = 3;
-    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.port_), _Internal::kHasBitsOffset + 1, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
-    // string token = 4;
-    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.token_), _Internal::kHasBitsOffset + 2, 0,
+    // string token = 2;
+    {PROTOBUF_FIELD_OFFSET(GetChatServerResponse, _impl_.token_), _Internal::kHasBitsOffset + 0, 0,
     (0 | ::_fl::kFcOptional | ::_fl::kUtf8String | ::_fl::kRepAString)},
   }},
   // no aux_entries
   {{
-    "\35\0\4\4\5\0\0\0"
+    "\35\0\5\0\0\0\0\0"
     "message.GetChatServerResponse"
-    "host"
-    "port"
     "token"
   }},
 };
@@ -1263,16 +1232,8 @@ PROTOBUF_NOINLINE void GetChatServerResponse::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if ((cached_has_bits & 0x00000007u) != 0) {
-    if ((cached_has_bits & 0x00000001u) != 0) {
-      _impl_.host_.ClearNonDefaultToEmpty();
-    }
-    if ((cached_has_bits & 0x00000002u) != 0) {
-      _impl_.port_.ClearNonDefaultToEmpty();
-    }
-    if ((cached_has_bits & 0x00000004u) != 0) {
-      _impl_.token_.ClearNonDefaultToEmpty();
-    }
+  if ((cached_has_bits & 0x00000001u) != 0) {
+    _impl_.token_.ClearNonDefaultToEmpty();
   }
   _impl_.error_ = 0;
   _impl_._has_bits_.Clear();
@@ -1295,7 +1256,7 @@ PROTOBUF_NOINLINE void GetChatServerResponse::Clear() {
   (void)cached_has_bits;
 
   // int32 error = 1;
-  if ((this_._impl_._has_bits_[0] & 0x00000008u) != 0) {
+  if ((this_._impl_._has_bits_[0] & 0x00000002u) != 0) {
     if (this_._internal_error() != 0) {
       target =
           ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<1>(
@@ -1303,33 +1264,13 @@ PROTOBUF_NOINLINE void GetChatServerResponse::Clear() {
     }
   }
 
-  // string host = 2;
+  // string token = 2;
   if ((this_._impl_._has_bits_[0] & 0x00000001u) != 0) {
-    if (!this_._internal_host().empty()) {
-      const std::string& _s = this_._internal_host();
-      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "message.GetChatServerResponse.host");
-      target = stream->WriteStringMaybeAliased(2, _s, target);
-    }
-  }
-
-  // string port = 3;
-  if ((this_._impl_._has_bits_[0] & 0x00000002u) != 0) {
-    if (!this_._internal_port().empty()) {
-      const std::string& _s = this_._internal_port();
-      ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "message.GetChatServerResponse.port");
-      target = stream->WriteStringMaybeAliased(3, _s, target);
-    }
-  }
-
-  // string token = 4;
-  if ((this_._impl_._has_bits_[0] & 0x00000004u) != 0) {
     if (!this_._internal_token().empty()) {
       const std::string& _s = this_._internal_token();
       ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
           _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "message.GetChatServerResponse.token");
-      target = stream->WriteStringMaybeAliased(4, _s, target);
+      target = stream->WriteStringMaybeAliased(2, _s, target);
     }
   }
 
@@ -1358,30 +1299,16 @@ PROTOBUF_NOINLINE void GetChatServerResponse::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  if ((cached_has_bits & 0x0000000fu) != 0) {
-    // string host = 2;
+  if ((cached_has_bits & 0x00000003u) != 0) {
+    // string token = 2;
     if ((cached_has_bits & 0x00000001u) != 0) {
-      if (!this_._internal_host().empty()) {
-        total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                        this_._internal_host());
-      }
-    }
-    // string port = 3;
-    if ((cached_has_bits & 0x00000002u) != 0) {
-      if (!this_._internal_port().empty()) {
-        total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                        this_._internal_port());
-      }
-    }
-    // string token = 4;
-    if ((cached_has_bits & 0x00000004u) != 0) {
       if (!this_._internal_token().empty()) {
         total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
                                         this_._internal_token());
       }
     }
     // int32 error = 1;
-    if ((cached_has_bits & 0x00000008u) != 0) {
+    if ((cached_has_bits & 0x00000002u) != 0) {
       if (this_._internal_error() != 0) {
         total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
             this_._internal_error());
@@ -1401,26 +1328,8 @@ void GetChatServerResponse::MergeImpl(::google::protobuf::MessageLite& to_msg, c
   (void) cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if ((cached_has_bits & 0x0000000fu) != 0) {
+  if ((cached_has_bits & 0x00000003u) != 0) {
     if ((cached_has_bits & 0x00000001u) != 0) {
-      if (!from._internal_host().empty()) {
-        _this->_internal_set_host(from._internal_host());
-      } else {
-        if (_this->_impl_.host_.IsDefault()) {
-          _this->_internal_set_host("");
-        }
-      }
-    }
-    if ((cached_has_bits & 0x00000002u) != 0) {
-      if (!from._internal_port().empty()) {
-        _this->_internal_set_port(from._internal_port());
-      } else {
-        if (_this->_impl_.port_.IsDefault()) {
-          _this->_internal_set_port("");
-        }
-      }
-    }
-    if ((cached_has_bits & 0x00000004u) != 0) {
       if (!from._internal_token().empty()) {
         _this->_internal_set_token(from._internal_token());
       } else {
@@ -1429,7 +1338,7 @@ void GetChatServerResponse::MergeImpl(::google::protobuf::MessageLite& to_msg, c
         }
       }
     }
-    if ((cached_has_bits & 0x00000008u) != 0) {
+    if ((cached_has_bits & 0x00000002u) != 0) {
       if (from._internal_error() != 0) {
         _this->_impl_.error_ = from._impl_.error_;
       }
@@ -1453,8 +1362,6 @@ void GetChatServerResponse::InternalSwap(GetChatServerResponse* PROTOBUF_RESTRIC
   ABSL_DCHECK_EQ(arena, other->GetArena());
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.host_, &other->_impl_.host_, arena);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.port_, &other->_impl_.port_, arena);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.token_, &other->_impl_.token_, arena);
   swap(_impl_.error_, other->_impl_.error_);
 }

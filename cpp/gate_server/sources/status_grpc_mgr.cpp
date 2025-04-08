@@ -10,8 +10,6 @@
 GetChatServerResponse StatusGrpcMgr::GetChatServer( std::int32_t uuid )
 {
     ClientContext context;
-    // // 设置 10 秒的超时
-    // context.set_deadline( std::chrono::seconds( 10 ) );
 
     GetChatServerResponse reply;
     GetChatServerRequest request;
@@ -28,7 +26,7 @@ GetChatServerResponse StatusGrpcMgr::GetChatServer( std::int32_t uuid )
     }
     catch ( std::out_of_range& exp )
     {
-        std::cout << "StatusServer超时未应答" << std::endl;
+        std::cout << "StatusServer异常" << std::endl;
         reply.set_error( static_cast< int >( EnumErrorCode::ErrorServerNotResponding ) );
         return reply;
     }

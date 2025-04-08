@@ -10,6 +10,21 @@ std::string MySqlMgr::SelectUserPwd( const std::string& email )
     return dao.SelectUserPwd( email );
 }
 
+bool MySqlMgr::UpdateUserUpdatedAt( int uuid )
+{
+    try
+    {
+        dao.UpdateUserUpdatedAt( uuid );
+    }
+    catch ( std::exception& exp )
+    {
+        std::cout << "MySqlMgr UpdateUserUpdatedAt处异常：" << exp.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 int MySqlMgr::RegisterUser( const UserInfo& user_info )
 {
     MySqlUsersElem user_elem{
@@ -35,4 +50,9 @@ int MySqlMgr::RegisterUser( const UserInfo& user_info )
         default:
             return 0; // 未定义错误
     }
+}
+
+std::string MySqlMgr::SelectUserLastLoginTime( int uuid )
+{
+    return dao.SelectUserUpdatedAt( uuid );
 }

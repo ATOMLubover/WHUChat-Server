@@ -11,6 +11,9 @@ MySqlConn::MySqlConn( const MySqlConnInfo& info )
         sqlconn->setSchema( info.schema );
         conn.reset( sqlconn );
 
+        std::cout << "MySqlConn构造成功在：" << info.addr << " "
+            << info.schema << std::endl;
+
         // auto curr_time = std::chrono::steady_clock::now().time_since_epoch();
         // sec_last_oper = std::chrono::duration_cast< std::chrono::seconds >( curr_time ).count();
     }

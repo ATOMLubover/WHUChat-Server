@@ -19,3 +19,14 @@ bool RedisMgr::CheckVrfValid( const std::string& email, const std::string vrf )
 
     return true;
 }
+
+std::string RedisMgr::GetChatServerAddr( int uuid )
+{
+    const std::string PREFIX = "server_user_";
+
+    std::string addr = "";
+    if ( !dao.Get( PREFIX + std::to_string( uuid ), &addr ) )
+        return "";
+
+    return addr;
+}

@@ -30,5 +30,8 @@ enum class EnumErrorCode
     ErrorPwdIncorreponds = 1007,          // GateServer 无法注册新用户：密码不一致
     ErrorVrfInvalid = 1008,               // GateServer 无法注册新用户：验证码不一致
     ErrorPwdWrong = 1009,                 // GateServer 无法登录用户：密码错误
-    ErrorEmailInvalid = 1010              // GateServer 无法登录用户：email 未注册
+    ErrorEmailInvalid = 1010,             // GateServer 无法登录用户：email 未注册
+    ErrorLoginCookieInvalid = 1011,       // GateServer 拒绝访问：cookie 无效
+    ErrorCookieNotFound = 1012,           // GateServer 未找到 cookie
+    ErrorUnableGetServer = 1013           // GateServer 无法获取 ChatServer 地址
 };
