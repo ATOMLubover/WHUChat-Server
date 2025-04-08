@@ -65,7 +65,7 @@ port ：**8080**
 
 - 补充  
 
-    当浏览器携带正确的 cookie 时，会直接重定向到 /chat 页面
+    当浏览器携带正确的 cookie 时，会直接重定向到 /chat 页面  
     如果处理中发现有关 cookie 的问题，会直接重定向到 /login 页面
 
 `/favicon.ico`
@@ -90,11 +90,11 @@ port ：**8080**
 
 - 返回值（text/html）  
 
-    返回登录页面HTML文档
+    返回登录页面 html 页面
 
 - 补充  
 
-    无
+    浏览器会自动获取其相关的 js 和 css 文件
 
 `/register`
 
@@ -104,11 +104,11 @@ port ：**8080**
 
 - 返回值（text/html）  
 
-    返回注册页面HTML文档
+    返回注册页面 html 页面
 
 - 补充  
 
-    无
+    浏览器会自动获取其相关的 js 和 css 文件
 
 **POST**
 
@@ -121,19 +121,37 @@ port ：**8080**
     | `email`      | string | 是   | 用户注册邮箱        | `"user@domain.com"`  |
     | `password`   | string | 是   | 用户密码    | `"P@ssw0rd"`         |
 
-- 返回值（JSON）
+- 返回值（none 或 JSON）  
+
+    当登录不成功：  
 
     | 参数名       | 类型   | 说明                      | 示例值                     |
     | :----------- | :----- | :------------------------ | :------------------------- |
     | `uuid`       | int | 用户唯一标识              | `2233`              |
-    | `token`      | string | 用于访问 `ChatServer` 的凭证       | `"1145-dd19"`            |
-    | `host`       | string | `ChatServer` 地址            | `"271.22.65.1"`       |
-    | `port`       | string    |  `ChatServer` 端口            | `"443"`                      |
     | `error`      | int | 错误信息    | `1009`    |
 
 - 补充  
 
-    Web 客户端需要自行使用 `host` 和 `port` 以及 `token` 向 `ChatServer` 发送请求
+    当登录成功会直接重定向到 /chat 页面，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
+    如果登录不成功才会返回 json 响应体  
+
+`/api/v1/get_chatserver`
+
+- 请求参数
+
+    无
+
+- 返回值（JSON）  
+
+    | 参数名       | 类型   | 说明                      | 示例值                     |
+    | :----------- | :----- | :------------------------ | :------------------------- |
+    | `addr`       | string | `ChatServer` 地址            | `"271.22.65.1:8081"`       |
+    | `error`      | int | 错误信息    | `1013`    |
+
+- 补充  
+
+    在发送该请求之前，应该先确定获得了有效的 cookie（在 /api/v1/login 成功之后会更新 cookie）  
+    当由前端自行在合适的时间请求，从而获得能够连接 `ChatServer` 接口 （比如在 /chat 页面加载完成之后）  
 
 `/api/v1/send_vrf`
 
@@ -243,8 +261,9 @@ port ：**8080**
 | 1008 | ErrorVrfInvalid | ` GateServer ` 无法注册新用户：验证码无效 |
 | 1009 | ErrorPwdWrong | ` GateServer ` 无法登录用户：密码错误 |
 | 1010 | ErrorEmailInvalid | ` GateServer ` 无法登录用户：email 未注册 |
-| 1011 | ErrorLoginCookieInvalid | ` GateServer ` 无法自动登录用户：cookie 过期 |
+| 1011 | ErrorLoginCookieInvalid | ` GateServer ` 拒绝访问：cookie 无效 |
 | 1012 | ErrorCookieNotFound | ` GateServer ` 未找到 cookie |
+| 1013 | ErrorUnableGetServer | ` GateServer `无法获取 ChatServer 地址 |
 | 2001 | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket |
 
 ## 对 Python ` ApiServer ` 希望的接口
@@ -260,12 +279,7 @@ port ：**8080**
     | 参数名       | 类型   | 必填 | 说明                                                            | 示例值                    |
     | :----------- | :------ | :---- | :--------------------------------------------------------------- | :------------------------- |
     | `session_id` | int | 是 | 当前话语内容所属的对话 ID |  `1145` |
-    | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
-    | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
-    | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
-    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...} |
-    | `url` | string | 否   | 自定义模型调用网址                 | `"https://api.deepseek.com"` |
-    | `api_key` | string | 否   | 自定义模型调用api key                 | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"` |
+    | `data`   | json | 是   | ` ChatServer ` 转发的前端的所有数据          | `{ "message": "gpt-3.5-turbo", ... }` |
 
 - 返回值（text/plain; charset=utf-8）
 
