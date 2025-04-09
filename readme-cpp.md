@@ -202,14 +202,12 @@ port ：**8080**
 
 **GET**
 
-`/trans_ans` *WebSocket Upgrade*
+`/api/v1/ws/trans_ans` *WebSocket Upgrade*
 
 - 请求参数  
 
     | 参数名        | 必填 | 说明                          | 示例值               |
     | :------------ | :--- | :-----------------------------| :------------------- |
-    | `uuid`        |  是   | 标识升级请求方   | `1919810`         |
-    | `token`        |  是   | 连接凭证          | `kyyd`         |
     | `session_id`       | 是   | 用于链接对应 Websocket 进行转发 | `1145`  |
 
 - 返回值  
@@ -221,7 +219,7 @@ port ：**8080**
     Web 客户端使用的接口  
     `token` 参数暂时先直接传输，有待之后改进
 
-`/send_ans` *WebSocket Upgrade*
+`/api/v1/ws/send_ans` *WebSocket Upgrade*
 
 - 请求参数  
 
@@ -237,6 +235,33 @@ port ：**8080**
 - 补充  
 
     `ApiServer` 使用的接口，Web 客户端不能使用
+
+### POST 请求
+
+`/api/v1/chat/send`
+
+- 请求参数（application/json）
+
+    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
+    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
+    | `uuid`       | string | 是   | 用户唯一标识                                                    | `"zhangsan"`              |
+    | `session_id` | string | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `"session_123"`           |
+    | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
+    | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
+    | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
+    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...} |
+    | `URL` | string | 否   | 自定义模型调用网址                 | `"https://api.deepseek.com"` |
+    | `api_key` | string | 否   | 自定义模型调用api key                 | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"` |
+
+- 返回值（application/json）
+
+    | 参数名        | 类型   | 说明                          | 示例值               |
+    | ------------- | ------ | ----------------------------- | -------------------- |
+    | `error`        | int | 错误码 | `2002`                    |
+
+- 补充
+
+    Web 在接受到正常的 HTTP 响应后，要自行建立 Websocket 连接接受 ApiServer 的回答
 
 ## HTTP 请求反馈错误码一览
 
@@ -270,26 +295,31 @@ port ：**8080**
 
 > 斜体是暂时不确定的部分
 
-**GET**
+### GET
 
 ` /get_response `
 
 - 请求参数（JSON）
 
-    | 参数名       | 类型   | 必填 | 说明                                                            | 示例值                    |
-    | :----------- | :------ | :---- | :--------------------------------------------------------------- | :------------------------- |
-    | `session_id` | int | 是 | 当前话语内容所属的对话 ID |  `1145` |
-    | `data`   | json | 是   | ` ChatServer ` 转发的前端的所有数据          | `{ "message": "gpt-3.5-turbo", ... }` |
+    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
+    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
+    | `uuid`       | string | 是   | 用户唯一标识                                                    | `"zhangsan"`              |
+    | `session_id` | string | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `"session_123"`           |
+    | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
+    | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
+    | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
+    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...} |
+    | `URL` | string | 否   | 自定义模型调用网址                 | `"https://api.deepseek.com"` |
+    | `api_key` | string | 否   | 自定义模型调用api key                 | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"` |
 
-- 返回值（text/plain; charset=utf-8）
+- 返回值（application/json）
 
-    值只能为 "ready" 或者 "error"  
-    指示是否已成功处理发送的对话信息，并且即将发起 Websocket 升级请求进行 AI 回答内容的传输
+    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
+    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
+    | `error`       | int | 是   | ApiServer 中产生的错误码   | `1`              |
 
 - 补充
 
+    参数是 Web 所发给 ChatServer 的请求，除了 session_id 进行了更新没有改变  
+    返回值中的 ` error ` 的取值，请参照上一部分中的 POST 请求错误码表的形式，从 201 开始编号
     ` ChatServer ` 并不会特别准备 Websocket 的链接，需要 ` ApiServer ` 自行发起 Websocket 连接，然后发送内容到 ` ChatServer `
-
-## TODO
-
-- 设计禁止重复登录
