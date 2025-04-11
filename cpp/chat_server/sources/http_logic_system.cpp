@@ -142,6 +142,9 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
 
                     json_rsp.emplace( "error", json_cli[ "error" ] );
                     conn->WriteRspBody( json_rsp.dump() );
+
+                    // 使原链接返回响应
+                    conn->AsyncWriteResponse();
                 } ) );
         // 设定 timeout_handler
         CliTimeoutHandler timeout_handler( std::make_shared<
@@ -155,6 +158,9 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
                     nlohmann::json json_rsp;
                     json_rsp.emplace( "error", EnumErrorCode::ErrorApiNotResponding );
                     conn->WriteRspBody( json_rsp.dump() );
+
+                    // 使原链接返回响应
+                    conn->AsyncWriteResponse();
                 } ) );
 
         // 异步地发送 http 请求
@@ -163,6 +169,9 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
             std::move( req ),
             handler,
             timeout_handler );
+
+        // 最后保证原 http conn 不要自动发送响应，而是等待 cli conn 处理完成
+        conn->SetDelay( true );
     }
 }
 

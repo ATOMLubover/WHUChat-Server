@@ -30,6 +30,9 @@ public:
     // 异步监听读
     void AsyncRead();
 
+    // 设置是否不自动发送
+    void SetDelay( bool flag ) { is_delay = flag; }
+
     // 供 ChatServer 调用，获取 socket 以异步 async_accept
     tcp::socket& GetSocket() { return socket; }
     // 获取原生 http request
@@ -73,4 +76,6 @@ private:
     std::map<std::string, std::string> get_params; // get 请求的参数
 
     std::string post_url; // post 请求的根路由
+
+    bool is_delay;
 };

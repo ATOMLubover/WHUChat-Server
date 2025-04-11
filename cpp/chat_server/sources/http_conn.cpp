@@ -125,7 +125,8 @@ void HttpConn::SyncHandle()
         response.set( http::field::server, "ChatServer" );
 
         // 最后异步写入
-        AsyncWriteResponse();
+        if ( !is_delay )
+            AsyncWriteResponse();
         // 设置超时
         AsyncCheckTimeout();
 
@@ -156,7 +157,8 @@ void HttpConn::SyncHandle()
         response.set( http::field::server, "ChatServer" );
 
         // 最后异步写入
-        AsyncWriteResponse();
+        if ( !is_delay )
+            AsyncWriteResponse();
         // 设置超时
         AsyncCheckTimeout();
 
