@@ -1,4 +1,4 @@
-#include "gate_server.hpp"
+#include "include/chat_server.hpp"
 
 #include "asio_iocontext_pool.hpp"
 #include "http_conn.hpp"
@@ -8,19 +8,19 @@
 
 #include <boost/asio.hpp>
 
-GateServer::GateServer()
+ChatServer::ChatServer()
     : ioc_server( IOC_THREAD_NUM )
     , acceptor( ioc_server, tcp::endpoint( net::ip::address_v4::from_string( "127.0.0.1" ), 8081 ) )
 {
     std::cout << "GateServer构造，监听于：127.0.0.1:8081" << std::endl;
 }
 
-GateServer::~GateServer()
+ChatServer::~ChatServer()
 {
     std::cout << "GateServer被析构退出" << std::endl;
 }
 
-void GateServer::Run()
+void ChatServer::Run()
 {
     auto self = shared_from_this(); // 防止该实例自身被析构
 
@@ -31,7 +31,7 @@ void GateServer::Run()
         {
             if ( err )
             {
-                std::cout << "GateServer signals注册回调获取错误码：" << err << std::endl;
+                std::cout << "ChatServer signals注册回调获取错误码：" << err << std::endl;
                 return; // 直接返回，不再继续执行 ioc_main 的 stop 函数
             }
 
@@ -45,7 +45,7 @@ void GateServer::Run()
     ioc_server.run(); // 阻塞，事件循环直到所有任务完成
 }
 
-void GateServer::AsyncListen()
+void ChatServer::AsyncListen()
 {
     auto self = shared_from_this();
 
@@ -73,7 +73,7 @@ void GateServer::AsyncListen()
             }
             catch ( std::exception& exp )
             {
-                std::cout << "GateServer AsyncListen中出现异常：" << exp.what() << std::endl;
+                std::cout << "ChatServer AsyncListen中出现异常：" << exp.what() << std::endl;
             }
         } );
 }

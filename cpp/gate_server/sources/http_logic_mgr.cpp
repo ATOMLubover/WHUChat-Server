@@ -414,6 +414,14 @@ void HttpLogicMgr::InitPost()
 
             std::string email = json_req[ "email" ].get<std::string>();
 
+            // 检查 email 是否被注册过
+            if ( MySqlMgr::GetInstance()->SelectUserUuid( email ) >= 0 )
+            {
+                std::cout << email << "已被注册" << std::endl;
+                json_rsp.emplace( "error", EnumErrorCode::ErrorEmailConflicts );
+                return;
+            }
+
             // 发送验证码
             auto result
                 = VerifiGrpcMgr::GetInstance()->GetVerifiCode( email );
@@ -492,13 +500,13 @@ void HttpLogicMgr::AutoRegDir(
             url,
             [ rel_path, safe ] ( std::shared_ptr<HttpConn> conn )
             {
-                // 分配文件响应体
-                conn->ConstructFileBody();
-
                 // 假设是安全模式，则需要检查 cookie
                 // 当 cookie 无效时，跳转到 /login 页面
                 if ( safe == EnumCheckCookie::Safe )
                 {
+                    // 先构建动态响应体
+                    conn->ConstructDynamicBody();
+
                     // 如果没有找到 cookie，指示重定向到 /login 页面
                     auto iter = conn->request.find( http::field::cookie );
                     if ( iter == conn->request.end() )
@@ -519,7 +527,13 @@ void HttpLogicMgr::AutoRegDir(
                         conn->dynamic_response->result( http::status::temporary_redirect );
                         return;
                     }
+
+                    // 通过了检测之后，不需再用动态响应体了，故销毁
+                    conn->DestructDynamicBody();
                 }
+
+                // 分配文件响应体
+                conn->ConstructFileBody();
 
                 auto filebody
                     = std::move( HttpLogicMgr::PrepareFileBodyHelper( rel_path ) );

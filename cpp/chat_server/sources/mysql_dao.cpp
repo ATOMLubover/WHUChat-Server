@@ -49,7 +49,7 @@ int MySqlDao::SelectUuid( int uuid )
     return 1;
 }
 
-int MySqlDao::SelectSsnId( int ssn_id )
+int MySqlDao::CheckSessionExisting( int ssn_id )
 {
     std::unique_ptr<MySqlConn> conn = conn_pool->TakeConn();
     if ( conn == nullptr )
@@ -77,6 +77,35 @@ int MySqlDao::SelectSsnId( int ssn_id )
     }
 
     return 1;
+}
+
+std::string MySqlDao::SelectUserUpdatedAt( int uuid )
+{
+    std::unique_ptr<MySqlConn> conn = conn_pool->TakeConn();
+    if ( conn == nullptr )
+    {
+        std::cout << "MySqlDao无法获取正常连接" << std::endl;
+        return "";
+    }
+
+    // 如果获得的链接非空，则需要在最后返回连接
+    Defer defer(
+        [ this, &conn ] ()
+        {
+            this->conn_pool->ReturnConn( std::move( conn ) );
+        } );
+
+    MySqlStmt stmt( conn );
+    std::unique_ptr<sql::ResultSet> resultset
+        = stmt.Commit( fmt::format(
+            "SELECT updated_at FROM users WHERE id = '{}'", uuid ) );
+    if ( resultset->next() )
+    {
+        std::string result = resultset->getString( 1 );
+        return result;
+    }
+
+    return "";
 }
 
 // int MySqlDao::SelectUserUuid( const std::string& email )

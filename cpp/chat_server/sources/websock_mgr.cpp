@@ -6,6 +6,8 @@
 #include "mysql_mgr.hpp"
 #include "redis_mgr.hpp"
 #include "config_mgr.hpp"
+#include "http_logic_system.hpp"
+#include "cookie_processer.hpp"
 
 #include <iostream>
 #include <regex>
@@ -98,6 +100,10 @@ WebsockMgr::WebsockMgr()
 
 void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
 {
+    auto iter = conn->get_params.find( "session_id" );
+    if ( iter == conn->get_params.end() )
+        return;
+
     try
     {
         // 由于 WebsockConn 的建立是客户端自行决定时机的
@@ -146,27 +152,38 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
 
 bool WebsockMgr::CheckPipeCliFormat( std::shared_ptr<HttpConn> conn )
 {
-    // 定义正则表达式，匹配参数字符串应该要有 uuid、token 和 session_id
-    std::regex pattern( R"(^uuid=(\d+)&token=([a-z0-9-]+)&session_id=(\d+)$)" );
-    std::string raw_params = conn->GetRawParams();
-    if ( !std::regex_match( raw_params, pattern ) )
-        return false;
+    // // 定义正则表达式，匹配参数字符串应该要有 uuid、token 和 session_id
+    // std::regex pattern( R"(^uuid=(\d+)&token=([a-z0-9-]+)&session_id=(\d+)$)" );
+    // std::string raw_params = conn->GetRawParams();
+    // if ( !std::regex_match( raw_params, pattern ) )
+    //     return false;
 
     try
     {
-        // 获取参数
-        int uuid = std::stoi( conn->GetParams()[ "uuid" ] );
-        std::string token = conn->GetParams()[ "token" ];
-        int session_id = std::stoi( conn->GetParams()[ "session_id" ] );
+        // // 获取参数
+        // int uuid = std::stoi( conn->GetParams()[ "uuid" ] );
+        // std::string token = conn->GetParams()[ "token" ];
+        // int session_id = std::stoi( conn->GetParams()[ "session_id" ] );
 
-        // 先检查 uuid 是否有效
-        if ( !MySqlMgr::GetInstance()->CheckUuidExisting( uuid ) )
+        // // 先检查 uuid 是否有效
+        // if ( !MySqlMgr::GetInstance()->CheckUuidExisting( uuid ) )
+        //     return false;
+        // // 如果 uuid 有效，则确定 token 是否有效
+        // if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, token ) )
+        //     return false;
+        // // 最后确定是否存在对应会话
+        // if ( !MySqlMgr::GetInstance()->CheckSessionExisting( session_id ) )
+        //     return false;
+
+        // 如果不存在 cookie，直接返回 false
+        auto iter = conn->GetRequest().find( "Cookie" );
+        if ( iter == conn->GetRequest().end() )
             return false;
-        // 如果 uuid 有效，则确定 token 是否有效
-        if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, token ) )
-            return false;
-        // 最后确定是否存在对应会话
-        if ( !MySqlMgr::GetInstance()->CheckSessionExisting( session_id ) )
+
+        // 检查 cookie
+        auto map_cookies
+            = CookieProcesser::Parse( iter->value() );
+        if ( !CheckCookieValid( map_cookies ) )
             return false;
     }
     catch ( std::exception& exp )
@@ -228,4 +245,20 @@ void WebsockMgr::TryDelPipe( std::shared_ptr<WebsockConn> conn )
         if ( pipe->IsUnloaded() )
             map_pipe.erase( iter );
     }
+}
+
+bool WebsockMgr::CheckCookieValid( std::map<std::string, std::string>& map_cookies )
+{
+    // 检查是否有 uuid 键值对
+    auto iter = map_cookies.find( "uuid" );
+    if ( iter == map_cookies.end() )
+        return false;
+    int uuid = std::stoi( iter->second );
+
+    // 检查 token 是否有效
+    // 当过期三天，redis 会自动删除对应的 token
+    if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, map_cookies[ "token" ] ) )
+        return false;
+
+    return true;
 }

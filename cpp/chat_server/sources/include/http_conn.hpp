@@ -30,7 +30,7 @@ public:
     // 异步监听读
     void AsyncRead();
 
-    // 供 GateServer 调用，获取 socket 以异步 async_accept
+    // 供 ChatServer 调用，获取 socket 以异步 async_accept
     tcp::socket& GetSocket() { return socket; }
     // 获取原生 http request
     http::request<http::string_body> GetRequest() const { return request; }

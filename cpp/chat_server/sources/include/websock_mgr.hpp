@@ -47,6 +47,9 @@ private:
     // 检查并尝试删除管道
     void TryDelPipe( std::shared_ptr<WebsockConn> conn );
 
+    // 检查 cookie 是否有效
+    static bool CheckCookieValid( std::map<std::string, std::string>& map_cookies );
+
 private:
     // 由 uuid 到 Conn 的映射
     std::map<std::string, std::shared_ptr<WebsockConn>> map_conn;

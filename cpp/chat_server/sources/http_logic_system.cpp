@@ -4,6 +4,15 @@
 #include "websock_conn.hpp"
 #include "asio_iocontext_pool.hpp"
 #include "websock_mgr.hpp"
+#include "mysql_mgr.hpp"
+#include "date_processer.hpp"
+#include "redis_mgr.hpp"
+#include "defer.hpp"
+#include "asio_iocontext_pool.hpp"
+#include "config_mgr.hpp"
+#include "cookie_processer.hpp"
+#include "cli_http_mgr.hpp"
+#include "sync_logger.hpp"
 
 #include <fmt/core.h>
 #include <json/json.hpp>
@@ -11,6 +20,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <functional>
 
 namespace fs = std::filesystem; // from <filesystem>
 
@@ -56,6 +66,122 @@ void HttpLogicSystem::RegisterPost( const std::string& url, HttpHandler handler 
     std::cout << "注册POST URL：" << url << std::endl;
 }
 
+void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
+{
+    nlohmann::json json_rsp;
+    nlohmann::json json_req = nlohmann::json::parse( conn->request.body().data() );
+
+    SyncLogger::GetInstance()->Log(
+        LogLevel::Debug,
+        "TransMsgContent试图转发: {}",
+        json_req.dump() );
+
+    auto ssn_id = json_req.find( "session_id" );
+    if ( !json_req.is_object() )
+    {
+        std::cout << "/api/v1/send_message接受到无法解析的json" << std::endl;
+        json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+        conn->WriteRspBody( json_rsp.dump() );
+        return;
+    }
+
+    // 如果是新 session，则创建一个新的 session
+    if ( ssn_id->is_null() )
+    {
+        int new_ssn_id = MySqlMgr::GetInstance()->CreateSession( json_req[ "uuid" ] );
+        json_req[ "session_id" ] = new_ssn_id;
+    }
+    // 如果 session 存在，则检查是否存在该 session
+    if ( ssn_id->is_number_integer() )
+    {
+        if ( !MySqlMgr::GetInstance()->CheckSessionExisting( *ssn_id ) )
+        {
+            json_rsp.emplace( "error", EnumErrorCode::ErrorSsnIdInvalid );
+            conn->WriteRspBody( json_rsp.dump() );
+            return;
+        }
+    }
+
+    // 向 ApiServer 转发 http
+    {
+        // 确定 ApiServer 的地址和端口
+        std::string host = ConfigMgr::GetInstance()[ "api_server" ][ "host" ];
+        std::string post = ConfigMgr::GetInstance()[ "api_server" ][ "port" ];
+
+        // 构建 http 请求
+        http::request<http::string_body> req{
+            http::verb::post,  "/get_response", 11 };
+        // 设置 Content-Type 头
+        req.set( http::field::content_type, "application/json" );
+        req.set( http::field::host, host );
+        req.body() = json_req.dump(); // 写入 json
+        // 最后设置 Content-Length
+        req.set( http::field::content_length,
+            std::to_string( req.body().size() ) );
+
+        // 设定 rsp handler
+        CliRspHandler handler( std::make_shared<
+            std::function<void( http::response<http::string_body>&& )>>(
+                [ conn ] ( http::response<http::string_body>&& cli_rsp )
+                {
+                    nlohmann::json json_rsp;
+
+                    SyncLogger::GetInstance()->Log(
+                        LogLevel::Debug,
+                        "接受到ApiServer回复为：{}",
+                        cli_rsp.body() );
+
+                    nlohmann::json json_cli = nlohmann::json::parse( cli_rsp.body() );
+                    auto iter = json_cli.find( "error" );
+                    if ( iter == json_cli.end() )
+                    {
+                        json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+                        conn->WriteRspBody( json_rsp.dump() );
+                        return;
+                    }
+
+                    json_rsp.emplace( "error", json_cli[ "error" ] );
+                    conn->WriteRspBody( json_rsp.dump() );
+                } ) );
+        // 设定 timeout_handler
+        CliTimeoutHandler timeout_handler( std::make_shared<
+            std::function<void( std::shared_ptr<CliHttpConn> )>>(
+                [ conn ] ( std::shared_ptr<CliHttpConn> cli_conn )
+                {
+                    SyncLogger::GetInstance()->Log(
+                        LogLevel::Error,
+                        "{} 超时", cli_conn->ToString() );
+
+                    nlohmann::json json_rsp;
+                    json_rsp.emplace( "error", EnumErrorCode::ErrorApiNotResponding );
+                    conn->WriteRspBody( json_rsp.dump() );
+                } ) );
+
+        // 异步地发送 http 请求
+        CliHttpMgr::GetInstance()->AsyncRequest(
+            host, post,
+            std::move( req ),
+            handler,
+            timeout_handler );
+    }
+}
+
+bool HttpLogicSystem::CheckSessionCookie( std::map<std::string, std::string>& map_cookies )
+{
+    // 检查是否有 uuid 键值对
+    auto iter = map_cookies.find( "uuid" );
+    if ( iter == map_cookies.end() )
+        return false;
+    int uuid = std::stoi( iter->second );
+
+    // 检查 token 是否有效
+    // 当过期三天，redis 会自动删除对应的 token
+    if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, map_cookies[ "token" ] ) )
+        return false;
+
+    return true;
+}
+
 bool HttpLogicSystem::HandlePost( std::shared_ptr<HttpConn> conn )
 {
     auto iter_handler = post_handlers.find( conn->post_url );
@@ -91,24 +217,33 @@ bool HttpLogicSystem::HandleUpgrade( std::shared_ptr<HttpConn> conn )
 
 HttpLogicSystem::HttpLogicSystem()
 {
-    // TODO: for test
-    {
+    RegisterPost(
+        "/api/v1/send_message",
+        [] ( std::shared_ptr<HttpConn> conn )
+        {
+            nlohmann::json json_rsp;
 
-    }
+            auto iter = conn->request.find( "Cookie" );
+            if ( iter == conn->request.end() )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorSendCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
 
-    // POST 部分
-    {
-        // // 客户端发送对话
-        // RegisterPost(
-        //     "/api/v1/chat/send",
-        //     [] ( std::shared_ptr<HttpConn> conn )
-        //     {
-        //         std::string str_req = beast::buffers_to_string( conn->request.buf_recv );
-        //         std::cout << "/api/v1/chat/send收到数据：" << str_req << std::endl;
+            auto map_cookies
+                = CookieProcesser::Parse( iter->value() );
+            if ( !CheckSessionCookie( map_cookies ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorSendCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
 
+            // 转发客户端的请求
+            TransMsgContent( conn );
+        } );
 
-        //     } );
-    }
 
     std::cout << "HttpLogicSystem构造" << std::endl;
 }

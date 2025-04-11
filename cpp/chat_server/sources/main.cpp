@@ -1,6 +1,6 @@
 #define BOOST_BEAST_DEBUG
 
-#include "gate_server.hpp"
+#include "include/chat_server.hpp"
 
 #include <iostream>
 
@@ -8,7 +8,7 @@ int main( int argc, const char** argv )
 {
     try
     {
-        std::make_shared<GateServer>()->Run();
+        std::make_shared<ChatServer>()->Run();
     }
     catch ( std::exception& exp )
     {

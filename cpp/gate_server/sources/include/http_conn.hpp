@@ -43,8 +43,12 @@ private:
 
     // 分配动态响应体
     void ConstructDynamicBody();
+    // 销毁动态响应体
+    void DestructDynamicBody();
     // 分配文件响应体
     void ConstructFileBody();
+    // 销毁文件响应体
+    void DestructFileBody();
 
     static std::string EncodeUrlHelper( const std::string& raw );
     static std::string DecodeUrlHelper( const std::string& url );

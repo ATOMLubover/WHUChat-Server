@@ -18,7 +18,7 @@ using HttpHandler = std::function<void( std::shared_ptr<HttpConn> )>;
 class WebsockConn;
 using WsHandler = std::function<void( std::shared_ptr<WebsockConn> )>;
 
-// http 和 Websocket 的逻辑独立形成的类
+// http 的逻辑独立形成的类
 class HttpLogicSystem
     : public Singleton<HttpLogicSystem>
 {
@@ -40,6 +40,12 @@ private:
     void RegisterGet( const std::string& url, HttpHandler handler );
     // 注册 post 请求处理函数（url, handler）
     void RegisterPost( const std::string& url, HttpHandler handler );
+
+    // 向 ApiServer 转发客户端的对话请求
+    static void TransMsgContent( std::shared_ptr<HttpConn> conn );
+
+    // 检查 cookie 是否有效
+    static bool CheckSessionCookie( std::map<std::string, std::string>& map_cookies );
 
 private:
     static const std::string FRONTEND_STATIC_DIR; // 前端静态资源目录

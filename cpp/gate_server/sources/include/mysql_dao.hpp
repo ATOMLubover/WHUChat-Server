@@ -28,12 +28,6 @@ public:
     /// 0 成功执行，1 用户已存在，2 邮箱重复
     int ProcRegisterUser( const MySqlUsersElem& new_user );
 
-    /// @brief 事例过程，用于检查 token 是否有效，当 token 有效时会自动更新 updated_at
-    /// @param last_update_time token 中的 last_update_time
-    /// @param old_update_time 数据库中记录的 updated_at
-    /// @returns 错误码：-1 MySQL 事务执行异常，0 成功执行，1 uuid 无效，2 token 不匹配
-    int ProcTryUpdateUser( int uuid, const std::string& last_update_time, std::string* old_update_time );
-
 private:
     const int SIZE_CONN_POOL = 4; // 连接池的大小
     std::unique_ptr<MySqlConnPool> conn_pool;

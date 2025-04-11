@@ -122,7 +122,7 @@ void HttpConn::SyncHandle()
         }
 
         // 正常处理时，大部分工作都交给 HandleGet()
-        response.set( http::field::server, "GateServer" );
+        response.set( http::field::server, "ChatServer" );
 
         // 最后异步写入
         AsyncWriteResponse();
@@ -153,7 +153,7 @@ void HttpConn::SyncHandle()
 
         // 同上 get 请求的处理
         // 正常处理时，大部分工作都交给 HandleGet()
-        response.set( http::field::server, "GateServer" );
+        response.set( http::field::server, "ChatServer" );
 
         // 最后异步写入
         AsyncWriteResponse();

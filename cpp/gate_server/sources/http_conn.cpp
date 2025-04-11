@@ -1,6 +1,7 @@
 #include "include/http_conn.hpp"
 
 #include "include/http_logic_mgr.hpp"
+#include "http_conn.hpp"
 
 HttpConn::HttpConn( boost::asio::io_context& ioc )
     : socket( ioc )
@@ -197,10 +198,21 @@ void HttpConn::ConstructDynamicBody()
         dynamic_response = std::make_unique<http::response<http::dynamic_body>>();
 }
 
+
+void HttpConn::DestructDynamicBody()
+{
+    dynamic_response.reset();
+}
+
 void HttpConn::ConstructFileBody()
 {
     if ( !file_response )
         file_response = std::make_unique<http::response<http::file_body>>();
+}
+
+void HttpConn::DestructFileBody()
+{
+    file_response.reset();
 }
 
 std::string HttpConn::EncodeUrlHelper( const std::string& raw )

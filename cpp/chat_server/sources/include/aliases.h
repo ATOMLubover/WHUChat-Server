@@ -33,6 +33,12 @@ enum class EnumErrorCode
     ErrorVrfInvalid = 1008,               // GateServer 无法注册新用户：验证码不一致
     ErrorPwdWrong = 1009,                 // GateServer 无法登录用户：密码错误
     ErrorEmailInvalid = 1010,             // GateServer 无法登录用户：email 未注册
+    ErrorLoginCookieInvalid = 1011,       // GateServer 拒绝访问：cookie 无效
+    ErrorCookieNotFound = 1012,           // GateServer 未找到 cookie
+    ErrorUnableGetServer = 1013,          // GateServer 无法获取 ChatServer 地址
 
-    ErrorWebsocketUpgradeDinied = 2001    // ChatServer 拒绝升级 Websocket
+    ErrorWebsocketUpgradeDinied = 2001,   // ChatServer 拒绝升级 Websocket
+    ErrorSendCookieInvalid = 2002,        // ChatServer 无法解析 cookie
+    ErrorApiNotResponding = 2003,         // ChatServer 未收到 ApiServer 的响应
+    ErrorSsnIdInvalid = 2004              // ChatServer 无法解析 ssn_id
 };

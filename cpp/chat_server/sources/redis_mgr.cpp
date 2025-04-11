@@ -9,7 +9,7 @@ RedisMgr::~RedisMgr()
 
 bool RedisMgr::QueryChatServerToken( int uuid, const std::string& token )
 {
-    const std::string PREFIX = "token_";
+    const std::string PREFIX = "token_user_";
     std::string result = "";
     dao.Get( PREFIX + std::to_string( uuid ), &result );
     return result == token;
