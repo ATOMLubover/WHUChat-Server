@@ -290,12 +290,15 @@ port ：**8080**
 | 1012 | ErrorCookieNotFound | ` GateServer ` 未找到 cookie |
 | 1013 | ErrorUnableGetServer | ` GateServer `无法获取 ChatServer 地址 |
 | 2001 | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket |
+| 2002 | ErrorSendCookieInvalid | ` ChatServer ` 无法解析 cookie |
+| 2003 | ErrorApiNotResponding | ` ChatServer ` 未接受到 ` ApiServer ` 的响应 |
+| 2003 | ErrorSsnIdInvalid | ` ChatServer ` 无法找到对应 session_id |
 
 ## 对 Python ` ApiServer ` 希望的接口
 
 > 斜体是暂时不确定的部分
 
-### GET
+### POST
 
 ` /get_response `
 
