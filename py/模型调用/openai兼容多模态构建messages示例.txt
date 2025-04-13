@@ -1,0 +1,61 @@
+图片示例：
+messages=[
+    {
+        "role": "system",
+        "content": [{"type": "text", "text": "You are a helpful assistant."}],
+    },
+    {
+        "role": "user",
+        "content": [
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": "https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20241022/emyrja/dog_and_girl.jpeg"
+                },
+            },
+            {"type": "text", "text": "图中描绘的是什么景象？"},
+        ],
+    },
+],
+音频示例：
+messages=[
+        {
+            "role": "system",
+            "content": [{"type": "text", "text": "You are a helpful assistant."}],
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "input_audio",
+                    "input_audio": {
+                        "data": "https://dashscope.oss-cn-beijing.aliyuncs.com/audios/welcome.mp3",
+                        "format": "mp3",
+                    },
+                },
+                {"type": "text", "text": "这段音频在说什么"},
+            ],
+        },
+    ],
+视频示例：
+messages=[
+        {
+            "role": "system",
+            "content": [{"type": "text", "text": "You are a helpful assistant."}],
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "video_url",
+                    "video_url": {
+                        "url": "https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20241115/cqqkru/1.mp4"
+                    },
+                },
+                {"type": "text", "text": "视频的内容是什么?"},
+            ],
+        },
+    ],
+
+    本地文件上传转base64只需要把xxx_url替换成类似如下格式
+     {"url": f"data:;base64,{base64_video}"}，其中{base64_video}为本地上传转换的base64编码

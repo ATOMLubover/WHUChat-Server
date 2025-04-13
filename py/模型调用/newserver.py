@@ -57,6 +57,19 @@ async def handle_websocket(websocket):
                     match model_class:
                         case "chatgpt":
                             result = gptreadimage.chatgpt_chat(model_type, promote_list,temperature)
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote_list,temperature)
+
+                case "audio":
+                    match model_class:
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote_list,temperature)
+                    
+                
+                case "video":
+                    match model_class:
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote_list,temperature) 
 
             # 逐步发送流式响应
             for chunk in result:
