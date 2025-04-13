@@ -10,7 +10,8 @@
 
 ` GateServer ` 通过 gRPC 调用 Node.js 开发的 ` VerifiServer ` 进行注册账号时的验证码发送  
 ` GateServer ` 通过 gRPC 调用 C++ 开发的 ` StatusServer ` 进行客户端分配，
-随后指示客户端转接到 ` ChatServer `  
+随后指示客户端转调用 ` ChatServer ` 的接口进行数据处理  
+` ChatServer ` 会通过 Websocoket 和 HTTP 与 ` ApiServer ` 交互进行 AI 接口调用处理
 
 ---
 
@@ -48,12 +49,11 @@ port ：**8080**
 ## ` GateServer ` 的接口
   
 > 斜体字为注释  
-
 > 所有 text 类型的返回值默认是 UTF-8 编码
 
-**GET**
+### GET
 
-`/home`
+#### `/home`
 
 - 请求参数  
 
@@ -68,7 +68,7 @@ port ：**8080**
     当浏览器携带正确的 cookie 时，会直接重定向到 /chat 页面  
     如果处理中发现有关 cookie 的问题，会直接重定向到 /login 页面
 
-`/favicon.ico`
+#### `/favicon.ico`
 
 - 请求参数  
 
@@ -82,7 +82,7 @@ port ：**8080**
 
     无
 
-`/login`
+#### `/login`
 
 - 请求参数  
 
@@ -96,7 +96,7 @@ port ：**8080**
 
     浏览器会自动获取其相关的 js 和 css 文件
 
-`/register`
+#### `/register`
 
 - 请求参数  
 
@@ -110,32 +110,32 @@ port ：**8080**
 
     浏览器会自动获取其相关的 js 和 css 文件
 
-**POST**
+### POST
 
-`/api/v1/login`
+#### `/api/v1/login`
 
 - 请求参数（JSON）
 
-    | 参数名       | 类型   | 必填 | 说明                | 示例值               |
-    | :----------- | :----- | :--- | :-------------------| :------------------- |
-    | `email`      | string | 是   | 用户注册邮箱        | `"user@domain.com"`  |
-    | `password`   | string | 是   | 用户密码    | `"P@ssw0rd"`         |
+    | 参数名     | 类型   | 必填 | 说明         | 示例值              |
+    | :--------- | :----- | :--- | :----------- | :------------------ |
+    | `email`    | string | 是   | 用户注册邮箱 | `"user@domain.com"` |
+    | `password` | string | 是   | 用户密码     | `"P@ssw0rd"`        |
 
 - 返回值（none 或 JSON）  
 
     当登录不成功：  
 
-    | 参数名       | 类型   | 说明                      | 示例值                     |
-    | :----------- | :----- | :------------------------ | :------------------------- |
-    | `uuid`       | int | 用户唯一标识              | `2233`              |
-    | `error`      | int | 错误信息    | `1009`    |
+    | 参数名  | 类型 | 说明         | 示例值 |
+    | :------ | :--- | :----------- | :----- |
+    | `uuid`  | int  | 用户唯一标识 | `2233` |
+    | `error` | int  | 错误信息     | `1009` |
 
 - 补充  
 
     当登录成功会直接重定向到 /chat 页面，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
     如果登录不成功才会返回 json 响应体  
 
-`/api/v1/get_chatserver`
+#### `/api/v1/get_chatserver`
 
 - 请求参数
 
@@ -143,54 +143,54 @@ port ：**8080**
 
 - 返回值（JSON）  
 
-    | 参数名       | 类型   | 说明                      | 示例值                     |
-    | :----------- | :----- | :------------------------ | :------------------------- |
-    | `addr`       | string | `ChatServer` 地址            | `"271.22.65.1:8081"`       |
-    | `error`      | int | 错误信息    | `1013`    |
+    | 参数名  | 类型   | 说明              | 示例值               |
+    | :------ | :----- | :---------------- | :------------------- |
+    | `addr`  | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
+    | `error` | int    | 错误信息          | `1013`               |
 
 - 补充  
 
     在发送该请求之前，应该先确定获得了有效的 cookie（在 /api/v1/login 成功之后会更新 cookie）  
     当由前端自行在合适的时间请求，从而获得能够连接 `ChatServer` 接口 （比如在 /chat 页面加载完成之后）  
 
-`/api/v1/send_vrf`
+#### `/api/v1/send_vrf`
 
 - 请求参数（JSON）
 
-    | 参数名       | 类型   | 必填 | 说明                | 示例值               |
-    | :----------- | :----- | :--- | :-------------------| :------------------- |
-    | `email`      | string | 是   | 需要验证的邮箱地址  | `"user@domain.com"`  |
+    | 参数名  | 类型   | 必填 | 说明               | 示例值              |
+    | :------ | :----- | :--- | :----------------- | :------------------ |
+    | `email` | string | 是   | 需要验证的邮箱地址 | `"user@domain.com"` |
 
 - 返回值（JSON）
 
-    | 参数名           | 类型   | 说明                      | 示例值                     |
-    | :--------------- | :----- | :------------------------ | :------------------------- |
-    | `target_email`   | string | 实际发送验证码的邮箱      | `"user@domain.com"`        |
-    | `error`          | int | 错误信息（成功时为空）    | `1006`   |
+    | 参数名         | 类型   | 说明                   | 示例值              |
+    | :------------- | :----- | :--------------------- | :------------------ |
+    | `target_email` | string | 实际发送验证码的邮箱   | `"user@domain.com"` |
+    | `error`        | int    | 错误信息（成功时为空） | `1006`              |
 
 - 补充  
 
     验证码有效期为3分钟
 
-`/api/v1/register`
+#### `/api/v1/register`
 
 - 请求参数（JSON）
 
-    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
-    | :------------ | :----- | :--- | :-----------------| :------------------- |
-    | `username`    | string | 是   | 用户名            | `"new_user"`         |
-    | `email`       | string | 是   | 注册邮箱          | `"user@domain.com"`  |
-    | `password`    | string | 是   | 前端加密后的密码   | `"6cgj__qtz3"`      |
-    | `repassword`  | string | 是   | 重复加密后的密码   | `"6cgj__qtz3"`      |
-    | `vrf_code`    | string | 是   | 4位数字验证码      | `"19nj"`           |
+    | 参数名       | 类型   | 必填 | 说明             | 示例值              |
+    | :----------- | :----- | :--- | :--------------- | :------------------ |
+    | `username`   | string | 是   | 用户名           | `"new_user"`        |
+    | `email`      | string | 是   | 注册邮箱         | `"user@domain.com"` |
+    | `password`   | string | 是   | 前端加密后的密码 | `"6cgj__qtz3"`      |
+    | `repassword` | string | 是   | 重复加密后的密码 | `"6cgj__qtz3"`      |
+    | `vrf_code`   | string | 是   | 4位数字验证码    | `"19nj"`            |
 
 - 返回值（JSON）
 
-    | 参数名           | 类型   | 说明                          | 示例值                     |
-    | :--------------- | :----- | :---------------------------- | :------------------------- |
-    | `target_uuid`    | int | 新创建用户的 uuid              | `2`              |
-    | `target_email`   | string | 实际注册的邮箱地址            | `"user@domain.com"`        |
-    | `error`          | int | 错误信息（成功时为空）        | `1003`          |
+    | 参数名         | 类型   | 说明                   | 示例值              |
+    | :------------- | :----- | :--------------------- | :------------------ |
+    | `target_uuid`  | int    | 新创建用户的 uuid      | `2`                 |
+    | `target_email` | string | 实际注册的邮箱地址     | `"user@domain.com"` |
+    | `error`        | int    | 错误信息（成功时为空） | `1003`              |
 
 - 补充  
 
@@ -200,15 +200,17 @@ port ：**8080**
 
 ## ` ChatServer ` 的接口
 
-**GET**
+### GET
 
-`/api/v1/ws/trans_ans` *WebSocket Upgrade*
+#### `/api/v1/ws/trans_ans` *WebSocket Upgrade*
 
 - 请求参数  
 
-    | 参数名        | 必填 | 说明                          | 示例值               |
-    | :------------ | :--- | :-----------------------------| :------------------- |
-    | `session_id`       | 是   | 用于链接对应 Websocket 进行转发 | `1145`  |
+    | 参数名       | 必填 | 说明                            | 示例值 |
+    | :----------- | :--- | :------------------------------ | :----- |
+    | `uuid`       | 是   | 当前用户                        | `abcd` |
+    | `session_id` | 是   | 用于链接对应 Websocket 进行转发 | `1145` |
+    | `model_id`   | 是   | 当前获取答案的模型              | `2`    |
 
 - 返回值  
 
@@ -216,17 +218,16 @@ port ：**8080**
 
 - 补充  
 
-    Web 客户端使用的接口  
-    `token` 参数暂时先直接传输，有待之后改进
+    Web 客户端使用的接口
 
-`/api/v1/ws/send_ans` *WebSocket Upgrade*
+#### `/api/v1/ws/send_ans` *WebSocket Upgrade*
 
 - 请求参数  
 
-    | 参数名        | 必填 | 说明                          | 示例值               |
-    | :------------ | :--- | :-----------------------------| :------------------- |
-    | `token`       | 是   | 由服务器端自行决定的一个确认 token，不公开 | `abcd`  |
-    | `session_id`       | 是   | 用于链接对应 Websocket 进行转发 | `1145`  |
+    | 参数名       | 必填 | 说明                                       | 示例值 |
+    | :----------- | :--- | :----------------------------------------- | :----- |
+    | `token`      | 是   | 由服务器端自行决定的一个确认 token，不公开 | `abcd` |
+    | `session_id` | 是   | 用于链接对应 Websocket 进行转发            | `1145` |
 
 - 返回值  
 
@@ -236,63 +237,149 @@ port ：**8080**
 
     `ApiServer` 使用的接口，Web 客户端不能使用
 
-### POST 请求
+#### `/api/v1/chat/models`
 
-`/api/v1/chat/send`
+- 请求参数  
+
+    无
+
+- 返回值  
+
+    | 参数名   | 类型     | 说明                       | 示例值 |
+    | :------- | :------- | :------------------------- | :----- |
+    | `models` | 对象数组 | 包含所有可用模型信息的数组 | 见下   |
+
+    `models` 中对象的说明
+
+    | 参数名  | 类型   | 说明         | 示例值             |
+    | :------ | :----- | :----------- | :----------------- |
+    | `id`    | int    | 模型序号     | `3`                |
+    | `name`  | string | 模型具体名字 | `"DeepSeek V3"`    |
+    | `class` | string | 模型的类别   | `"claude-3-haiku"` |
+    | `desc`  | string | 模型描述     | `A powerful LLM`   |
+
+- 补充  
+
+    暂时没有实现根据客户的等级返回模型的功能  
+    另外由于使用了 cookie 进行验证，所以无须传递任何参数
+
+### POST
+
+#### `/api/v1/chat/send_message`
 
 - 请求参数（application/json）
 
-    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
-    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
-    | `uuid`       | string | 是   | 用户唯一标识                                                    | `"zhangsan"`              |
-    | `session_id` | string | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `"session_123"`           |
-    | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
-    | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
-    | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
-    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...} |
-    | `URL` | string | 否   | 自定义模型调用网址                 | `"https://api.deepseek.com"` |
-    | `api_key` | string | 否   | 自定义模型调用api key                 | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"` |
+    | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                     |
+    | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
+    | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
+    | `model_class` | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
+    | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
 
 - 返回值（application/json）
 
-    | 参数名        | 类型   | 说明                          | 示例值               |
-    | ------------- | ------ | ----------------------------- | -------------------- |
-    | `error`        | int | 错误码 | `2002`                    |
+    | 参数名  | 类型 | 说明   | 示例值 |
+    | ------- | ---- | ------ | ------ |
+    | `error` | int  | 错误码 | `2002` |
 
 - 补充
 
-    Web 在接受到正常的 HTTP 响应后，要自行建立 Websocket 连接接受 ApiServer 的回答
+    Web 前端在接受到正常的 HTTP 响应后，要自行建立 Websocket 连接接受 ApiServer 的回答  
+
+#### `/api/v1/chat/browse_messages`
+
+- 请求参数（application/json）
+
+    | 参数名       | 类型 | 必填 | 说明                                                            | 示例值 |
+    | :----------- | :--- | :--- | :-------------------------------------------------------------- | :----- |
+    | `uuid`       | int  | 是   | 用户唯一标识                                                    | `1`    |
+    | `session_id` | int  | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`    |
+
+- 返回值（application/json）
+
+    | 参数名     | 类型     | 说明                              | 示例值 |
+    | ---------- | -------- | --------------------------------- | ------ |
+    | `error`    | int      | 错误码                            | `2002` |
+    | `messages` | 对象数组 | 记录指定 session 中所有的 message | 见下   |
+
+    `messages` 中对象的说明
+
+    | 参数名        | 类型   | 说明                                                            | 示例值                                                     |
+    | :------------ | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`        | int    | 用户唯一标识                                                    | `int`                                                      |
+    | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
+    | `model_class` | string | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
+    | `model_id`    | string | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `prompt`      | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+
+- 补充
+
+    Web 前端和 ` ApiServer ` 均可以使用，用于获取特定会话的历史记录（注：` ApiServer ` 使用时务必设置 `uuid` 为 0）
+
+#### `/api/v1/chat/history`
+
+- 请求参数（application/json）
+
+    | 参数名 | 类型 | 必填 | 说明         | 示例值 |
+    | :----- | :--- | :--- | :----------- | :----- |
+    | `uuid` | int  | 是   | 用户唯一标识 | `1`    |
+
+- 返回值（application/json）
+
+    | 参数名     | 类型     | 说明                       | 示例值 |
+    | ---------- | -------- | -------------------------- | ------ |
+    | `error`    | int      | 错误码                     | `2002` |
+    | `sessions` | 对象数组 | 当前用户所有会话的基本信息 | 见下   |
+
+    `sessions` 中对象的说明
+
+    | 参数名       | 类型   | 说明               | 示例值             |
+    | :----------- | :----- | :----------------- | :----------------- |
+    | `uuid`       | int    | 用户唯一标识       | `1`                |
+    | `id`         | int    | 会话 ID            | `123`              |
+    | `title`      | string | 会话的标题         | `"claude-3-haiku"` |
+    | `updated_at` | string | 最后一次更新的时间 | `"gemini"`         |
+
+- 补充
+
+    Web 前端用于获取用来简单显示的会话列表信息
 
 ## HTTP 请求反馈错误码一览
 
 > 如果返回体是 JSON 格式，则会以 "error" 字段存储  
-
 > 斜体的 *trs* 表示是转发其他服务器的错误码
 
-| int32值 | 名称 | 描述 |
-| :- | :- | :- |
-| 0 | Success | 正常处理请求 |
-| 1 | ErrorException | ` GateServer ` 中产生未定义错误 |
-| 101 | ErrorRedis *trs* | ` VerifiServer ` 调用 Redis 出现错误 |
-| 102 | ErrorSend *trs* | ` VerifiServer ` 未能成功发送验证邮件  |
-| 103 | ErrorException *trs* | ` VerifiServer ` 未定义异常 |
-| 1001 | ErrorServerNotResponding | ` GateServer ` 未收到其他服务器的响应 |
-| 1002 | ErrorGrpc | ` GateServer ` 调用 gRPC 出现错误 |
-| 1003 | ErrorJson | ` GateServer ` 处理前端传输  JSON 出现错误 |
-| 1004 | ErrorMySql | ` GateServer ` 调用 MySQL 时发生异常 |
-| 1005 | ErrorUsernameExists | ` GateServer ` 无法注册新用户：用户名已存在 |
-| 1006 | ErrorEmailConflicts | ` GateServer ` 无法注册新用户：email已被注册 |
-| 1007 | ErrorPwdIncorreponds | ` GateServer ` 无法注册新用户：密码不一致 |
-| 1008 | ErrorVrfInvalid | ` GateServer ` 无法注册新用户：验证码无效 |
-| 1009 | ErrorPwdWrong | ` GateServer ` 无法登录用户：密码错误 |
-| 1010 | ErrorEmailInvalid | ` GateServer ` 无法登录用户：email 未注册 |
-| 1011 | ErrorLoginCookieInvalid | ` GateServer ` 拒绝访问：cookie 无效 |
-| 1012 | ErrorCookieNotFound | ` GateServer ` 未找到 cookie |
-| 1013 | ErrorUnableGetServer | ` GateServer `无法获取 ChatServer 地址 |
-| 2001 | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket |
-| 2002 | ErrorSendCookieInvalid | ` ChatServer ` 无法解析 cookie |
-| 2003 | ErrorApiNotResponding | ` ChatServer ` 未接受到 ` ApiServer ` 的响应 |
-| 2003 | ErrorSsnIdInvalid | ` ChatServer ` 无法找到对应 session_id |
+| int32值 | 名称                        | 描述                                         |
+| :------ | :-------------------------- | :------------------------------------------- |
+| 0       | Success                     | 正常处理请求                                 |
+| 1       | ErrorException              | ` GateServer ` 中产生未定义错误              |
+| 101     | ErrorRedis *trs*            | ` VerifiServer ` 调用 Redis 出现错误         |
+| 102     | ErrorSend *trs*             | ` VerifiServer ` 未能成功发送验证邮件        |
+| 103     | ErrorException *trs*        | ` VerifiServer ` 未定义异常                  |
+| 1001    | ErrorServerNotResponding    | ` GateServer ` 未收到其他服务器的响应        |
+| 1002    | ErrorGrpc                   | ` GateServer ` 调用 gRPC 出现错误            |
+| 1003    | ErrorJson                   | ` GateServer ` 处理前端传输  JSON 出现错误   |
+| 1004    | ErrorMySql                  | ` GateServer ` 调用 MySQL 时发生异常         |
+| 1005    | ErrorUsernameExists         | ` GateServer ` 无法注册新用户：用户名已存在  |
+| 1006    | ErrorEmailConflicts         | ` GateServer ` 无法注册新用户：email已被注册 |
+| 1007    | ErrorPwdIncorreponds        | ` GateServer ` 无法注册新用户：密码不一致    |
+| 1008    | ErrorVrfInvalid             | ` GateServer ` 无法注册新用户：验证码无效    |
+| 1009    | ErrorPwdWrong               | ` GateServer ` 无法登录用户：密码错误        |
+| 1010    | ErrorEmailInvalid           | ` GateServer ` 无法登录用户：email 未注册    |
+| 1011    | ErrorLoginCookieInvalid     | ` GateServer ` 拒绝访问：cookie 无效         |
+| 1012    | ErrorCookieNotFound         | ` GateServer ` 未找到 cookie                 |
+| 1013    | ErrorUnableGetServer        | ` GateServer `无法获取 ChatServer 地址       |
+| 2001    | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket            |
+| 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie               |
+| 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的响应 |
+| 2003    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id       |
 
 ## 对 Python ` ApiServer ` 希望的接口
 
@@ -304,22 +391,22 @@ port ：**8080**
 
 - 请求参数（JSON）
 
-    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
-    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
-    | `uuid`       | string | 是   | 用户唯一标识                                                    | `"zhangsan"`              |
-    | `session_id` | string | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `"session_123"`           |
-    | `model_class`   | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`        |
-    | `model_id`   | string | 是   | 选择的模型大类                                                   | `"gemini"`        |
-    | `prompt`     | array | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"`      |
-    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...} |
-    | `URL` | string | 否   | 自定义模型调用网址                 | `"https://api.deepseek.com"` |
-    | `api_key` | string | 否   | 自定义模型调用api key                 | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"` |
+    | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                     |
+    | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
+    | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
+    | `model_class` | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
+    | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
 
 - 返回值（application/json）
 
-    | 参数名        | 类型   | 必填 | 说明                          | 示例值               |
-    | :------------ | :--- | :-----------------------------| :------------------- | :------------------ |
-    | `error`       | int | 是   | ApiServer 中产生的错误码   | `1`              |
+    | 参数名  | 类型 | 必填 | 说明                     | 示例值 |
+    | :------ | :--- | :--- | :----------------------- | :----- |
+    | `error` | int  | 是   | ApiServer 中产生的错误码 | `1`    |
 
 - 补充
 
