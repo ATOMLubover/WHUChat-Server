@@ -218,7 +218,7 @@ port ：**8080**
 
 - 补充  
 
-    Web 客户端使用的接口
+    Web 客户端使用的接口，会验证 cookie
 
 #### `/api/v1/ws/send_ans` *WebSocket Upgrade*
 
@@ -228,6 +228,8 @@ port ：**8080**
     | :----------- | :--- | :----------------------------------------- | :----- |
     | `token`      | 是   | 由服务器端自行决定的一个确认 token，不公开 | `abcd` |
     | `session_id` | 是   | 用于链接对应 Websocket 进行转发            | `1145` |
+    | `uuid`       | 是   | 用于建建立转发管道                         |        |
+    | `model_id`   | 是   | 数据库记录 AI 回答的标记                   |        |
 
 - 返回值  
 
@@ -256,7 +258,7 @@ port ：**8080**
     | `id`    | int    | 模型序号     | `3`                |
     | `name`  | string | 模型具体名字 | `"DeepSeek V3"`    |
     | `class` | string | 模型的类别   | `"claude-3-haiku"` |
-    | `desc`  | string | 模型描述     | `A powerful LLM`   |
+    | `desc`  | string | 模型描述     | `"A powerful LLM"`   |
 
 - 补充  
 
