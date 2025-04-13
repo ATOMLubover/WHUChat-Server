@@ -38,7 +38,7 @@ enum class EnumErrorCode
     ErrorUnableGetServer = 1013,          // GateServer 无法获取 ChatServer 地址
 
     ErrorWebsocketUpgradeDinied = 2001,   // ChatServer 拒绝升级 Websocket
-    ErrorSendCookieInvalid = 2002,        // ChatServer 无法解析 cookie
+    ErrorChatCookieInvalid = 2002,        // ChatServer 无法解析 cookie
     ErrorApiNotResponding = 2003,         // ChatServer 未收到 ApiServer 的响应
     ErrorSsnIdInvalid = 2004              // ChatServer 无法解析 ssn_id
 };

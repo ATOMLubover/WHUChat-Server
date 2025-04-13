@@ -64,6 +64,8 @@ void HttpConn::AsyncCheckTimeout()
     timer_timeout.async_wait(
         [ self ] ( beast::error_code err )
         {
+            std::cout << "AsyncCheckTimeout被调用" << err.message() << std::endl;
+
             // 如果无错误地调用该回调函数，说明超时
             if ( !err )
             {
@@ -126,9 +128,11 @@ void HttpConn::SyncHandle()
 
         // 最后异步写入
         if ( !is_delay )
+        {
             AsyncWriteResponse();
-        // 设置超时
-        AsyncCheckTimeout();
+            // 设置超时
+            AsyncCheckTimeout();
+        }
 
         return;
     }
@@ -158,9 +162,11 @@ void HttpConn::SyncHandle()
 
         // 最后异步写入
         if ( !is_delay )
+        {
             AsyncWriteResponse();
-        // 设置超时
-        AsyncCheckTimeout();
+            // 设置超时
+            AsyncCheckTimeout();
+        }
 
         return;
     }
@@ -177,8 +183,16 @@ void HttpConn::AsyncWriteResponse()
         response,
         [ self ] ( beast::error_code err, std::size_t size_bytes )
         {
+            std::cout << "AsyncWriteResponse被调用: " << err.message() << std::endl;
+
+            if ( err )
+            {
+                std::cout << "HttpConn::AsyncWriteResponse接收到异常: " << err.message() << std::endl;
+                return;
+            }
+
             // 关闭连接和计时器（仅发送端）
-            self->socket.shutdown( tcp::socket::shutdown_send, err );
+            self->socket.shutdown( tcp::socket::shutdown_both, err );
             self->timer_timeout.cancel();
         } );
 }

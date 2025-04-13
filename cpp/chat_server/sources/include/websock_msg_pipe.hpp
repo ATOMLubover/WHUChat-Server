@@ -12,7 +12,7 @@ class WebsockMsgPipe
     : public std::enable_shared_from_this<WebsockMsgPipe>
 {
 public:
-    WebsockMsgPipe( int ssn_id );
+    WebsockMsgPipe( int ssn_id, int model_id );
     WebsockMsgPipe( const WebsockMsgPipe& ) = delete;
     WebsockMsgPipe& operator=( const WebsockMsgPipe& ) = delete;
     ~WebsockMsgPipe();
@@ -45,7 +45,9 @@ public:
     static const std::string PIPE_URI_API;
 
 private:
+    // int uuid;
     int session_id;
+    int model_id;
 
     std::shared_ptr<WebsockConn> input;
     std::shared_ptr<WebsockConn> output;

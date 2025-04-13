@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <regex>
+#include <algorithm>
 
 WebsockMgr::~WebsockMgr()
 {
@@ -80,7 +81,9 @@ std::shared_ptr<WebsockConn> WebsockMgr::CreateConn( std::shared_ptr<HttpConn> h
         ws_conn->SyncAccept( http_conn->GetRequest() );
 
         // 检查是否需要建立管道
-        TryBuildPipe( ws_conn );
+        if ( http_conn->GetUri() == WebsockMsgPipe::PIPE_URI_API
+            || http_conn->GetUri() == WebsockMsgPipe::PIPE_URI_CLI )
+            TryBuildPipe( ws_conn );
     }
     catch ( std::exception& exp )
     {
@@ -93,7 +96,7 @@ std::shared_ptr<WebsockConn> WebsockMgr::CreateConn( std::shared_ptr<HttpConn> h
 
 WebsockMgr::WebsockMgr()
 {
-    set_uri = { "/trans_ans", "/send_ans" };
+    set_uri = { "/api/v1/ws/trans_ans", "/api/v1/ws/send_ans" };
 
     std::cout << "WebsockMgr构造" << std::endl;
 }
@@ -108,7 +111,9 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
     {
         // 由于 WebsockConn 的建立是客户端自行决定时机的
         // 无法确定 WebsockMsgPipe 先有谁建立，故先使用 session_id 验证存在性
-        int session_id = std::stoi( conn->get_params[ "session_id" ] );
+        int session_id = std::stoi( iter->second );
+        int uuid = std::stoi( conn->get_params[ "uuid" ] );
+        int model_id = std::stoi( conn->get_params[ "model_id" ] );
 
         // 防止多次建立同一个管道，锁定
         std::lock_guard<std::mutex> guard( mtx_mappipe );
@@ -119,7 +124,8 @@ void WebsockMgr::TryBuildPipe( std::shared_ptr<WebsockConn> conn )
         {
             iter = map_pipe.insert( std::make_pair(
                 session_id,
-                std::make_shared<WebsockMsgPipe>( session_id ) ) )
+                std::make_shared<WebsockMsgPipe>(
+                    session_id, model_id ) ) )
                 .first;
             std::cout << "WebsockMsgPipe（session_id：" << session_id << "）"
                 "被保留" << std::endl;
@@ -176,15 +182,37 @@ bool WebsockMgr::CheckPipeCliFormat( std::shared_ptr<HttpConn> conn )
         //     return false;
 
         // 如果不存在 cookie，直接返回 false
-        auto iter = conn->GetRequest().find( "Cookie" );
-        if ( iter == conn->GetRequest().end() )
+        auto iter_cookie
+            = conn->GetRequest().find( "Cookie" );
+        if ( iter_cookie == conn->GetRequest().end() )
             return false;
 
         // 检查 cookie
         auto map_cookies
-            = CookieProcesser::Parse( iter->value() );
+            = CookieProcesser::Parse( iter_cookie->value() );
         if ( !CheckCookieValid( map_cookies ) )
             return false;
+
+        // 不存在 seesion_id 则返回 false
+        auto iter_ssn_id
+            = conn->GetParams().find( "session_id" );
+        if ( iter_ssn_id == conn->GetParams().end() )
+            return false;
+
+        // 如果当前 session_id 不是这个用户的，则返回 false
+        auto sessions = MySqlMgr::GetInstance()->SelectSessions(
+            std::stoi( map_cookies[ "uuid" ] ) );
+        if ( std::find_if(
+            sessions.begin(),
+            sessions.end(),
+            [ & ] ( const SessionInfo& session )
+            {
+                return session.m_id == std::stoi( iter_ssn_id->second );
+            } )
+            == sessions.end() )
+        {
+            return false;
+        }
     }
     catch ( std::exception& exp )
     {
@@ -198,7 +226,7 @@ bool WebsockMgr::CheckPipeCliFormat( std::shared_ptr<HttpConn> conn )
 bool WebsockMgr::CheckPipeApiFormat( std::shared_ptr<HttpConn> conn )
 {
     // 定义正则表达式，匹配参数字符串应该要有 token 和 session_id
-    std::regex pattern( R"(^token=api_server&session_id=(\d+)$)" );
+    std::regex pattern( R"(^token=api_server&session_id=(\d+)&uuid=(\d+)&model_id=(\d+)$)" );
     std::string raw_params = conn->GetRawParams();
     if ( !std::regex_match( raw_params, pattern ) )
         return false;

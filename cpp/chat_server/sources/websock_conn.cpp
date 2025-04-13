@@ -175,7 +175,7 @@ void WebsockConn::AsyncWrite( std::string msg )
     auto self = shared_from_this();
     websock->async_write(
         net::buffer( msg.c_str(), msg.size() ),
-        [ self ] ( beast::error_code err, std::size_t bytes )
+        [ self, msg ] ( beast::error_code err, std::size_t bytes )
         {
             if ( err )
             {
@@ -185,6 +185,8 @@ void WebsockConn::AsyncWrite( std::string msg )
 
                 return;
             }
+
+            std::cout << "WebsockConn异步write成功，发送: " << msg << std::endl;
 
             try
             {
@@ -200,6 +202,7 @@ void WebsockConn::AsyncWrite( std::string msg )
                     msg_to_send = self->que_msg.front();
                 }
 
+                // 循环调用到 que_msg 为空
                 self->AsyncWrite( std::move( msg_to_send ) );
             }
             catch ( std::exception& exp )

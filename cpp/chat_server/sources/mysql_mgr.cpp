@@ -2,6 +2,11 @@
 
 #include "sync_logger.hpp"
 
+#include <json/json.hpp>
+
+#include <list>
+#include <algorithm>
+
 bool MySqlMgr::CheckUuidExisting( int uuid )
 {
     switch ( dao.SelectUuid( uuid ) )
@@ -34,11 +39,167 @@ bool MySqlMgr::CheckSessionExisting( int ssn_id )
     }
 }
 
-// TODO
+std::list<ModelInfo> MySqlMgr::SelectModels()
+{
+    try
+    {
+        return dao.SelectModels();
+    }
+    catch ( std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::SelectModels处异常: {}", exp.what() );
+        return {};
+    }
+}
+
+std::list<SessionInfo> MySqlMgr::SelectSessions( int uuid )
+{
+    try
+    {
+        return dao.SelectSessions( uuid );
+    }
+    catch ( const std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::SelectSessions处异常: {}",
+            exp.what() );
+        return {};
+    }
+}
+
+std::list<std::string> MySqlMgr::SelectMessagesInSession( int uuid, int ssn_id )
+{
+    try
+    {
+        return dao.SelectMessages( uuid, ssn_id );;
+    }
+    catch ( const std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::SelectMessages处异常: {}",
+            exp.what() );
+        return {};
+    }
+}
+
 int MySqlMgr::CreateSession( int uuid )
 {
-    SyncLogger::GetInstance()->Log( LogLevel::Info, "MySqlMgr::CreateSession" );
+    try
+    {
+        int result = dao.CreateSession( uuid );
+        switch ( result )
+        {
+            case 0:
+            case -1:
+            case -2:
+            case -3:
+                return -1;
+
+            default:
+                return result;
+        }
+    }
+    catch ( const std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::CreateSession处异常: {}",
+            exp.what() );
+    }
     return 0;
+}
+
+bool MySqlMgr::UpdateSessionTitle( int ssn_id, const std::string& title )
+{
+    try
+    {
+        int result = dao.UpdateSessionTitle( ssn_id, title );
+        switch ( result )
+        {
+            case 0:
+            case -1:
+                return false;
+
+            default:
+                return true;
+        }
+    }
+    catch ( const std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::UpdateSessionTitle处异常: {}",
+            exp.what() );
+        return false;
+    }
+}
+
+int MySqlMgr::CreateMessage(
+    int ssn_id, int uuid, int model_id,
+    const std::string& content, const std::string& sender,
+    std::string raw )
+{
+    try
+    {
+        // 先确定创建的消息是否是该用户已创建会话中的
+        // 不等于 0 的是用户发送的消息
+        if ( uuid != 0 )
+        {
+            auto sessions_of_user = SelectSessions( uuid );
+            if ( std::find_if(
+                sessions_of_user.begin(),
+                sessions_of_user.end(),
+                [ ssn_id ] ( const SessionInfo& info ) { return info.m_id == ssn_id; } )
+                == sessions_of_user.end() )
+            {
+                return -1;
+            }
+        }
+        // 如果是 AI 的回答，则需要处理生成 raw 数据
+        else
+        {
+            nlohmann::json json_raw;
+
+            nlohmann::json json_prompt;
+            json_prompt[ "role" ] = "assistant";
+            json_prompt[ "content" ] = content;
+
+            json_raw[ "prompt" ] = json_prompt;
+            json_raw[ "model_id" ] = model_id;
+            json_raw[ "session_id" ] = ssn_id;
+            json_raw[ "uuid" ] = uuid;
+
+            raw = json_raw.dump();
+        }
+
+        int result = dao.CreateMessage(
+            uuid, ssn_id, model_id,
+            content, sender,
+            raw );
+        switch ( result )
+        {
+            case 0:
+            case -1:
+            case -2:
+            case -3:
+                return -1;
+
+            default:
+                return 0;
+        }
+    }
+    catch ( const std::exception& exp )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "MySqlMgr::CreateMessage处异常: {}",
+            exp.what() );
+        return -1;
+    }
 }
 
 std::string MySqlMgr::SelectUserLastLoginTime( int uuid )

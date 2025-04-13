@@ -220,6 +220,7 @@ void CliHttpConn::OnRead( boost::system::error_code err, std::size_t bytes_trans
                 ToString(), err.message() );
             return;
         }
+        m_timer_timeout.cancel();
     }
     catch ( std::exception& exp )
     {

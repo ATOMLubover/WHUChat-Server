@@ -1,16 +1,35 @@
 #include "websock_msg_pipe.hpp"
 
-const std::string WebsockMsgPipe::PIPE_URI_CLI = "/trans_ans";
-const std::string WebsockMsgPipe::PIPE_URI_API = "/send_ans";
+#include "mysql_mgr.hpp"
+#include "sync_logger.hpp"
 
-WebsockMsgPipe::WebsockMsgPipe( int ssn_id )
-    : session_id( ssn_id )
+#include <json/json.hpp>
+
+const std::string WebsockMsgPipe::PIPE_URI_CLI = "/api/v1/ws/trans_ans";
+const std::string WebsockMsgPipe::PIPE_URI_API = "/api/v1/ws/send_ans";
+
+WebsockMsgPipe::WebsockMsgPipe( int ssn_id, int model_id )
+    : session_id( ssn_id ), model_id( model_id )
 {
-    std::cout << "WebsockMsgPipe构造，其session_id：" << session_id << std::endl;
+    std::cout << "WebsockMsgPipe构造，其session_id：" << session_id
+        << "，model_id：" << model_id << std::endl;
 }
 
 WebsockMsgPipe::~WebsockMsgPipe()
 {
+    // 尝试存储消息，如果不成功打印日志
+    if ( MySqlMgr::GetInstance()->CreateMessage(
+        session_id, 0, model_id,
+        msg_sent, "assistant",
+        "" )
+        != 0 )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "WebsockMsgPipe::~WebsockMsgPipe存储消息失败，其session_id：{}",
+            session_id );
+    }
+
     std::cout << "WebsockMsgPipe被析构，其session_id：" << session_id
         << "\n所有接受到内容为：" << msg_sent << std::endl;
 }
@@ -42,6 +61,8 @@ void WebsockMsgPipe::BindInput( std::shared_ptr<WebsockConn> conn )
             // 先提取收到的信息
             std::string data = beast::buffers_to_string( input->buf_recv.data() );
             input->buf_recv.consume( input->buf_recv.size() );
+
+            // std::cout << "input接受到数据：" << data << std::endl;
 
             // 若是 output 还没有绑定，则先缓存
             if ( !self->output )

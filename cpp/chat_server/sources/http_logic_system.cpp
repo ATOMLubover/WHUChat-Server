@@ -69,14 +69,8 @@ void HttpLogicSystem::RegisterPost( const std::string& url, HttpHandler handler 
 void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
 {
     nlohmann::json json_rsp;
-    nlohmann::json json_req = nlohmann::json::parse( conn->request.body().data() );
+    nlohmann::json json_req = nlohmann::json::parse( conn->request.body() );
 
-    SyncLogger::GetInstance()->Log(
-        LogLevel::Debug,
-        "TransMsgContent试图转发: {}",
-        json_req.dump() );
-
-    auto ssn_id = json_req.find( "session_id" );
     if ( !json_req.is_object() )
     {
         std::cout << "/api/v1/send_message接受到无法解析的json" << std::endl;
@@ -85,14 +79,36 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
         return;
     }
 
+    // 确定是否存在 ssn_id
+    auto ssn_id = json_req.find( "session_id" );
+    if ( ssn_id == json_req.end() )
+    {
+        json_rsp.emplace( "error", EnumErrorCode::ErrorJson );
+        conn->WriteRspBody( json_rsp.dump() );
+        return;
+    }
+
+    int uuid = json_req[ "uuid" ].get<int>();
+    std::string sender = json_req[ "prompt" ][ "role" ].get<std::string>();
+    std::string content = json_req[ "prompt" ][ "content" ].get<std::string>();
+
     // 如果是新 session，则创建一个新的 session
     if ( ssn_id->is_null() )
     {
-        int new_ssn_id = MySqlMgr::GetInstance()->CreateSession( json_req[ "uuid" ] );
+        int new_ssn_id = MySqlMgr::GetInstance()->CreateSession( uuid );
+        // 如果返回小于等于 0，则创建失败
+        if ( new_ssn_id <= 0 )
+        {
+            json_rsp.emplace( "error", EnumErrorCode::ErrorMySql );
+            return;
+        }
+
+        // 否则创建成功，更新 request 和程序中的 session_id
         json_req[ "session_id" ] = new_ssn_id;
+        *ssn_id = new_ssn_id;
     }
     // 如果 session 存在，则检查是否存在该 session
-    if ( ssn_id->is_number_integer() )
+    else if ( ssn_id->is_number_integer() )
     {
         if ( !MySqlMgr::GetInstance()->CheckSessionExisting( *ssn_id ) )
         {
@@ -102,8 +118,28 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
         }
     }
 
+    // 记录用户提出的消息
+    if ( MySqlMgr::GetInstance()->CreateMessage(
+        *ssn_id, uuid, 100,
+        content, sender,
+        json_req.dump() )
+        != 0 )
+    {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Error,
+            "数据库记录用户消息失败" );
+        json_rsp.emplace( "error", EnumErrorCode::ErrorMySql );
+        conn->WriteRspBody( json_rsp.dump() );
+        return;
+    }
+
     // 向 ApiServer 转发 http
     {
+        SyncLogger::GetInstance()->Log(
+            LogLevel::Debug,
+            "TransMsgContent试图转发: {}",
+            json_req.dump() );
+
         // 确定 ApiServer 的地址和端口
         std::string host = ConfigMgr::GetInstance()[ "api_server" ][ "host" ];
         std::string post = ConfigMgr::GetInstance()[ "api_server" ][ "port" ];
@@ -226,8 +262,9 @@ bool HttpLogicSystem::HandleUpgrade( std::shared_ptr<HttpConn> conn )
 
 HttpLogicSystem::HttpLogicSystem()
 {
-    RegisterPost(
-        "/api/v1/send_message",
+    // 获取所有模型列表
+    RegisterGet(
+        "/api/v1/chat/models",
         [] ( std::shared_ptr<HttpConn> conn )
         {
             nlohmann::json json_rsp;
@@ -235,7 +272,7 @@ HttpLogicSystem::HttpLogicSystem()
             auto iter = conn->request.find( "Cookie" );
             if ( iter == conn->request.end() )
             {
-                json_rsp.emplace( "error", EnumErrorCode::ErrorSendCookieInvalid );
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
                 conn->WriteRspBody( json_rsp.dump() );
                 return;
             }
@@ -244,7 +281,58 @@ HttpLogicSystem::HttpLogicSystem()
                 = CookieProcesser::Parse( iter->value() );
             if ( !CheckSessionCookie( map_cookies ) )
             {
-                json_rsp.emplace( "error", EnumErrorCode::ErrorSendCookieInvalid );
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            std::list<ModelInfo> models = MySqlMgr::GetInstance()->SelectModels();
+            nlohmann::json json_models;
+            for ( auto iter = models.begin()
+                ; iter != models.end()
+                ; ++iter )
+            {
+                nlohmann::json json_model;
+                json_model.emplace( "id", iter->m_id );
+                json_model.emplace( "name", iter->m_name );
+                json_model.emplace( "class", iter->m_class );
+                json_model.emplace( "desc", iter->m_desc );
+
+                json_models.emplace_back( json_model );
+            }
+
+            json_rsp.emplace( "models", json_models );
+            conn->WriteRspBody( json_rsp.dump() );
+        } );
+
+    // 发送问题
+    RegisterPost(
+        "/api/v1/chat/send_message",
+        [] ( std::shared_ptr<HttpConn> conn )
+        {
+            nlohmann::json json_rsp;
+
+            auto iter = conn->request.find( "Cookie" );
+            if ( iter == conn->request.end() )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            auto map_cookies
+                = CookieProcesser::Parse( iter->value() );
+            if ( !CheckSessionCookie( map_cookies ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            if ( nlohmann::json::parse( conn->request.body() )[ "uuid" ].get<int>()
+                != std::stoi( map_cookies[ "uuid" ] ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
                 conn->WriteRspBody( json_rsp.dump() );
                 return;
             }
@@ -253,6 +341,109 @@ HttpLogicSystem::HttpLogicSystem()
             TransMsgContent( conn );
         } );
 
+    // 获取历史会话
+    RegisterPost(
+        "/api/v1/chat/history",
+        [] ( std::shared_ptr<HttpConn> conn )
+        {
+            nlohmann::json json_rsp;
+
+            auto iter = conn->request.find( "Cookie" );
+            if ( iter == conn->request.end() )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            auto map_cookies
+                = CookieProcesser::Parse( iter->value() );
+            if ( !CheckSessionCookie( map_cookies ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            nlohmann::json json_req = nlohmann::json::parse( conn->request.body() );
+            int uuid = json_req[ "uuid" ].get<int>();
+
+            if ( uuid != std::stoi( map_cookies[ "uuid" ] ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            auto sessions
+                = std::move( MySqlMgr::GetInstance()->SelectSessions( uuid ) );
+            nlohmann::json json_ssns;
+            for ( const auto& ssn : sessions )
+            {
+                nlohmann::json json_ssn;
+                json_ssn.emplace( "id", ssn.m_id );
+                json_ssn.emplace( "uuid", ssn.m_uuid );
+                json_ssn.emplace( "title", ssn.m_title );
+                json_ssn.emplace( "updated_at", ssn.m_updated_at );
+
+                json_ssns.emplace_back( json_ssn );
+            }
+
+            json_rsp.emplace( "error", EnumErrorCode::Success );
+            json_rsp.emplace( "sessions", json_ssns );
+            conn->WriteRspBody( json_rsp.dump() );
+        } );
+
+    // 获取指定会话中所有的 message
+    RegisterPost(
+        "/api/v1/chat/browse_messages",
+        [] ( std::shared_ptr<HttpConn> conn )
+        {
+            nlohmann::json json_rsp;
+
+            auto iter = conn->request.find( "Cookie" );
+            if ( iter == conn->request.end() )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            auto map_cookies
+                = CookieProcesser::Parse( iter->value() );
+            if ( !CheckSessionCookie( map_cookies ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            nlohmann::json json_req = nlohmann::json::parse( conn->request.body() );
+            int uuid = json_req[ "uuid" ].get<int>();
+            int ssn_id = json_req[ "session_id" ].get<int>();
+
+            if ( uuid != 0 &&
+                uuid != std::stoi( map_cookies[ "uuid" ] ) )
+            {
+                json_rsp.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                conn->WriteRspBody( json_rsp.dump() );
+                return;
+            }
+
+            auto messages
+                = std::move( MySqlMgr::GetInstance()->SelectMessagesInSession(
+                    uuid, ssn_id ) );
+            nlohmann::json json_msgs;
+            for ( const auto& msg : messages )
+            {
+                nlohmann::json json_msg = nlohmann::json::parse( msg );
+                json_msgs.emplace_back( json_msg );
+            }
+
+            json_rsp.emplace( "error", EnumErrorCode::Success );
+            json_rsp.emplace( "messages", json_msgs );
+            conn->WriteRspBody( json_rsp.dump() );
+        } );
 
     std::cout << "HttpLogicSystem构造" << std::endl;
 }
