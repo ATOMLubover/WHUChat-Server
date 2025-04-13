@@ -9,7 +9,7 @@ import tongyi
 import gemini
 import doubao
 import default
-
+import claude
 # 服务器地址和端口
 HOST = "127.0.0.1"
 PORT = 8000
@@ -50,6 +50,8 @@ async def handle_websocket(websocket):
                             result = gemini.gemini_chat(model_type, promote_list,temperature)
                         case "doubao":
                             result = doubao.get_chat_completion(model_type, promote_list,temperature)
+                        case "claude":
+                            result = claude.stream_claude_response(promote_list,temperature)
                         case _:
                             result = default.get_chat_completion(api_key, base_url, model_type, promote_list,temperature)
                         
