@@ -29,7 +29,7 @@ async def handle_websocket(websocket):
             session_id = data.get("session_id", "未提供")
             model_type = data.get("model", "未提供")
             model_class = data.get("class", "未提供")
-            promote_list = data.get("promote", [])
+            promote = data.get("promote", [])
             api_key = data.get("api_key", "未提供")
             URL = data.get("URL", "未提供")
             parameters = data.get("parameters", {})
@@ -41,37 +41,37 @@ async def handle_websocket(websocket):
                 case "chat":            # 选择 AI 模型
                     match model_class:
                         case "deepseek":
-                            result = deepseekfunc.deepseekgate(model_type, promote_list, temperature)
+                            result = deepseekfunc.deepseekgate(model_type, promote, temperature)
                         case "chatgpt":
-                            result = gptfunc.chatgpt_chat(model_type, promote_list,temperature)
+                            result = gptfunc.chatgpt_chat(model_type, promote,temperature)
                         case "tongyi":
-                            result = tongyi.tongyi_chat(model_type, promote_list,temperature)
+                            result = tongyi.tongyi_chat(model_type, promote,temperature)
                         case "gemini":
-                            result = gemini.gemini_chat(model_type, promote_list,temperature)
+                            result = gemini.gemini_chat(model_type, promote,temperature)
                         case "doubao":
-                            result = doubao.get_chat_completion(model_type, promote_list,temperature)
+                            result = doubao.get_chat_completion(model_type, promote,temperature)
                         case "claude":
-                            result = claude.stream_claude_response(promote_list,temperature)
+                            result = claude.stream_claude_response(promote,temperature)
                         case _:
-                            result = default.get_chat_completion(api_key, URL, model_type, promote_list,temperature)
+                            result = default.get_chat_completion(api_key, URL, model_type, promote,temperature)
                         
                 case "image":            # 选择 AI 模型
                     match model_class:
                         case "chatgpt":
-                            result = gptreadimage.chatgpt_chat(model_type, promote_list,temperature)
+                            result = gptreadimage.chatgpt_chat(model_type, promote,temperature)
                         case "qianwen":
-                            result = tongyi.tongyi_mutichat(promote_list,temperature)
+                            result = tongyi.tongyi_mutichat(promote,temperature)
 
                 case "audio":
                     match model_class:
                         case "qianwen":
-                            result = tongyi.tongyi_mutichat(promote_list,temperature)
+                            result = tongyi.tongyi_mutichat(promote,temperature)
                     
                 
                 case "video":
                     match model_class:
                         case "qianwen":
-                            result = tongyi.tongyi_mutichat(promote_list,temperature) 
+                            result = tongyi.tongyi_mutichat(promote,temperature) 
 
             # 逐步发送流式响应
             for chunk in result:
