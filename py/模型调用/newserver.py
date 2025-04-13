@@ -25,16 +25,16 @@ async def handle_websocket(websocket):
         async for message in websocket:
             print(f"收到消息: {message}")
             data = json.loads(message)
+            uuid = data.get("uuid", "未提供")
             session_id = data.get("session_id", "未提供")
-            talkdata = data.get("talkdata", {})
-            model_type = talkdata.get("model", "未提供")
-            model_class = talkdata.get("class", "未提供")
-            promote_list = talkdata.get("promote", [])
-            api_key = talkdata.get("api_key", "未提供")
-            base_url = talkdata.get("base_url", "未提供")
-            parameters = talkdata.get("parameters", {})
+            model_type = data.get("model", "未提供")
+            model_class = data.get("class", "未提供")
+            promote_list = data.get("promote", [])
+            api_key = data.get("api_key", "未提供")
+            URL = data.get("URL", "未提供")
+            parameters = data.get("parameters", {})
             temperature = parameters.get("temperature", 0.7)
-            talktype = talkdata.get("type", "未提供")
+            talktype = parameters.get("type", "未提供")
 
 
             match talktype:
@@ -53,7 +53,7 @@ async def handle_websocket(websocket):
                         case "claude":
                             result = claude.stream_claude_response(promote_list,temperature)
                         case _:
-                            result = default.get_chat_completion(api_key, base_url, model_type, promote_list,temperature)
+                            result = default.get_chat_completion(api_key, URL, model_type, promote_list,temperature)
                         
                 case "image":            # 选择 AI 模型
                     match model_class:
