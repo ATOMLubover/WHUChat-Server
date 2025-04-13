@@ -38,10 +38,10 @@ async def handle_websocket(websocket):
 
 
             match talktype:
-                case "word":            # 选择 AI 模型
+                case "chat":            # 选择 AI 模型
                     match model_class:
                         case "deepseek":
-                            result = deepseekfunc.deepseek_chat(model_type, promote_list, temperature)
+                            result = deepseekfunc.deepseekgate(model_type, promote_list, temperature)
                         case "chatgpt":
                             result = gptfunc.chatgpt_chat(model_type, promote_list,temperature)
                         case "tongyi":

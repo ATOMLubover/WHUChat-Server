@@ -1,0 +1,23 @@
+{
+    "session_id": "12345",
+    "talkdata": {
+        "model_type": "chatgpt",
+        "model_class": "gpt-4o-mini",
+        "promote_list": [
+        {
+            "role": "system",
+            "content": "你好，你想让我做什么？"
+        },
+        {
+            "role": "user",
+            "content": "1+1等于几？"
+        }
+        ],
+        "api_key": null,
+        "URL": null,
+        "parameters": {
+        "temperature": 0.7
+        },
+        "base_url": null
+    }
+}
