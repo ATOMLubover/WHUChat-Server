@@ -80,7 +80,11 @@ async def handle_websocket(websocket):
                         case "qianwen":
                             result = tongyi.tongyi_mutichat(promote, temperature)
 
-                case "audio" | "video":
+                case "audio":
+                    match model_class:
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote, temperature)
+                case "video":
                     match model_class:
                         case "qianwen":
                             result = tongyi.tongyi_mutichat(promote, temperature)
