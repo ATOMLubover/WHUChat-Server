@@ -44,7 +44,7 @@ async def handle_websocket(websocket):
             uuid = data.get("uuid")
             session_id = data.get("session_id")
             # 获取历史消息
-            history = await fetch_message_history(uuid, session_id)
+            history = await fetch_message_history(0, session_id)
             messages = history.get("messages")
             promote = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
             model_type = data.get("model")
