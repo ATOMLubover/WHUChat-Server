@@ -18,6 +18,8 @@ using HttpHandler = std::function<void( std::shared_ptr<HttpConn> )>;
 class WebsockConn;
 using WsHandler = std::function<void( std::shared_ptr<WebsockConn> )>;
 
+class SvrHttpsConn;
+
 // http 的逻辑独立形成的类
 class HttpLogicSystem
     : public Singleton<HttpLogicSystem>
@@ -29,6 +31,9 @@ public:
 
     bool HandleGet( std::shared_ptr<HttpConn> conn );
     bool HandlePost( std::shared_ptr<HttpConn> conn );
+
+    // 处理 HTTPS 连接，注入处理函数
+    void ProcessConn( std::shared_ptr<SvrHttpsConn> conn );
 
     // 将 HttpConn 升级为 WebsockConn（原链接应当被废弃）
     bool HandleUpgrade( std::shared_ptr<HttpConn> conn );

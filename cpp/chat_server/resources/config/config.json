@@ -2,6 +2,11 @@
     "gate_server": {
         "port": "8080"
     },
+    "chat_server": {
+        "host": "0.0.0.0",
+        "port": "8081",
+        "cert_dir": "../resources/config/"
+    },
     "verifi_server": {
         "host": "127.0.0.1",
         "port": "50051"

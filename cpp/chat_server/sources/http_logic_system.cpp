@@ -13,6 +13,7 @@
 #include "cookie_processer.hpp"
 #include "cli_http_mgr.hpp"
 #include "sync_logger.hpp"
+#include "svr_https_conn.hpp"
 
 #include <fmt/core.h>
 #include <json/json.hpp>
@@ -241,6 +242,17 @@ bool HttpLogicSystem::HandlePost( std::shared_ptr<HttpConn> conn )
     std::cout << "HttpLogicSystem处理POST请求，其URL：" << conn->post_url << std::endl;
     iter_handler->second( conn );
     return true;
+}
+
+void HttpLogicSystem::ProcessConn( std::shared_ptr<SvrHttpsConn> conn )
+{
+    //     conn->SetReadHandler(
+    //         std::make_shared<std::function<ResponseVar( ReqType )>>(
+    //             [ self = shared_from_this() ] ( ReqType req ) -> ResponseVar
+    //             {
+    //                 std::string url = req->target();
+
+    //             } ) );
 }
 
 bool HttpLogicSystem::HandleUpgrade( std::shared_ptr<HttpConn> conn )

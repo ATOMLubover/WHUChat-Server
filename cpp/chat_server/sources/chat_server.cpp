@@ -6,18 +6,20 @@
 // #include "config_mgr.hpp"
 #include "websock_conn.hpp"
 
+#include "svr_https_mgr.hpp"
+
 #include <boost/asio.hpp>
 
 ChatServer::ChatServer()
     : ioc_server( IOC_THREAD_NUM )
-    , acceptor( ioc_server, tcp::endpoint( net::ip::address_v4::from_string( "127.0.0.1" ), 8081 ) )
+    // , acceptor( ioc_server/*, tcp::endpoint( net::ip::address_v4::from_string( "127.0.0.1" ), 8081 )*/ )
 {
-    std::cout << "GateServer构造，监听于：127.0.0.1:8081" << std::endl;
+    std::cout << "ChatServer构造" << std::endl;
 }
 
 ChatServer::~ChatServer()
 {
-    std::cout << "GateServer被析构退出" << std::endl;
+    std::cout << "ChatServer被析构退出" << std::endl;
 }
 
 void ChatServer::Run()
@@ -39,41 +41,42 @@ void ChatServer::Run()
             self->ioc_server.stop();
         } );
 
-    // 开始监听
-    self->AsyncListen();
+    // // 开始监听
+    // self->AsyncListen();
+    SvrHttpsMgr::GetInstance()->Run( ioc_server );
 
     ioc_server.run(); // 阻塞，事件循环直到所有任务完成
 }
 
-void ChatServer::AsyncListen()
-{
-    auto self = shared_from_this();
+// void ChatServer::AsyncListen()
+// {
+//     auto self = shared_from_this();
 
-    auto& ioc_conn = AsioIoContextPool::GetInstance()->GetIoService();
-    std::shared_ptr<HttpConn> conn = std::make_shared<HttpConn>( ioc_conn );
-    acceptor.async_accept(
-        conn->GetSocket(),
-        [ self, conn ] ( beast::error_code err )
-        {
-            // 注意必须要传入 conn（一个 shared_ptr 的复制）
-            // 以防止 conn 在这个 AsyncListen 函数结束后被析构
-            try
-            {
-                // 如果产生错误，略过 conn 的 AsyncRead 处理函数重新开始监听新的连接
-                if ( err )
-                {
-                    self->AsyncListen();
-                    return;
-                }
+//     auto& ioc_conn = AsioIoContextPool::GetInstance()->GetIoService();
+//     std::shared_ptr<HttpConn> conn = std::make_shared<HttpConn>( ioc_conn );
+//     acceptor.async_accept(
+//         conn->GetSocket(),
+//         [ self, conn ] ( beast::error_code err )
+//         {
+//             // 注意必须要传入 conn（一个 shared_ptr 的复制）
+//             // 以防止 conn 在这个 AsyncListen 函数结束后被析构
+//             try
+//             {
+//                 // 如果产生错误，略过 conn 的 AsyncRead 处理函数重新开始监听新的连接
+//                 if ( err )
+//                 {
+//                     self->AsyncListen();
+//                     return;
+//                 }
 
-                conn->AsyncRead();
+//                 conn->AsyncRead();
 
-                // 仍然是开始监听新的连接
-                self->AsyncListen();
-            }
-            catch ( std::exception& exp )
-            {
-                std::cout << "ChatServer AsyncListen中出现异常：" << exp.what() << std::endl;
-            }
-        } );
-}
+//                 // 仍然是开始监听新的连接
+//                 self->AsyncListen();
+//             }
+//             catch ( std::exception& exp )
+//             {
+//                 std::cout << "ChatServer AsyncListen中出现异常：" << exp.what() << std::endl;
+//             }
+//         } );
+// }

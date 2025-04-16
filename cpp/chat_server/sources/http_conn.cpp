@@ -191,7 +191,7 @@ void HttpConn::AsyncWriteResponse()
                 return;
             }
 
-            // 关闭连接和计时器（仅发送端）
+            // 关闭连接和计时器
             self->socket.shutdown( tcp::socket::shutdown_both, err );
             self->timer_timeout.cancel();
         } );

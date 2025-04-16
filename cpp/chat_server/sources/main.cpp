@@ -6,6 +6,8 @@
 
 int main( int argc, const char** argv )
 {
+    // std::make_shared<ChatServer>()->Run();
+
     try
     {
         std::make_shared<ChatServer>()->Run();
@@ -13,6 +15,7 @@ int main( int argc, const char** argv )
     catch ( std::exception& exp )
     {
         std::cout << "main函数处异常：" << exp.what() << std::endl;
+        return -1;
     }
 
     return 0;

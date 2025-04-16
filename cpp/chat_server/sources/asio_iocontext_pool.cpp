@@ -61,7 +61,15 @@ AsioIoContextPool::AsioIoContextPool( std::size_t size )
         working_threads.emplace_back(
             [ this, i ] ()
             {
-                this->io_services[ i ].run();
+                try
+                {
+                    this->io_services[ i ].run();
+                }
+                catch ( std::exception& e )
+                {
+                    std::cerr << "AsioIoContextPool线程池（ID: " << i
+                        << "）中出现错误: " << e.what() << std::endl;
+                }
             } );
     }
 }

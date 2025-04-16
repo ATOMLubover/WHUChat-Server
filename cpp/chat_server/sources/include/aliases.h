@@ -8,6 +8,8 @@ namespace boost::asio { }
 namespace net = boost::asio;				    // from <boost/asio.hpp>
 namespace boost::beast::websocket { }
 namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+namespace boost::asio::ssl { }
+namespace ssl = boost::asio::ssl;               // from <boost/asio/ssl.hpp>
 
 namespace boost::asio::ip { class tcp; }
 using tcp = boost::asio::ip::tcp;			    // from <boost/asio/ip/tcp.hpp>
