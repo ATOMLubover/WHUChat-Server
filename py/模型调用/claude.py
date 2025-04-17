@@ -13,4 +13,6 @@ def stream_claude_response(messgaes=None,model= "claude-3-7-sonnet-20250219"):
 
     for event in stream:
         if event.type == "content_block_delta":
-            print(event.delta.text, end="", flush=True)
+            delta_text = event.delta.text
+            if delta_text:
+                yield {"type": "content", "content": delta_text}
