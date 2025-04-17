@@ -108,7 +108,7 @@ async def handle_http_trigger(request):
         data = await request.json()
         target_wss = data.get("wss_url")  
         payload = data.get("payload", {})
-
+        
         asyncio.create_task(trigger_wss_as_client(target_wss, payload))
 
         return web.json_response({"status": "ok", "message": f"已尝试连接 {target_wss}"})
