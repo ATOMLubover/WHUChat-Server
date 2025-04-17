@@ -51,3 +51,31 @@ def tongyi_mutichat(messages=None, temperature=0.7):
             print(chunk.choices[0].delta)
         else:
             print(chunk.usage)
+def tongyi_reasoner(messages=None,temperature=0.7):
+    try:        
+        client = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+        )
+
+        completion = client.chat.completions.create(
+            model="qwq-32b",
+            messages=messages,
+            stream=True,
+            temperature=temperature
+        )
+        for chunk in completion:
+            if chunk.choices[0].delta.reasoning_content is not None:
+                yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta.reasoning_content}
+            else:
+                yield{"type": "content", "content": chunk.choices[0].delta.content}
+    except Exception as e:
+        print(f"错误信息：{e}")
+        print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
+        return None
+def tongyi_gate(messages=None,temperature=0.7,model="qwen-plus"):
+    match model:
+        case "qwq-32b":
+            return tongyi_reasoner(messages,temperature)
+        case _:
+            return tongyi_chat(model,messages,temperature)

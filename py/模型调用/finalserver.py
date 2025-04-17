@@ -3,7 +3,7 @@ import json
 import logging
 import websockets
 import aiohttp
-
+import tiangong
 import gptreadimage
 import deepseekfunc
 import gptfunc
@@ -63,13 +63,15 @@ async def handle_websocket(websocket):
                         case "chatgpt":
                             result = gptfunc.chatgpt_chat(model_type, promote, temperature)
                         case "tongyi":
-                            result = tongyi.tongyi_chat(model_type, promote, temperature)
+                            result = tongyi.tongyi_gate(model_type, promote, temperature)
                         case "gemini":
-                            result = gemini.gemini_chat(model_type, promote, temperature)
+                            result = gemini.generate_content_stream(model_type, promote, temperature)
                         case "doubao":
                             result = doubao.get_chat_completion(model_type, promote, temperature)
                         case "claude":
                             result = claude.stream_claude_response(promote, temperature)
+                        case "tiangong":
+                            result = tiangong.doubao_stream_chat(promote, temperature)
                         case _:
                             result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
 
