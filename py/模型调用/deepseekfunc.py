@@ -58,6 +58,14 @@ if __name__ == "__main__":
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"}
     ]
-    for chunk in deepseek_chatreasoner(messages,1.0):
-        print(chunk, end="")
-    print()
+
+    result = {"reasoning_content": "", "content": ""}
+    for chunk in deepseek_chatreasoner(messages, 1.0):
+        print("返回值：", chunk)
+        if chunk["type"] == "reasoning":
+            result["reasoning_content"] += chunk["reasoning_content"]
+        elif chunk["type"] == "content":
+            result["content"] += chunk["content"]
+
+    print("\n最终合并结果：")
+    print(result)

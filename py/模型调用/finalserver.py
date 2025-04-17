@@ -90,14 +90,40 @@ async def handle_websocket(websocket):
                     match model_class:
                         case "qianwen":
                             result = tongyi.tongyi_mutichat(promote, temperature)
+            reasoning_chunks = []
+            content_chunks = []
 
             for chunk in result:
-                chunk_text = json.dumps(chunk) if isinstance(chunk, dict) else str(chunk)
-                await websocket.send(chunk_text)
+                if isinstance(chunk, dict):
+                    if chunk.get("type") == "reasoning":
+                        reasoning_chunks.append(chunk.get("reasoning_content", ""))
+                    elif chunk.get("type") == "content":
+                        content_chunks.append(chunk.get("content", ""))
+                    else:
+                        logging.warning(f"未知类型 chunk: {chunk}")
+                else:
+                    logging.warning(f"非字典 chunk: {chunk}")
 
+            # 先发送 reasoning_content
+            if reasoning_chunks:
+                reasoning_message = {
+                "role": "reasoning",
+                "reasoning_content": "".join(reasoning_chunks)
+                }
+                await websocket.send(json.dumps(reasoning_message))
+                logging.info("已发送 reasoning_content")
+
+            # 再发送 content
+            if content_chunks:
+                content_message = {
+                "role": "content",
+                "content": "".join(content_chunks)
+                }
+                await websocket.send(json.dumps(content_message))
+                logging.info("已发送 content")
+
+            # 最后发送结束标志
             await websocket.send(json.dumps({"end": True}))
-            logging.info("数据流发送完毕，发送结束标识")
-
             await websocket.close()
             logging.info("WebSocket 连接已关闭")
 
