@@ -16,8 +16,10 @@ def tongyi_chat(model="qwen-plus",messages=None,temperature=0.7):
             temperature=temperature
         )
         for chunk in completion:
-            if chunk.choices[0].delta.content is not None:
-                yield(chunk.choices[0].delta.content)
+            if chunk.choices[0].delta.reasoning_content is not None:
+                yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta.reasoning_content}
+            else:
+                yield{"type": "content", "content": chunk.choices[0].delta.content}
     except Exception as e:
         print(f"错误信息：{e}")
         print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")

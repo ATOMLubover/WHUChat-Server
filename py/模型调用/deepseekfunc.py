@@ -32,7 +32,7 @@ def deepseek_chatreasoner(messages,temperature=0.7):
             temperature=temperature
         )
         for chunk in response:
-            if chunk.choices[0].delta.reasoning_content:
+            if chunk.choices[0].delta.reasoning_content is not None:
                 yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta.reasoning_content}
             else:
                 yield{"type": "content", "content": chunk.choices[0].delta.content}

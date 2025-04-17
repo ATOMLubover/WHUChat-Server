@@ -8,5 +8,5 @@ def generate_content_stream(model, contents):
     response = client.models.generate_content_stream(model=model, contents=contents)
     
     for chunk in response:
-        yield chunk.text
+        yield {"type": "content", "content": chunk.text}
 

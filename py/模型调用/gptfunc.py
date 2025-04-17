@@ -11,8 +11,10 @@ def chatgpt_chat(model="gpt-3.5-turbo",messages=None,temperature=0.7):
         temperature=temperature
         )
         for chunk in response:
-            if chunk.choices[0].delta.content is not None:
-                yield(chunk.choices[0].delta.content)
+            if chunk.choices[0].delta.reasoning_content is not None:
+                yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta.reasoning_content}
+            else:
+                yield{"type": "content", "content": chunk.choices[0].delta.content}
     except openai.APIError as e:
         return(f"OpenAI API 调用出错: {e}")
     except openai.AuthenticationError as e:
