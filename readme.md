@@ -25,7 +25,7 @@
 | `session_id`  | int     | 是       | 当前会话 ID                                                  |
 | `model`       | string  | 是       | 模型具体名称，如 `"gpt-3.5-turbo"`                           |
 | `class`       | string  | 是       | 模型平台类别，如 `"chatgpt"`、`"deepseek"`、`"tongyi"` 等   |
-| `URL`         | string  | 是       | 目标 WebSocket 地址（适用于部分模型，如第三方私有部署）     |
+| `URL`         | string  | 否       | 目标 WebSocket 地址（适用于部分模型，如第三方私有部署）     |
 | `api_key`     | string  | 否       | 模型平台的 API Key（如 OpenAI 使用场景）                     |
 | `parameters`  | object  | 否       | 推理参数配置（详见下方说明）                                 |
 | `prompt`      | string  | 是       | 当前用户请求内容（用于参数校验，真实内容从历史中构造）      |
