@@ -198,7 +198,7 @@ port ：**8080**
 
 ---
 
-## ` ChatServer ` 的接口
+## ` ChatServer ` 的接口（全为 HTTPS 或 WSS）
 
 ### GET
 
@@ -208,7 +208,7 @@ port ：**8080**
 
     | 参数名       | 必填 | 说明                            | 示例值 |
     | :----------- | :--- | :------------------------------ | :----- |
-    | `uuid`       | 是   | 当前用户                        | `abcd` |
+    | `uuid`       | 是   | 当前用户                        | `123`  |
     | `session_id` | 是   | 用于链接对应 Websocket 进行转发 | `1145` |
     | `model_id`   | 是   | 当前获取答案的模型              | `2`    |
 
@@ -228,8 +228,7 @@ port ：**8080**
     | :----------- | :--- | :----------------------------------------- | :----- |
     | `token`      | 是   | 由服务器端自行决定的一个确认 token，不公开 | `abcd` |
     | `session_id` | 是   | 用于链接对应 Websocket 进行转发            | `1145` |
-    | `uuid`       | 是   | 用于建建立转发管道                         |        |
-    | `model_id`   | 是   | 数据库记录 AI 回答的标记                   |        |
+    | `model_id`   | 是   | 数据库记录 AI 回答的标记（其实不重要）     | `1`    |
 
 - 返回值  
 
@@ -258,7 +257,7 @@ port ：**8080**
     | `id`    | int    | 模型序号     | `3`                |
     | `name`  | string | 模型具体名字 | `"DeepSeek V3"`    |
     | `class` | string | 模型的类别   | `"claude-3-haiku"` |
-    | `desc`  | string | 模型描述     | `"A powerful LLM"`   |
+    | `desc`  | string | 模型描述     | `"A powerful LLM"` |
 
 - 补充  
 
@@ -312,10 +311,10 @@ port ：**8080**
 
     | 参数名        | 类型   | 说明                                                            | 示例值                                                     |
     | :------------ | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
-    | `uuid`        | int    | 用户唯一标识                                                    | `int`                                                      |
+    | `uuid`        | int    | 用户唯一标识                                                    | `1`                                                      |
     | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
-    | `model_class` | string | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
-    | `model_id`    | string | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `model_id` | int | 选择的模型 ID                                                  | `3`                                         |
+    | `model_class`    | string | 选择的模型大类                                                  | `"OpenAI"`                                                 |
     | `prompt`      | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
     | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
