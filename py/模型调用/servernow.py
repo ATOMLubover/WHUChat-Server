@@ -122,13 +122,33 @@ async def process_and_send_to_wss(data):
 
 async def http_handler(request):
     try:
-        data = await request.json()
+        # 尝试解析 JSON 请求体
+        try:
+            data = await request.json()
+        except Exception as e:
+            logging.error(f"请求体不是合法 JSON: {e}")
+            return web.json_response({"errorcode": 3001, "message": "请求体必须为合法 JSON"})
+
         logging.info(f"接收到 HTTP 请求: {data}")
+
+        # 检查必要字段是否存在
+        required_fields = ["uuid", "session_id", "model", "class", "prompt"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            message = f"缺少必要参数: {', '.join(missing_fields)}"
+            logging.error(message)
+            return web.json_response({"errorcode": 3002, "message": message})
+
+        # 一切正常，异步处理任务
         asyncio.create_task(process_and_send_to_wss(data))
         return web.json_response({"errorcode": 0})
+
     except Exception as e:
-        logging.error(f"HTTP 解析失败: {e}")
-        return web.json_response({"errorcode": 1, "message": str(e)})
+        # 兜底异常处理
+        logging.error(f"HTTP 处理过程中发生未知错误: {e}")
+        return web.json_response({"errorcode": 3003, "message": f"内部错误: {str(e)}"})
+
+    
 
 
 
