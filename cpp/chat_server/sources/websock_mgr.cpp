@@ -166,21 +166,6 @@ bool WebsockMgr::CheckPipeCliFormat( std::shared_ptr<HttpConn> conn )
 
     try
     {
-        // // 获取参数
-        // int uuid = std::stoi( conn->GetParams()[ "uuid" ] );
-        // std::string token = conn->GetParams()[ "token" ];
-        // int session_id = std::stoi( conn->GetParams()[ "session_id" ] );
-
-        // // 先检查 uuid 是否有效
-        // if ( !MySqlMgr::GetInstance()->CheckUuidExisting( uuid ) )
-        //     return false;
-        // // 如果 uuid 有效，则确定 token 是否有效
-        // if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, token ) )
-        //     return false;
-        // // 最后确定是否存在对应会话
-        // if ( !MySqlMgr::GetInstance()->CheckSessionExisting( session_id ) )
-        //     return false;
-
         // 如果不存在 cookie，直接返回 false
         auto iter_cookie
             = conn->GetRequest().find( "Cookie" );

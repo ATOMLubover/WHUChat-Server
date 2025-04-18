@@ -5,6 +5,7 @@
 #include "cookie_processer.hpp"
 #include "cli_http_mgr.hpp"
 #include "config_mgr.hpp"
+#include "svr_wss_mgr.hpp"
 
 #include <json/json.hpp>
 
@@ -24,18 +25,24 @@ void HttpsLogicSystem::Init()
 void HttpsLogicSystem::RegisterGetter( std::shared_ptr<SvrHttpsConn> conn )
 {
     conn->SetLogicGetter(
-        [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn )
+        [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> bool
         {
             switch ( conn->GetRequest()->method() )
             {
                 case http::verb::get:
                 {
-                    // TODO: 这里应该截断 wss 连接的部分
-                    // if ( websocket::is_upgrade( conn->GetRequest() ) )...
+                    // 截断 wss 连接的部分
+                    if ( websocket::is_upgrade( *conn->GetRequest() ) )
+                    {
+                        if ( SvrWssMgr::GetInstance()->CheckHttpsUpgradable( conn ) )
+                            SvrWssMgr::GetInstance()->UpgradeConn( conn );
+                        // 对于进入 wss 判定的部分必须返回 false
+                        return false;
+                    }
 
                     auto handler = self->FindGetHandler( conn->GetUri() );
                     if ( !handler )
-                        return;
+                        return true;
 
                     conn->SetReadHandler( handler );
 
@@ -45,13 +52,15 @@ void HttpsLogicSystem::RegisterGetter( std::shared_ptr<SvrHttpsConn> conn )
                 {
                     auto handler = self->FindPostHandler( conn->GetUri() );
                     if ( !handler )
-                        return;
+                        return true;
 
                     conn->SetReadHandler( handler );
 
                     break;
                 }
             }
+
+            return true;
         } );
 }
 
@@ -64,8 +73,8 @@ void HttpsLogicSystem::InitGetHandlers()
 {
     RegisterGetHandler(
         "/api/v1/chat/models",
-        std::make_shared<ReadFuncType>(
-            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> ResponseVar
+        std::make_shared<HttpsReadFunc>(
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
             {
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
@@ -119,8 +128,8 @@ void HttpsLogicSystem::InitPostHandlers()
 {
     RegisterPostHandler(
         "/api/v1/chat/history",
-        std::make_shared<ReadFuncType>(
-            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> ResponseVar
+        std::make_shared<HttpsReadFunc>(
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
             {
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
@@ -185,8 +194,8 @@ void HttpsLogicSystem::InitPostHandlers()
 
     RegisterPostHandler(
         "/api/v1/chat/browse_messages",
-        std::make_shared<ReadFuncType>(
-            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> ResponseVar
+        std::make_shared<HttpsReadFunc>(
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
             {
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
@@ -248,8 +257,8 @@ void HttpsLogicSystem::InitPostHandlers()
 
     RegisterPostHandler(
         "/api/v1/chat/send_message",
-        std::make_shared<ReadFuncType>(
-            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> ResponseVar
+        std::make_shared<HttpsReadFunc>(
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
             {
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
@@ -298,7 +307,7 @@ void HttpsLogicSystem::InitPostHandlers()
             } ) );
 }
 
-ReadHandlerType HttpsLogicSystem::FindGetHandler( const std::string& uri )
+HttpsReadHandler HttpsLogicSystem::FindGetHandler( const std::string& uri )
 {
     auto iter = m_get_handlers.find( uri );
     if ( iter == m_get_handlers.end() )
@@ -307,7 +316,7 @@ ReadHandlerType HttpsLogicSystem::FindGetHandler( const std::string& uri )
     return iter->second;
 }
 
-ReadHandlerType HttpsLogicSystem::FindPostHandler( const std::string& uri )
+HttpsReadHandler HttpsLogicSystem::FindPostHandler( const std::string& uri )
 {
     auto iter = m_post_handlers.find( uri );
     if ( iter == m_post_handlers.end() )
@@ -316,14 +325,14 @@ ReadHandlerType HttpsLogicSystem::FindPostHandler( const std::string& uri )
     return iter->second;
 }
 
-void HttpsLogicSystem::RegisterGetHandler( const std::string& uri, ReadHandlerType handler )
+void HttpsLogicSystem::RegisterGetHandler( const std::string& uri, HttpsReadHandler handler )
 {
     m_get_handlers.emplace( uri, handler );
 
     std::clog << "注册GET请求：" << uri << std::endl;
 }
 
-void HttpsLogicSystem::RegisterPostHandler( const std::string& uri, ReadHandlerType handler )
+void HttpsLogicSystem::RegisterPostHandler( const std::string& uri, HttpsReadHandler handler )
 {
     m_post_handlers.emplace( uri, handler );
 
@@ -353,7 +362,6 @@ bool HttpsLogicSystem::CheckCookieWithUuid( const http::request<http::dynamic_bo
         if ( iter_uuid == cookies.end()
             || iter_uuid->second != std::to_string( uuid ) )
             return false;
-
 
         // 如果 token 失效/不存在，也返回 false
         if ( !RedisMgr::GetInstance()->QueryChatServerToken( uuid, cookies[ "token" ] ) )

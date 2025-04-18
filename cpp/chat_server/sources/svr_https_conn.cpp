@@ -9,39 +9,52 @@
 std::atomic<int> SvrHttpsConn::total_cnt = 0;
 
 SvrHttpsConn::SvrHttpsConn( tcp::socket&& socket, ssl::context& ctx )
-    : m_stream( std::move( socket ), ctx )
+    : m_ssl_stream( std::make_unique<ssl::stream<tcp::socket>>( std::move( socket ), ctx ) )
     , m_id( total_cnt.fetch_add( 1 ) )
     , m_is_delay( false )
+    // , m_is_ssl_handshaked( false )
 {
-    // // 将 socket 移入 m_stream 的底层
-    // m_stream.next_layer() = std::move( socket );
-
     std::clog << fmt::format( "SvrHttpsConn(ID: {})构造", m_id ) << std::endl;
 }
 
 SvrHttpsConn::~SvrHttpsConn()
 {
+    if ( m_ssl_stream )
+    {
+        // if ( m_is_ssl_handshaked )
+        //     m_ssl_stream->shutdown();
+        m_ssl_stream->lowest_layer().close();
+    }
+
     std::clog << fmt::format( "SvrHttpsConn(ID: {})被析构", m_id ) << std::endl;
 }
 
-void SvrHttpsConn::SetLogicGetter( LogicGetterType getter )
+void SvrHttpsConn::SetLogicGetter( HttpsLogicGetter getter )
 {
     m_logic_getter = std::move( getter );
 }
 
-void SvrHttpsConn::SetReadHandler( ReadHandlerType handler )
+void SvrHttpsConn::SetReadHandler( HttpsReadHandler handler )
 {
     m_read_handler = handler;
 }
 
 void SvrHttpsConn::DoHandshake()
 {
-    m_stream.async_handshake(
+    m_ssl_stream->async_handshake(
         ssl::stream_base::server, // 以服务器身份进行挥手
         [ self = shared_from_this() ] ( beast::error_code ec )
         {
             self->OnHandShake( ec );
         } );
+}
+
+std::unique_ptr<ssl::stream<tcp::socket>> SvrHttpsConn::ReleaseSslStream()
+{
+    std::unique_ptr<ssl::stream<tcp::socket>> ori( m_ssl_stream.release() );
+    m_ssl_stream.reset( nullptr );
+    std::clog << fmt::format( "SvrHttpsConn(ID: {})转让SSL流\n", m_id ) << std::endl;
+    return ori;
 }
 
 void SvrHttpsConn::OnHandShake( beast::error_code ec )
@@ -54,6 +67,7 @@ void SvrHttpsConn::OnHandShake( beast::error_code ec )
         return;
     }
 
+    // m_is_ssl_handshaked = true;
     // 如果显示的挥手成功，则开始读取 HTTPS 请求
     DoRead();
 }
@@ -66,7 +80,7 @@ void SvrHttpsConn::DoRead()
     // 为 m_req 分配内存
     m_req = std::make_shared<http::request<http::dynamic_body>>();
     http::async_read(
-        m_stream,
+        *m_ssl_stream,
         *buf_recv,
         *m_req,
         [ self = shared_from_this(), buf_recv ] // 防止异步操作被销毁
@@ -89,14 +103,23 @@ void SvrHttpsConn::OnRead( beast::error_code ec )
     // 如果没有获得 logic 的途径，则该 URL 无法被处理
     if ( !m_logic_getter )
     {
-        ResponseFailure( m_req, http::status::not_found, "URI invalid" );
+        // 另外如果升级 WSS 失败，那么 socket 仍然可用，返回失败信息
+        if ( m_ssl_stream != nullptr )
+            ResponseFailure( m_req, http::status::not_found, "URI invalid" );
         return;
     }
 
     // 先预处理 request，得到重要数据
     Prepare();
     // 延迟到此时（得到 URI 后）获取逻辑
-    m_logic_getter( shared_from_this() );
+    // 在这里可能被升级为 WSS 连接
+    // 如果此时升级为 WSS 连接了之后，则不会获得 HTTPS 的逻辑函数，会得到 false
+    if ( !m_logic_getter( shared_from_this() ) )
+    {
+        if ( m_ssl_stream != nullptr )
+            ResponseFailure( m_req, http::status::not_found, "URI invalid" );
+        return;
+    }
 
     // 如果不存在 handler，说明该 URL 是无效的
     // 返回 404
@@ -150,7 +173,7 @@ void SvrHttpsConn::DoWrite( auto&& response )
     auto res_ptr = std::make_shared<std::decay_t<decltype( response )>>(
         std::forward<decltype( response )>( response ) );
     http::async_write(
-        m_stream,
+        *m_ssl_stream,
         *res_ptr,
         [ self = shared_from_this(), res_ptr ] ( beast::error_code ec, std::size_t bytes_trans )
         {
@@ -182,7 +205,7 @@ void SvrHttpsConn::Prepare()
 }
 
 void SvrHttpsConn::ResponseFailure(
-    const ReqType& req,
+    const HttpsReq& req,
     http::status status, std::string body )
 {
     http::response<http::string_body> res{};

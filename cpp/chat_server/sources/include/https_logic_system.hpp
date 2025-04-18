@@ -29,14 +29,14 @@ private:
     void InitPostHandlers();
 
     // 为 SvrHttpsConn 提供 GET 请求的处理回调
-    ReadHandlerType FindGetHandler( const std::string& uri );
+    HttpsReadHandler FindGetHandler( const std::string& uri );
     // 为 SvrHttpsConn 提供 POST 请求的处理回调
-    ReadHandlerType FindPostHandler( const std::string& uri );
+    HttpsReadHandler FindPostHandler( const std::string& uri );
 
     // 注册 GET 请求的处理回调
-    void RegisterGetHandler( const std::string& uri, ReadHandlerType handler );
+    void RegisterGetHandler( const std::string& uri, HttpsReadHandler handler );
     // 注册 POST 请求的处理回调
-    void RegisterPostHandler( const std::string& uri, ReadHandlerType handler );
+    void RegisterPostHandler( const std::string& uri, HttpsReadHandler handler );
 
     // 检查 cookie 是否有效
     // 当 uuid 为 -1 时，则不检查 uuid；为 0 时则不检查整个 cookie
@@ -54,7 +54,7 @@ private:
 
 private:
     // GET 请求的处理回调
-    std::map<std::string, ReadHandlerType> m_get_handlers;
+    std::map<std::string, HttpsReadHandler> m_get_handlers;
     // POST 请求的处理回调
-    std::map<std::string, ReadHandlerType> m_post_handlers;
+    std::map<std::string, HttpsReadHandler> m_post_handlers;
 };

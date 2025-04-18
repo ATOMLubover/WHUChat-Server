@@ -5,7 +5,7 @@
     "chat_server": {
         "host": "0.0.0.0",
         "port": "8081",
-        "cert_dir": "../resources/config/"
+        "cert_dir": "../resources/cert/"
     },
     "verifi_server": {
         "host": "127.0.0.1",

@@ -16,15 +16,22 @@ public:
         auto query_pos = url.find( '?' );
         if ( query_pos == std::string::npos )
         {
-            *uri = url;
+            if ( uri )
+                *uri = url;
             return;
         }
+        if ( uri )
+            *uri = url.substr( 0, query_pos );
 
-        *uri = url.substr( 0, query_pos );
         std::string query_string = url.substr( query_pos + 1 );
-        *raw_params = query_string; // 原本的参数部分
-        query_string += "&"; // add "&" to simplify the check conditions
+        if ( raw_params )
+            *raw_params = query_string; // 原本的参数部分
 
+        // 如果 params 为空，则不进行下述转换
+        if ( !params )
+            return;
+
+        query_string += "&"; // add "&" to simplify the check conditions
         std::string key, val;
         std::size_t pos_equal = 0;
         std::size_t pos_amper = 0;
