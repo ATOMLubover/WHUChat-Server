@@ -41,49 +41,47 @@ async def process_and_send_to_wss(data):
         parameters = data.get("parameters", {})
         temperature = parameters.get("temperature", 0.7)
         talktype = parameters.get("type", "chat")
-
-        history = await fetch_message_history(0, session_id)
-        messages = history.get("messages")
-        promote = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
-
-        match talktype:
-            case "chat":
-                match model_class:
-                    case "deepseek":
-                        result = deepseekfunc.deepseekgate(model_type, promote, temperature)
-                    case "chatgpt":
-                        result = gptfunc.chatgpt_chat(model_type, promote, temperature)
-                    case "tongyi":
-                        result = tongyi.tongyi_gate(model_type, promote, temperature)
-                    case "gemini":
-                        result = gemini.generate_content_stream(model_type, promote, temperature)
-                    case "doubao":
-                        result = doubao.get_chat_completion(model_type, promote, temperature)
-                    case "claude":
-                        result = claude.stream_claude_response(promote, temperature)
-                    case "tiangong":
-                        result = tiangong.doubao_stream_chat(promote, temperature)
-                    case _:
-                        result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
-
-            case "image":
-                match model_class:
-                    case "chatgpt":
-                        result = gptreadimage.chatgpt_chat(model_type, promote, temperature)
-                    case "qianwen":
-                        result = tongyi.tongyi_mutichat(promote, temperature)
-
-            case "audio" | "video":
-                match model_class:
-                    case "qianwen":
-                        result = tongyi.tongyi_mutichat(promote, temperature)
-
-        reasoning_chunks = []
-        content_chunks = []
-
-        async with websockets.connect(wssURL) as websocket:
+        WSSURL = f"wss://" + wssURL + f"/api/v1/ws/send_ans?session_id={session_id}"
+        async with websockets.connect(WSSURL) as websocket:
             logging.info(f"已连接到目标 WSS：{wssURL}")
+            history = await fetch_message_history(0, session_id)
+            messages = history.get("messages")
+            promote = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
 
+            match talktype:
+                case "chat":
+                    match model_class:
+                        case "deepseek":
+                            result = deepseekfunc.deepseekgate(model_type, promote, temperature)
+                        case "chatgpt":
+                            result = gptfunc.chatgpt_chat(model_type, promote, temperature)
+                        case "tongyi":
+                            result = tongyi.tongyi_gate(model_type, promote, temperature)
+                        case "gemini":
+                            result = gemini.generate_content_stream(model_type, promote, temperature)
+                        case "doubao":
+                            result = doubao.get_chat_completion(model_type, promote, temperature)
+                        case "claude":
+                            result = claude.stream_claude_response(promote, temperature)
+                        case "tiangong":
+                            result = tiangong.doubao_stream_chat(promote, temperature)
+                        case _:
+                            result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
+
+                case "image":
+                    match model_class:
+                        case "chatgpt":
+                            result = gptreadimage.chatgpt_chat(model_type, promote, temperature)
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote, temperature)
+
+                case "audio" | "video":
+                    match model_class:
+                        case "qianwen":
+                            result = tongyi.tongyi_mutichat(promote, temperature)
+
+            reasoning_chunks = []
+            content_chunks = []
             for chunk in result:
                 if isinstance(chunk, dict):
                     if chunk.get("type") == "reasoning":
