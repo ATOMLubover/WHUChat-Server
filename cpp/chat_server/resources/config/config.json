@@ -1,5 +1,6 @@
 {
     "gate_server": {
+        "host": "localhost",
         "port": "8080"
     },
     "chat_server": {

@@ -448,8 +448,8 @@ HttpLogicSystem::HttpLogicSystem()
             nlohmann::json json_msgs;
             for ( const auto& msg : messages )
             {
-                nlohmann::json json_msg = nlohmann::json::parse( msg );
-                json_msgs.emplace_back( json_msg );
+                // nlohmann::json json_msg = nlohmann::json::parse( msg );
+                // json_msgs.emplace_back( json_msg );
             }
 
             json_rsp.emplace( "error", EnumErrorCode::Success );

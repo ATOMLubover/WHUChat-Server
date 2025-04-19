@@ -107,11 +107,9 @@ void SvrHttpsConn::OnRead( beast::error_code ec )
     // 如果没有获得 logic 的途径，则该 URL 无法被处理
     if ( !m_logic_getter )
     {
-        // 另外如果升级 WSS 失败，那么 socket 仍然可用，返回失败信息
+        // 这可能是设计错误
         if ( m_ssl_stream != nullptr )
-            ResponseFailure( m_req, http::status::not_found, "URI invalid" );
-        std::clog << fmt::format( "SvrHttpsConn(ID: {})未获得逻辑；{}\n",
-            m_id, m_req->target() );
+            ResponseFailure( m_req, http::status::internal_server_error, "URI invalid" );
         return;
     }
 
@@ -124,8 +122,6 @@ void SvrHttpsConn::OnRead( beast::error_code ec )
     {
         if ( m_ssl_stream != nullptr )
             ResponseFailure( m_req, http::status::not_found, "URI invalid" );
-        std::clog << fmt::format( "SvrHttpsConn(ID: {})作为HTTPS失效：{}\n",
-            m_id, m_req->target() );
         return;
     }
 
@@ -134,8 +130,6 @@ void SvrHttpsConn::OnRead( beast::error_code ec )
     if ( !m_read_handler )
     {
         ResponseFailure( m_req, http::status::not_found, "URI invalid" );
-        std::clog << fmt::format( "SvrHttpsConn(ID: {})无法处理：{}\n",
-            m_id, m_req->target() );
         return;
     }
 
@@ -178,16 +172,6 @@ void SvrHttpsConn::DoWrite( auto&& response )
     {
         response.content_length( response.body().size() );
     }
-
-    std::string addr_gate_server
-        = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
-        + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
-    addr_gate_server = "https://" + addr_gate_server;
-    response.set( http::field::access_control_allow_origin, addr_gate_server );
-    response.set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
-    response.set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
-    // 允许携带凭证
-    response.set( http::field::access_control_allow_credentials, "true" );
 
     // 使用完美转发构造 shared_ptr
     auto res_ptr = std::make_shared<std::decay_t<decltype( response )>>(
@@ -239,8 +223,7 @@ void SvrHttpsConn::ResponseFailure(
     std::string addr_gate_server
         = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
         + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
-    addr_gate_server = "https://" + addr_gate_server;
-    res.set( http::field::access_control_allow_origin, addr_gate_server.c_str() );
+    res.set( http::field::access_control_allow_origin, addr_gate_server );
     res.set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
     res.set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
     // 允许携带凭证

@@ -16,7 +16,6 @@ void SvrHttpsMgr::Run( net::io_context& ioc )
 {
     // 初始化 m_listener
     InitListener( ioc );
-    std::clog << "SvrHttpsMgr创建并运行listener" << std::endl;
 }
 
 void SvrHttpsMgr::Stop()
@@ -76,6 +75,8 @@ void SvrHttpsMgr::InitListener( net::io_context& ioc )
         } );
 
     m_listener->Run();
+
+    std::clog << "SvrHttpsMgr创建并运行listener" << std::endl;
 }
 
 std::shared_ptr<SvrHttpsConn> SvrHttpsMgr::CreateConn( net::ip::tcp::socket&& socket, ssl::context& ctx )

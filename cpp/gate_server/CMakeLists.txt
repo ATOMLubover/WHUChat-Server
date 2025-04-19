@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.10 )
+cmake_minimum_required( VERSION 3.15 )
 
 # 打印当前运行 CMake 源文件的目录
 message( STATUS "CMake curr dir: " ${CMAKE_CURRENT_SOURCE_DIR} )
@@ -25,10 +25,18 @@ message( STATUS "Source code: " ${SOURCE_CODE} )
 # 第三方库包
 find_package( Threads REQUIRED )                        # 使用 CMake 的线程库
 find_package( fmt REQUIRED )                            # fmt 字符串格式化库
+set(OPENSSL_ROOT_DIR "/usr/local/openssl")  # 替换为你的实际路径
+find_package( OpenSSL REQUIRED )                        # OpenSSL 库
 find_package( Protobuf CONFIG REQUIRED )                # protocol buffer 库
 message( STATUS "Using protobuf ${Protobuf_VERSION}" )
 find_package( gRPC CONFIG REQUIRED )                    # gRPC 库（依赖 Protobuf）
 message( STATUS "Using gRPC ${gRPC_VERSION}" )
+# set(OPENSSL_ROOT_DIR "/usr/local/openssl")  # 替换为你的实际路径
+# find_package( OpenSSL REQUIRED )                        # OpenSSL 库
+
+message(STATUS "OpenSSL found: ${OPENSSL_FOUND}")
+message(STATUS "OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
+message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
 
 # 创建目标
 add_executable( ${PROJ_NAME} )
@@ -36,7 +44,14 @@ add_executable( ${PROJ_NAME} )
 # 设定源码
 target_sources( ${PROJ_NAME}
     PRIVATE 
-        ${SOURCE_CODE}
+        #sources/main.cpp 
+         ${SOURCE_CODE}
+)
+
+set_target_properties( ${PROJ_NAME} 
+    PROPERTIES
+        BUILD_RPATH "/usr/lib/x86_64-linux-gnu"
+        INSTALL_RPATH "/usr/lib/x86_64-linux-gnu"
 )
 
 # 设定 include 目录
@@ -44,18 +59,22 @@ target_include_directories( ${PROJ_NAME}
     PRIVATE 
         "./sources/include/"                         # 自己编写的头文件
         "./sources/thirdparty/"                      # 第三方工具生成的代码
-        "/home/lubover/code_resources/thirdparty/"  # 下载的第三方 dev 源码
+        "/home/lubover/code_resources/thirdparty/"   # 下载的第三方 dev 源码
+        ${OPENSSL_INCLUDE_DIRS}                      # openssl
 )
 
 # 设定所需链接第三方库
 target_link_libraries( ${PROJ_NAME}
     PRIVATE 
         fmt::fmt                    # fmt 字符串格式化库
+        OpenSSL::SSL
+        OpenSSL::Crypto
         gRPC::grpc++                # gRPC C++ 库
         gRPC::grpc++_reflection     # gRPC C++ 反射库
         protobuf::libprotobuf       # protobuf 库（必须在 gRPC 链接后链接）
         mysqlcppconn                # MySQL C++ 连接库
         hiredis                     # redis C 连接库
+        # ${OPENSSL_LIBRARIES}        # openssl 库
 )
 
 # 添加不同编译模式下的宏定义

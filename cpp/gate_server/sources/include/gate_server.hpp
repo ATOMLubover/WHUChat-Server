@@ -24,12 +24,12 @@ public:
     void Run();
 
 private:
-    // 创建一个 HttpConn 连接，异步等待客户端的连接
-    void AsyncListen();
+    // // 创建一个 HttpConn 连接，异步等待客户端的连接
+    // void AsyncListen();
 
 private:
     const std::size_t IOC_THREAD_NUM = 1; // 用于 AsyncListen 的 io_context 的线程数
     net::io_context ioc_server; // 用于 AsyncListen 的 io_context
 
-    tcp::acceptor acceptor;
+    // tcp::acceptor acceptor;
 };

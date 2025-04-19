@@ -1,16 +1,17 @@
 #include "gate_server.hpp"
 
 #include "asio_iocontext_pool.hpp"
-#include "http_conn.hpp"
+//#include "http_conn.hpp"
 #include "config_mgr.hpp"
+#include "svr_https_mgr.hpp"
 
 GateServer::GateServer()
     : ioc_server( IOC_THREAD_NUM )
-    , acceptor( ioc_server, tcp::endpoint( tcp::v4() /* 这里是默认监听 0.0.0.0 */,
-        static_cast< std::uint16_t >( std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) ) ) )
+    // , acceptor( ioc_server, tcp::endpoint( tcp::v4() /* 这里是默认监听 0.0.0.0 */,
+    //     static_cast< std::uint16_t >( std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) ) ) )
 {
-    std::cout << "GateServer构造，监听于：0.0.0.0:"
-        << std::stoi( ConfigMgr::GetInstance()[ "gate_server" ][ "port" ] ) << std::endl;
+    std::string port = ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+    std::cout << "GateServer构造，监听于：0.0.0.0:" << port << std::endl;
 }
 
 GateServer::~GateServer()
@@ -37,41 +38,42 @@ void GateServer::Run()
             self->ioc_server.stop();
         } );
 
-    // 开始监听
-    self->AsyncListen();
+    // // 开始监听
+    // self->AsyncListen();
+    SvrHttpsMgr::GetInstance()->Run( ioc_server );
 
     ioc_server.run(); // 阻塞，事件循环直到所有任务完成
 }
 
-void GateServer::AsyncListen()
-{
-    auto self = shared_from_this();
+// void GateServer::AsyncListen()
+// {
+//     auto self = shared_from_this();
 
-    auto& ioc_conn = AsioIoContextPool::GetInstance()->GetIoService();
-    std::shared_ptr<HttpConn> conn = std::make_shared<HttpConn>( ioc_conn );
-    acceptor.async_accept(
-        conn->GetSocket(),
-        [ self, conn ] ( beast::error_code err )
-        {
-            // 注意必须要传入 conn（一个 shared_ptr 的复制）
-            // 以防止 conn 在这个 AsyncListen 函数结束后被析构
-            try
-            {
-                // 如果产生错误，略过 conn 的 AsyncReadAndHandle 处理函数重新开始监听新的连接
-                if ( err )
-                {
-                    self->AsyncListen();
-                    return;
-                }
+//     auto& ioc_conn = AsioIoContextPool::GetInstance()->GetIoService();
+//     std::shared_ptr<HttpConn> conn = std::make_shared<HttpConn>( ioc_conn );
+//     acceptor.async_accept(
+//         conn->GetSocket(),
+//         [ self, conn ] ( beast::error_code err )
+//         {
+//             // 注意必须要传入 conn（一个 shared_ptr 的复制）
+//             // 以防止 conn 在这个 AsyncListen 函数结束后被析构
+//             try
+//             {
+//                 // 如果产生错误，略过 conn 的 AsyncReadAndHandle 处理函数重新开始监听新的连接
+//                 if ( err )
+//                 {
+//                     self->AsyncListen();
+//                     return;
+//                 }
 
-                conn->AsyncReadAndHandle();
+//                 conn->AsyncReadAndHandle();
 
-                // 仍然是开始监听新的连接
-                self->AsyncListen();
-            }
-            catch ( std::exception& exp )
-            {
-                std::cout << "GateServer AsyncListen中出现异常：" << exp.what() << std::endl;
-            }
-        } );
-}
+//                 // 仍然是开始监听新的连接
+//                 self->AsyncListen();
+//             }
+//             catch ( std::exception& exp )
+//             {
+//                 std::cout << "GateServer AsyncListen中出现异常：" << exp.what() << std::endl;
+//             }
+//         } );
+// }

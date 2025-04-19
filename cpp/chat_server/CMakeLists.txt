@@ -30,8 +30,8 @@ message( STATUS "Source code: " ${SOURCE_CODE} )
 # 第三方库包
 find_package( Threads REQUIRED )                        # 使用 CMake 的线程库
 find_package( fmt REQUIRED )                            # fmt 字符串格式化库
-set(OPENSSL_ROOT_DIR "/usr")
-find_package( OpenSSL REQUIRED)                         # OpenSSL 库 
+set( OPENSSL_ROOT_DIR "/usr" )
+find_package( OpenSSL REQUIRED )                         # OpenSSL 库 
 # find_package( Protobuf CONFIG REQUIRED )                # protocol buffer 库
 # message( STATUS "Using protobuf ${Protobuf_VERSION}" )
 # find_package( gRPC CONFIG REQUIRED )                    # gRPC 库（依赖 Protobuf）

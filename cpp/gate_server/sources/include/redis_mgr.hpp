@@ -24,6 +24,9 @@ public:
     // 获取用户对应的聊天服务器地址
     std::string GetChatServerAddr( int uuid );
 
+    // 检查 token 是否过期
+    bool CheckToken( int uuid, const std::string& token );
+
 private:
     RedisMgr() = default;
 

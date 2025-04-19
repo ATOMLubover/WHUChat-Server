@@ -58,6 +58,32 @@ void HttpsLogicSystem::RegisterGetter( std::shared_ptr<SvrHttpsConn> conn )
 
                     break;
                 }
+                case http::verb::options:
+                {
+                    // 设置跨域请求
+                    conn->SetReadHandler(
+                        std::make_shared<HttpsReadFunc>(
+                            [ self ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+                            {
+                                auto res
+                                    = std::make_shared<http::response<http::string_body>>();
+                                std::string addr_gate_server
+                                    = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                                    + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                                addr_gate_server = "https://" + addr_gate_server;
+                                res->set( http::field::access_control_allow_origin, addr_gate_server );
+                                res->set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                                res->set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                                // 允许携带凭证
+                                res->set( http::field::access_control_allow_credentials, "true" );
+
+                                res->result( http::status::ok );
+
+                                return res;
+                            } ) );
+
+                    break;
+                }
             }
 
             return true;
@@ -84,9 +110,9 @@ void HttpsLogicSystem::InitGetHandlers()
                 try
                 {
                     // 先检查 cookie
-                    if ( self->CheckCookieWithUuid( *conn->GetRequest(), -1 ) )
+                    if ( !self->CheckCookieWithUuid( *conn->GetRequest(), -1 ) )
                     {
-                        json_res.emplace( "error", EnumErrorCode::ErrorJson );
+                        json_res.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
                         response->body() = json_res.dump();
 
                         return response;
@@ -109,6 +135,16 @@ void HttpsLogicSystem::InitGetHandlers()
                     json_res.emplace( "models", json_models );
 
                     response->body() = json_res.dump();
+
+                    // std::string addr_gate_server
+                    //     = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                    //     + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                    // addr_gate_server = "https://" + addr_gate_server;
+                    // response->set( http::field::access_control_allow_origin, addr_gate_server );
+                    // response->set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                    // response->set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                    // // 允许携带凭证
+                    // response->set( http::field::access_control_allow_credentials, "true" );
                 }
                 catch ( std::exception& exp )
                 {
@@ -178,6 +214,16 @@ void HttpsLogicSystem::InitPostHandlers()
                     json_res.emplace( "sessions", json_ssns );
 
                     response->body() = json_res.dump();
+
+                    // std::string addr_gate_server
+                    //     = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                    //     + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                    // addr_gate_server = "https://" + addr_gate_server;
+                    // response->set( http::field::access_control_allow_origin, addr_gate_server );
+                    // response->set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                    // response->set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                    // // 允许携带凭证
+                    // response->set( http::field::access_control_allow_credentials, "true" );
                 }
                 catch ( std::exception& exp )
                 {
@@ -233,7 +279,8 @@ void HttpsLogicSystem::InitPostHandlers()
                     nlohmann::json json_msgs;
                     for ( const auto& msg : messages )
                     {
-                        nlohmann::json json_msg = nlohmann::json::parse( msg );
+                        nlohmann::json json_msg = nlohmann::json::parse( msg.m_raw );
+                        json_msg.emplace( "id", msg.m_id );
                         json_msgs.emplace_back( json_msg );
                     }
 
@@ -241,6 +288,16 @@ void HttpsLogicSystem::InitPostHandlers()
                     json_res.emplace( "messages", json_msgs );
 
                     response->body() = json_res.dump();
+
+                    // std::string addr_gate_server
+                    //     = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                    //     + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                    // addr_gate_server = "https://" + addr_gate_server;
+                    // response->set( http::field::access_control_allow_origin, addr_gate_server );
+                    // response->set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                    // response->set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                    // // 允许携带凭证
+                    // response->set( http::field::access_control_allow_credentials, "true" );
                 }
                 catch ( std::exception& exp )
                 {
@@ -501,6 +558,16 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
 
                         response.body() = json_res.dump();
                         conn->DoWrite( std::move( response ) );
+
+                        std::string addr_gate_server
+                            = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                            + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                        addr_gate_server = "https://" + addr_gate_server;
+                        response.set( http::field::access_control_allow_origin, addr_gate_server );
+                        response.set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                        response.set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                        // 允许携带凭证
+                        response.set( http::field::access_control_allow_credentials, "true" );
                     } ) );
             // 设定 timeout_handler
             CliTimeoutHandler timeout_handler( std::make_shared<
@@ -517,6 +584,16 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
                         response.body() = json_res.dump();
 
                         conn->DoWrite( std::move( response ) );
+
+                        std::string addr_gate_server
+                            = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
+                            + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                        addr_gate_server = "https://" + addr_gate_server;
+                        response.set( http::field::access_control_allow_origin, addr_gate_server );
+                        response.set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
+                        response.set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );
+                        // 允许携带凭证
+                        response.set( http::field::access_control_allow_credentials, "true" );
                     } ) );
 
             // 异步地发送 http 请求

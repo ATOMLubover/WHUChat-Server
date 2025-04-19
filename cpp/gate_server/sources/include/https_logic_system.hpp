@@ -5,6 +5,8 @@
 
 #include <json/json.hpp>
 
+#include <vector>
+
 // 独立的 HTTPS 连接的逻辑处理
 class HttpsLogicSystem
     : public Singleton<HttpsLogicSystem>
@@ -38,24 +40,26 @@ private:
     // 注册 POST 请求的处理回调
     void RegisterPostHandler( const std::string& uri, HttpsReadHandler handler );
 
+    // 代理整个文件夹文件的 GET 请求
+    void RegisterDir( const std::string& prefix, const std::string& url_dir, bool need_cookie = false );
+    // 获取一个文件夹所有子文件（夹）的函数
+    std::vector<std::string> GetDirFiles( const std::string& dir );
+    // 获取 MIME 类型
+    static std::string GetMimeType( const std::string& file );
+
+    // 辅助获得 file_body
+    static http::file_body::value_type PrepareFileBody( const std::string& file );
+
     // 检查 cookie 是否有效
     // 当 uuid 为 -1 时，则不检查 uuid；为 0 时则不检查整个 cookie
-    bool CheckCookieWithUuid( const http::request<http::dynamic_body>& req, int uuid );
+    static bool CheckCookie( const http::request<http::dynamic_body>& req );
     // 将请求体反序列化为 json
-    nlohmann::json ParseJson( const http::request<http::dynamic_body>& req );
-
-    // 跨域化响应
-    void MakeCors( http::response<http::string_body>& res );
-
-    /////////////////////////////////
-    /// 以下为一些处理具体逻辑的函数 ///
-    /////////////////////////////////
-
-    // /api/v1/chat/send_message 中，转发请求到 ApiSerevr
-    // 并异步等待其回答的逻辑
-    void TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> conn );
+    static nlohmann::json ParseJson( const http::request<http::dynamic_body>& req );
 
 private:
+    // 前段代理文件所在的根目录
+    static const std::string FRONTEND_STATIC_DIR;
+
     // GET 请求的处理回调
     std::map<std::string, HttpsReadHandler> m_get_handlers;
     // POST 请求的处理回调

@@ -29,7 +29,7 @@ public:
 
 private:
     // size 可以传入 std::thread::hardware_concurrency()，表示使用所有 CPU 核心
-    AsioIoContextPool( std::size_t size = 3 );
+    AsioIoContextPool( std::size_t size = 1 );
 
     // RAII，资源只由自己创建和清除
     void Tidy();

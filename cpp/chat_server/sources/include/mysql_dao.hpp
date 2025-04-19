@@ -15,15 +15,12 @@ struct ModelInfo
     std::string m_desc;
 };
 
-// // message 表的结构
-// struct MessageInfo
-// {
-//     int m_id;
-//     int m_ssn_id;
-//     std::string m_content;
-//     std::string m_sender;
-//     std::string m_created_at;
-// };
+// message 表的结构
+struct MessageInfo
+{
+    int m_id;
+    std::string m_raw;
+};
 
 // sessions 表的结构
 struct SessionInfo
@@ -54,7 +51,7 @@ public:
     /// @brief 获取指定用户所有的 session 的基本信息
     std::list<SessionInfo> SelectSessions( int uuid );
     /// @brief 获取指定 session 的信息
-    std::list<std::string> SelectMessages( int uuid, int ssn_id );
+    std::list<MessageInfo> SelectMessages( int uuid, int ssn_id );
 
     /// @brief 创建新会话
     /// @return 错误码：-3 model_id 不存在，-2 uuid 不存在，-1 异常，0 未定义，大于 0 创建成功

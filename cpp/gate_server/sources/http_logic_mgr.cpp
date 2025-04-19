@@ -356,7 +356,8 @@ void HttpLogicMgr::InitPost()
                     {
                         { "Path", "/" },
                         { "HttpOnly", "" },
-                        { "SameSite", "Strict" },
+                        { "Secure", "" },
+                        { "SameSite", "None"},
                         { "Max-Age", "259200" } // 三天的 expire time
                     } ) );
             conn->dynamic_response->insert(
@@ -367,7 +368,8 @@ void HttpLogicMgr::InitPost()
                     {
                         { "Path", "/" },
                         { "HttpOnly", "" },
-                        { "SameSite", "Strict" },
+                        { "Secure", "" },
+                        { "SameSite", "None"},
                         { "Max-Age", "259200" }
                     } ) );
             conn->dynamic_response->insert(
@@ -378,7 +380,8 @@ void HttpLogicMgr::InitPost()
                     {
                         { "Path", "/" },
                         { "HttpOnly", "" },
-                        { "SameSite", "Strict" },
+                        { "Secure", "" },
+                        { "SameSite", "None"},
                         { "Max-Age", "259200" }
                     } ) );
         } );
@@ -560,6 +563,8 @@ HttpLogicMgr::HttpLogicMgr()
 
 std::vector<std::string> HttpLogicMgr::GetAllFilesHelper( const std::string& dir )
 {
+    namespace fs = std::filesystem;
+
     fs::path dir_path( dir );
 
     std::vector<fs::path> file_pathes;

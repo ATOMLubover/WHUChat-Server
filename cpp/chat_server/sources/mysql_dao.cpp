@@ -147,7 +147,7 @@ std::list<SessionInfo> MySqlDao::SelectSessions( int uuid )
     return result;
 }
 
-std::list<std::string> MySqlDao::SelectMessages( int uuid, int ssn_id )
+std::list<MessageInfo> MySqlDao::SelectMessages( int uuid, int ssn_id )
 {
     std::unique_ptr<MySqlConn> conn = conn_pool->TakeConn();
     if ( conn == nullptr )
@@ -166,12 +166,14 @@ std::list<std::string> MySqlDao::SelectMessages( int uuid, int ssn_id )
     MySqlStmt stmt( conn );
     std::unique_ptr<sql::ResultSet> resultset
         = stmt.Commit( fmt::format(
-            "SELECT `raw` FROM `messages` WHERE `session_id` = {}",
+            "SELECT `id`, `raw` FROM `messages` WHERE `session_id` = {}",
             ssn_id ) );
-    std::list<std::string> result;
+    std::list<MessageInfo> result;
     while ( resultset->next() )
     {
-        result.push_back( resultset->getString( 1 ) );
+        result.push_back( MessageInfo{
+            resultset->getInt( 1 ),
+            resultset->getString( 2 ) } );
     }
 
     return std::move( result );

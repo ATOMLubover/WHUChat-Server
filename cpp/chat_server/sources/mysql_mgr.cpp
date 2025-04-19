@@ -70,7 +70,7 @@ std::list<SessionInfo> MySqlMgr::SelectSessions( int uuid )
     }
 }
 
-std::list<std::string> MySqlMgr::SelectMessagesInSession( int uuid, int ssn_id )
+std::list<MessageInfo> MySqlMgr::SelectMessagesInSession( int uuid, int ssn_id )
 {
     try
     {

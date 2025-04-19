@@ -27,7 +27,7 @@ public:
     // 获取一个用户的所有 session
     std::list<SessionInfo> SelectSessions( int uuid );
     // 获取一个特定会话的 message
-    std::list<std::string> SelectMessagesInSession( int uuid, int ssn_id );
+    std::list<MessageInfo> SelectMessagesInSession( int uuid, int ssn_id );
 
     // 新建特定 session（返回创建的 ssn_id）
     int CreateSession( int uuid );

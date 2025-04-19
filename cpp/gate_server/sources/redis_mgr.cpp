@@ -30,3 +30,11 @@ std::string RedisMgr::GetChatServerAddr( int uuid )
 
     return addr;
 }
+
+bool RedisMgr::CheckToken( int uuid, const std::string& token )
+{
+    const std::string PREFIX = "token_user_";
+    std::string result = "";
+    dao.Get( PREFIX + std::to_string( uuid ), &result );
+    return result == token;
+}
