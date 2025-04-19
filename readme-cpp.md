@@ -110,9 +110,27 @@ port ：**8080**
 
     浏览器会自动获取其相关的 js 和 css 文件
 
+#### `/api/v1/gate/get_chatserver`
+
+- 请求参数
+
+    无
+
+- 返回值（JSON）  
+
+    | 参数名  | 类型   | 说明              | 示例值               |
+    | :------ | :----- | :---------------- | :------------------- |
+    | `addr`  | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
+    | `error` | int    | 错误信息          | `1013`               |
+
+- 补充  
+
+    在发送该请求之前，应该先确定获得了有效的 cookie（在 /api/v1/login 成功之后会更新 cookie）  
+    当由前端自行在合适的时间请求，从而获得能够连接 `ChatServer` 接口 （比如在 /chat 页面加载完成之后）  
+
 ### POST
 
-#### `/api/v1/login`
+#### `/api/v1/gate/login`
 
 - 请求参数（JSON）
 
@@ -135,25 +153,7 @@ port ：**8080**
     当登录成功会直接重定向到 /chat 页面，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
     如果登录不成功才会返回 json 响应体  
 
-#### `/api/v1/get_chatserver`
-
-- 请求参数
-
-    无
-
-- 返回值（JSON）  
-
-    | 参数名  | 类型   | 说明              | 示例值               |
-    | :------ | :----- | :---------------- | :------------------- |
-    | `addr`  | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
-    | `error` | int    | 错误信息          | `1013`               |
-
-- 补充  
-
-    在发送该请求之前，应该先确定获得了有效的 cookie（在 /api/v1/login 成功之后会更新 cookie）  
-    当由前端自行在合适的时间请求，从而获得能够连接 `ChatServer` 接口 （比如在 /chat 页面加载完成之后）  
-
-#### `/api/v1/send_vrf`
+#### `/api/v1/gate/send_vrf`
 
 - 请求参数（JSON）
 
@@ -172,7 +172,7 @@ port ：**8080**
 
     验证码有效期为3分钟
 
-#### `/api/v1/register`
+#### `/api/v1/gate/register`
 
 - 请求参数（JSON）
 
@@ -210,7 +210,6 @@ port ：**8080**
     | :----------- | :--- | :------------------------------ | :----- |
     | `uuid`       | 是   | 当前用户                        | `123`  |
     | `session_id` | 是   | 用于链接对应 Websocket 进行转发 | `1145` |
-    | `model_id`   | 是   | 当前获取答案的模型              | `2`    |
 
 - 返回值  
 
@@ -228,7 +227,6 @@ port ：**8080**
     | 参数名       | 必填 | 说明                                       | 示例值 |
     | :----------- | :--- | :----------------------------------------- | :----- |
     | `session_id` | 是   | 用于链接对应 Websocket 进行转发            | `1145` |
-    | `model_id`   | 是   | 数据库记录 AI 回答的标记（其实不重要）     | `1`    |
 
 - 返回值  
 
@@ -415,3 +413,20 @@ port ：**8080**
     参数是 Web 所发给 ChatServer 的请求，除了 session_id 进行了更新没有改变  
     返回值中的 ` error ` 的取值，请参照上一部分中的 POST 请求错误码表的形式，从 201 开始编号
     ` ChatServer ` 并不会特别准备 Websocket 的链接，需要 ` ApiServer ` 自行发起 Websocket 连接，然后发送内容到 ` ChatServer `
+
+## 构建注意事项
+
+- 使用的 OpenSSL 版本为 3.0.15 3 Sep 2024 (Library: OpenSSL 3.0.15 3 Sep 2024)
+
+- gPRC 要依赖该 OpenSSL 工作，可选指令类似下图
+
+    ```bash
+    cmake ../.. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DgRPC_SSL_PROVIDER=package \
+        -DOPENSSL_ROOT_DIR=/usr \
+        -DgRPC_USE_BORINGSSL=OFF \
+        -DgRPC_USE_OPENSSL=ON \
+        -DgRPC_INSTALL=ON \
+        -DCMAKE_INSTALL_PREFIX=/usr/local # 或者您希望安装到的自定义路径
+    ```
