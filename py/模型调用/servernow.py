@@ -80,37 +80,46 @@ async def process_and_send_to_wss(data):
                         case "qianwen":
                             result = tongyi.tongyi_mutichat(promote, temperature)
 
-            reasoning_chunks = []
-            content_chunks = []
-            for chunk in result:
+            has_sent_reasoning_header = False
+            has_sent_content_header = False
+            reasoning_buffer = []
+            content_buffer = []
+
+            async for chunk in result if hasattr(result, "__aiter__") else result:
                 if isinstance(chunk, dict):
                     if chunk.get("type") == "reasoning":
-                        reasoning_chunks.append(chunk.get("reasoning_content", ""))
+                        if not has_sent_reasoning_header:
+                            await websocket.send("Reasoning:")
+                            has_sent_reasoning_header = True
+                        reasoning_text = chunk.get("reasoning_content", "")
+                        if reasoning_text:
+                            await websocket.send(reasoning_text)
+                            reasoning_buffer.append(reasoning_text)
+
                     elif chunk.get("type") == "content":
-                        content_chunks.append(chunk.get("content", ""))
+                        if not has_sent_content_header:
+                            await websocket.send("Contents:")
+                            has_sent_content_header = True
+                        content_text = chunk.get("content", "")
+                        if content_text:
+                            await websocket.send(content_text)
+                            content_buffer.append(content_text)
                     else:
                         logging.warning(f"未知类型 chunk: {chunk}")
                 else:
                     logging.warning(f"非字典 chunk: {chunk}")
 
-            if reasoning_chunks:
-                reasoning_message = {
-                    "role": "reasoning",
-                    "reasoning_content": "".join(reasoning_chunks)
-                }
-                await websocket.send(json.dumps(reasoning_message))
-                logging.info("已发送 reasoning_content")
+            # 分别在 reasoning 和 content 发送结束后统一发送分隔符
+            if reasoning_buffer:
+                await websocket.send("######@@@@@@%%%%%%")
+                logging.info("发送 reasoning 分隔符完成")
 
-            if content_chunks:
-                content_message = {
-                    "role": "content",
-                    "content": "".join(content_chunks)
-                }
-                await websocket.send(json.dumps(content_message))
-                logging.info("已发送 content")
+            if content_buffer:
+                await websocket.send("&&&&&&******^^^^^^")
+                logging.info("发送 content 分隔符完成")
 
             # 结束标记
-            await websocket.send(json.dumps({"end": True}))
+            await websocket.send("*^%$%&&$$$$$$%^^$##E%##^^$#$%")
             logging.info("发送 end 标志完成，关闭连接")
 
     except Exception as e:
