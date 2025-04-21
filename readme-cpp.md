@@ -139,9 +139,7 @@ port ：**8080**
     | `email`    | string | 是   | 用户注册邮箱 | `"user@domain.com"` |
     | `password` | string | 是   | 用户密码     | `"P@ssw0rd"`        |
 
-- 返回值（none 或 JSON）  
-
-    当登录不成功：  
+- 返回值（JSON）  
 
     | 参数名  | 类型 | 说明         | 示例值 |
     | :------ | :--- | :----------- | :----- |
@@ -150,8 +148,7 @@ port ：**8080**
 
 - 补充  
 
-    当登录成功会直接重定向到 /chat 页面，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
-    如果登录不成功才会返回 json 响应体  
+    当登录成功会返回 0 错误码，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
 
 #### `/api/v1/gate/send_vrf`
 
