@@ -274,6 +274,7 @@ port ：**8080**
     | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
     | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
     | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `is_bot`      | boolean| 是   | 标识本条对话时模型还是用户发出                                   |  true |
     | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
 
