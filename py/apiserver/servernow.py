@@ -10,12 +10,17 @@ import gptreadimage
 import deepseekfunc
 import gptfunc
 import tongyi
-#import gemini
+
+# import gemini
 import doubao
 import default
 import claude
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
 async def fetch_message_history(uuid: int, session_id: int | None):
     url = historyURL
     payload = {
@@ -35,7 +40,7 @@ async def process_and_send_to_wss(data):
     try:
         uuid = data.get("uuid")
         session_id = data.get("session_id")
-        model_type = data.get("model")
+        model_id = data.get("model_id")
         model_class = data.get("class")
         api_key = data.get("api_key")
         URL = data.get("URL")
@@ -49,32 +54,49 @@ async def process_and_send_to_wss(data):
             logging.info(f"已连接到目标 WSS：{wssURL}")
             history = await fetch_message_history(0, session_id)
             messages = history.get("messages")
-            promote = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
+            promote = [
+                {"role": msg["role"], "content": msg["content"]} for msg in messages
+            ]
+
+            if model_id == 1:
+                model_type = "deepseek"
 
             match talktype:
                 case "chat":
                     match model_class:
                         case "deepseek":
-                            result = deepseekfunc.deepseekgate(model_type, promote, temperature)
+                            result = deepseekfunc.deepseekgate(
+                                model_type, promote, temperature
+                            )
                         case "chatgpt":
-                            result = gptfunc.chatgpt_chat(model_type, promote, temperature)
+                            result = gptfunc.chatgpt_chat(
+                                model_type, promote, temperature
+                            )
                         case "tongyi":
-                            result = tongyi.tongyi_gate(model_type, promote, temperature)
-                        #case "gemini":
-                            #result = gemini.generate_content_stream(model_type, promote, temperature)
+                            result = tongyi.tongyi_gate(
+                                model_type, promote, temperature
+                            )
+                        # case "gemini":
+                        # result = gemini.generate_content_stream(model_type, promote, temperature)
                         case "doubao":
-                            result = doubao.get_chat_completion(model_type, promote, temperature)
+                            result = doubao.get_chat_completion(
+                                model_type, promote, temperature
+                            )
                         case "claude":
                             result = claude.stream_claude_response(promote, temperature)
                         case "tiangong":
                             result = tiangong.doubao_stream_chat(promote, temperature)
                         case _:
-                            result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
+                            result = default.get_chat_completion(
+                                api_key, URL, model_type, promote, temperature
+                            )
 
                 case "image":
                     match model_class:
                         case "chatgpt":
-                            result = gptreadimage.chatgpt_chat(model_type, promote, temperature)
+                            result = gptreadimage.chatgpt_chat(
+                                model_type, promote, temperature
+                            )
                         case "qianwen":
                             result = tongyi.tongyi_mutichat(promote, temperature)
 
@@ -129,7 +151,6 @@ async def process_and_send_to_wss(data):
         logging.error(f"WSS 推送过程中出错: {e}")
 
 
-
 async def http_handler(request):
     try:
         # 尝试解析 JSON 请求体
@@ -137,50 +158,50 @@ async def http_handler(request):
             data = await request.json()
         except Exception as e:
             logging.error(f"请求体不是合法 JSON: {e}")
-            return web.json_response({"errorcode": 3001, "message": "请求体必须为合法 JSON"})
+            return web.json_response(
+                {"errorcode": 3001, "message": "请求体必须为合法 JSON"}
+            )
 
         logging.info(f"接收到 HTTP 请求: {data}")
 
         # 检查必要字段是否存在
-        required_fields = ["uuid", "session_id", "model", "class", "prompt"]
+        required_fields = ["uuid", "session_id", "model_id", "model_class", "prompt"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             message = f"缺少必要参数: {', '.join(missing_fields)}"
             logging.error(message)
-            return web.json_response({"errorcode": 3002, "message": message})
+            return web.json_response({"error": 3002, "message": message})
 
         # 一切正常，异步处理任务
         asyncio.create_task(process_and_send_to_wss(data))
-        return web.json_response({"errorcode": 0})
+        return web.json_response({"error": 0})
 
     except Exception as e:
         # 兜底异常处理
         logging.error(f"HTTP 处理过程中发生未知错误: {e}")
-        return web.json_response({"errorcode": 3003, "message": f"内部错误: {str(e)}"})
-
-
-
+        return web.json_response({"error": 3003, "message": f"内部错误: {str(e)}"})
 
 
 async def main():
-    with open(r"py\apiserver\config.json", "r") as f:
+    with open(r"py/apiserver/config.json", "r") as f:
         config = json.load(f)
-    global historyURL, httpport, wssURL,key_path,certfile_path
+    global historyURL, httpport, wssURL, key_path, certfile_path
     historyURL = config["database"]["historyURL"]
     httpport = config["database"]["httpport"]
     wssURL = config["database"]["wssURL"]
-    certfile_path=config["database"]["certfile_path"]
-    key_path=config["database"]["key_path"]
+    certfile_path = config["database"]["certfile_path"]
+    key_path = config["database"]["key_path"]
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain(certfile=certfile_path, keyfile=key_path)
     app = web.Application()
-    app.router.add_post("/", http_handler)
+    app.router.add_post("/get_response", http_handler)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", httpport)
+    site = web.TCPSite(runner, "localhost", httpport)
     await site.start()
     logging.info("HTTP 服务已启动")
-    await asyncio.Future() 
+    await asyncio.Future()
+
 
 if __name__ == "__main__":
     try:
