@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import ssl
 import aiohttp
 from aiohttp import web
 import websockets
@@ -9,7 +10,7 @@ import gptreadimage
 import deepseekfunc
 import gptfunc
 import tongyi
-import gemini
+#import gemini
 import doubao
 import default
 import claude
@@ -42,6 +43,8 @@ async def process_and_send_to_wss(data):
         temperature = parameters.get("temperature", 0.7)
         talktype = parameters.get("type", "chat")
         WSSURL = f"wss://" + wssURL + f"/api/v1/ws/send_ans?session_id={session_id}"
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.load_cert_chain(certfile=r"D:\python\whchat_server-py\py\apiserver\server.crt", keyfile=r"D:\python\whchat_server-py\py\apiserver\server.key")
         async with websockets.connect(WSSURL) as websocket:
             logging.info(f"已连接到目标 WSS：{wssURL}")
             history = await fetch_message_history(0, session_id)
@@ -57,8 +60,8 @@ async def process_and_send_to_wss(data):
                             result = gptfunc.chatgpt_chat(model_type, promote, temperature)
                         case "tongyi":
                             result = tongyi.tongyi_gate(model_type, promote, temperature)
-                        case "gemini":
-                            result = gemini.generate_content_stream(model_type, promote, temperature)
+                        #case "gemini":
+                            #result = gemini.generate_content_stream(model_type, promote, temperature)
                         case "doubao":
                             result = doubao.get_chat_completion(model_type, promote, temperature)
                         case "claude":
@@ -155,17 +158,19 @@ async def http_handler(request):
         logging.error(f"HTTP 处理过程中发生未知错误: {e}")
         return web.json_response({"errorcode": 3003, "message": f"内部错误: {str(e)}"})
 
-    
+
 
 
 
 async def main():
-    with open("config.json", "r") as f:
+    with open(r"D:\python\whchat_server-py\py\apiserver\config.json", "r") as f:
         config = json.load(f)
     global historyURL, httpport, wssURL
     historyURL = config["database"]["historyURL"]
     httpport = config["database"]["httpport"]
     wssURL = config["database"]["wssURL"]
+    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    ssl_context.load_cert_chain(certfile=r"D:\python\whchat_server-py\py\apiserver\server.crt", keyfile=r"D:\python\whchat_server-py\py\apiserver\server.key")
     app = web.Application()
     app.router.add_post("/", http_handler)
     runner = web.AppRunner(app)
