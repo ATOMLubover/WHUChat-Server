@@ -44,7 +44,7 @@ async def process_and_send_to_wss(data):
         talktype = parameters.get("type", "chat")
         WSSURL = f"wss://" + wssURL + f"/api/v1/ws/send_ans?session_id={session_id}"
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        ssl_context.load_cert_chain(certfile=r"D:\python\whchat_server-py\py\apiserver\server.crt", keyfile=r"D:\python\whchat_server-py\py\apiserver\server.key")
+        ssl_context.load_cert_chain(certfile=certfile_path, keyfile=key_path)
         async with websockets.connect(WSSURL) as websocket:
             logging.info(f"已连接到目标 WSS：{wssURL}")
             history = await fetch_message_history(0, session_id)
@@ -163,14 +163,16 @@ async def http_handler(request):
 
 
 async def main():
-    with open(r"D:\python\whchat_server-py\py\apiserver\config.json", "r") as f:
+    with open(r"py\apiserver\config.json", "r") as f:
         config = json.load(f)
-    global historyURL, httpport, wssURL
+    global historyURL, httpport, wssURL,key_path,certfile_path
     historyURL = config["database"]["historyURL"]
     httpport = config["database"]["httpport"]
     wssURL = config["database"]["wssURL"]
+    certfile_path=config["database"]["certfile_path"]
+    key_path=config["database"]["key_path"]
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_context.load_cert_chain(certfile=r"D:\python\whchat_server-py\py\apiserver\server.crt", keyfile=r"D:\python\whchat_server-py\py\apiserver\server.key")
+    ssl_context.load_cert_chain(certfile=certfile_path, keyfile=key_path)
     app = web.Application()
     app.router.add_post("/", http_handler)
     runner = web.AppRunner(app)
