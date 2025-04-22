@@ -311,7 +311,8 @@ port ：**8080**
     | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
     | `model_id` | int | 选择的模型 ID                                                  | `3`                                         |
     | `model_class`    | string | 选择的模型大类                                                  | `"OpenAI"`                                                 |
-    | `prompt`      | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `is_bot`      | boolean| 是   | 标识本条对话时模型还是用户发出                                   |  true |
+    | `prompt`      | array  | 每个元素是一个对象, 现阶段可以只考虑文本，但保留图片的可扩展性  | 对图像形如`{"type": "image", "content": {"url": ...}}`, 对文本则是`{"type": "text", "content": "hello"}`，组成数组 |
     | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
