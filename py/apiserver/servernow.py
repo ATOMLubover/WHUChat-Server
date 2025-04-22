@@ -192,12 +192,12 @@ async def main():
     cert_path = config["database"]["certfile_path"]
     key_path = config["database"]["key_path"]
     if os.path.exists(cert_path):
-            ssl_context.load_verify_locations(cert_path)
+        ssl_context.load_verify_locations(cert_path)
     else:
-            print(f"警告: 证书文件 {cert_path} 不存在，将尝试不进行严格验证。")
-            ssl_context.check_hostname = (
-                False  # 如果证书不存在，回退到不验证 (仅限开发)
-            )
+        print(f"警告: 证书文件 {cert_path} 不存在，将尝试不进行严格验证。")
+        ssl_context.check_hostname = (
+            False  # 如果证书不存在，回退到不验证 (仅限开发)
+        )
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain(certfile=certfile_path, keyfile=key_path)
     app = web.Application()
