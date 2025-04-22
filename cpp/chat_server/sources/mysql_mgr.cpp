@@ -74,7 +74,18 @@ std::list<MessageInfo> MySqlMgr::SelectMessagesInSession( int uuid, int ssn_id )
 {
     try
     {
-        return dao.SelectMessages( uuid, ssn_id );;
+        auto sessions = dao.SelectSessions( uuid );
+        if ( std::find_if(
+            sessions.begin(),
+            sessions.end(),
+            [ ssn_id ] ( const SessionInfo& info ) { return info.m_id == ssn_id; }
+        )
+            == sessions.end() )
+        {
+            return {};
+        }
+
+        return dao.SelectMessages( ssn_id );;
     }
     catch ( const std::exception& exp )
     {
@@ -143,12 +154,22 @@ int MySqlMgr::CreateMessage(
     const std::string& content, const std::string& sender,
     std::string raw )
 {
+    // // 如果 content 为空，则不创建消息
+    // if ( content.empty() )
+    //     return -1;
+
     try
     {
         // 先确定创建的消息是否是该用户已创建会话中的
         // 不等于 0 的是用户发送的消息
         if ( uuid != 0 )
         {
+            // 当是用户的信息试图插入时，要检查 raw 中的 prompt 对象 content 字段是否为空
+            nlohmann::json json_raw = nlohmann::json::parse( raw );
+            if ( json_raw[ "prompt" ][ "content" ].is_null()
+                || json_raw[ "prompt" ][ "content" ].get<std::string>().empty() )
+                return -1;
+
             auto sessions_of_user = SelectSessions( uuid );
             if ( std::find_if(
                 sessions_of_user.begin(),
@@ -162,12 +183,15 @@ int MySqlMgr::CreateMessage(
         // 如果是 AI 的回答，则需要处理生成 raw 数据
         else
         {
-            nlohmann::json json_raw;
+            // 当是 AI 的回答时，要检查 content 是否为空
+            if ( content.empty() )
+                return -1;
 
             nlohmann::json json_prompt;
             json_prompt[ "role" ] = "assistant";
             json_prompt[ "content" ] = content;
 
+            nlohmann::json json_raw;
             json_raw[ "prompt" ] = json_prompt;
             json_raw[ "model_id" ] = model_id;
             json_raw[ "session_id" ] = ssn_id;
@@ -178,7 +202,7 @@ int MySqlMgr::CreateMessage(
 
         int result = dao.CreateMessage(
             uuid, ssn_id, model_id,
-            content, sender,
+            sender,
             raw );
         switch ( result )
         {

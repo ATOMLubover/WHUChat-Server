@@ -161,15 +161,19 @@ bool SvrWssMgr::CheckPipeCliFormat( std::shared_ptr<SvrHttpsConn> conn )
         auto iter_uuid = params.find( "uuid" );
         if ( iter_uuid == params.end() )
             return false;
+        // 如果不存在 session_id 则返回 false
+        auto iter_ssn_id = params.find( "session_id" );
+        if ( iter_ssn_id == params.end() )
+            return false;
 
         // 检查 cookie
         if ( !CheckCookieWithUuid( conn, std::stoi( iter_uuid->second ) ) )
             return false;
 
-        // 不存在 seesion_id 则返回 false
-        auto iter_ssn_id = params.find( "session_id" );
-        if ( iter_ssn_id == params.end() )
-            return false;
+        // // 不存在 seesion_id 则返回 false
+        // auto iter_ssn_id = params.find( "session_id" );
+        // if ( iter_ssn_id == params.end() )
+        //     return false;
 
         // 如果当前 session_id 不是这个用户的，则返回 false
         auto sessions = MySqlMgr::GetInstance()->SelectSessions(

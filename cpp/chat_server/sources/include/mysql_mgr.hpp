@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aliases.h"
 #include "singleton.hpp"
 #include "mysql_dao.hpp"
 

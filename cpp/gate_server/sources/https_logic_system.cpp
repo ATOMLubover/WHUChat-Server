@@ -420,9 +420,11 @@ void HttpsLogicSystem::InitPostHandlers()
                         return response;
                     }
 
-                    // 直接重定向
-                    response->set( http::field::location, "/chat" );
-                    response->result( http::status::temporary_redirect );
+                    // 不直接重定向，而是给出错误码，让客户端自行判断是否跳转
+                    json_res.emplace( "uuid", uuid );
+                    json_res.emplace( "error", EnumErrorCode::Success );
+
+                    response->body() = json_res.dump();
 
                     // 并且最后写入用于免密登录的 cookie
                     // 同时更新数据库中用户的 updated_at 时间

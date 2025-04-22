@@ -147,7 +147,7 @@ std::list<SessionInfo> MySqlDao::SelectSessions( int uuid )
     return result;
 }
 
-std::list<MessageInfo> MySqlDao::SelectMessages( int uuid, int ssn_id )
+std::list<MessageInfo> MySqlDao::SelectMessages( int ssn_id )
 {
     std::unique_ptr<MySqlConn> conn = conn_pool->TakeConn();
     if ( conn == nullptr )
@@ -166,14 +166,15 @@ std::list<MessageInfo> MySqlDao::SelectMessages( int uuid, int ssn_id )
     MySqlStmt stmt( conn );
     std::unique_ptr<sql::ResultSet> resultset
         = stmt.Commit( fmt::format(
-            "SELECT `id`, `raw` FROM `messages` WHERE `session_id` = {}",
+            "SELECT `id`, `sender`, `raw` FROM `messages` WHERE `session_id` = {}",
             ssn_id ) );
     std::list<MessageInfo> result;
     while ( resultset->next() )
     {
         result.push_back( MessageInfo{
             resultset->getInt( 1 ),
-            resultset->getString( 2 ) } );
+            resultset->getString( 2 ),
+            resultset->getString( 3 ) } );
     }
 
     return std::move( result );
@@ -243,7 +244,7 @@ int MySqlDao::UpdateSessionTitle( int ssn_id, const std::string& title )
 
 int MySqlDao::CreateMessage(
     int uuid, int ssn_id, int model_id,
-    const std::string& content, const std::string& sender,
+    const std::string& sender,
     const std::string& raw )
 {
     // 当 raw 为空，直接返回
@@ -266,9 +267,9 @@ int MySqlDao::CreateMessage(
 
     MySqlStmt stmt( conn );
     stmt.SetStatement( fmt::format(
-        "CALL CreateMessage( {}, {}, {}, '{}', '{}', '{}', @result )",
+        "CALL CreateMessage( {}, {}, {}, '{}', '{}', @result )",
         uuid, ssn_id, model_id,
-        sender, content, raw ) );
+        sender, raw ) );
     std::unique_ptr<sql::ResultSet> resultset
         = stmt.Commit( "SELECT @result" );
     if ( resultset->next() )

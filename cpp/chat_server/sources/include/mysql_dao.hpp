@@ -19,6 +19,7 @@ struct ModelInfo
 struct MessageInfo
 {
     int m_id;
+    std::string m_sender;
     std::string m_raw;
 };
 
@@ -51,7 +52,7 @@ public:
     /// @brief 获取指定用户所有的 session 的基本信息
     std::list<SessionInfo> SelectSessions( int uuid );
     /// @brief 获取指定 session 的信息
-    std::list<MessageInfo> SelectMessages( int uuid, int ssn_id );
+    std::list<MessageInfo> SelectMessages( int ssn_id );
 
     /// @brief 创建新会话
     /// @return 错误码：-3 model_id 不存在，-2 uuid 不存在，-1 异常，0 未定义，大于 0 创建成功
@@ -66,7 +67,7 @@ public:
     /// @note 创建成功后，会返回 session_id
     int CreateMessage(
         int uuid, int ssn_id, int model_id,
-        const std::string& content, const std::string& sender,
+        const std::string& sender,
         const std::string& raw );
 
     // 获取用户的 updated_at

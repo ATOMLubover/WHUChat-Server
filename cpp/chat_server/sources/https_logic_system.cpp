@@ -281,6 +281,7 @@ void HttpsLogicSystem::InitPostHandlers()
                     {
                         nlohmann::json json_msg = nlohmann::json::parse( msg.m_raw );
                         json_msg.emplace( "id", msg.m_id );
+                        json_msg.emplace( "sender", msg.m_sender );
                         json_msgs.emplace_back( json_msg );
                     }
 
@@ -464,7 +465,8 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
 
         int uuid = json_req[ "uuid" ].get<int>();
         std::string sender = json_req[ "prompt" ][ "role" ].get<std::string>();
-        std::string content = json_req[ "prompt" ][ "content" ].get<std::string>();
+        int model_id = json_req[ "model_id" ].get<int>();
+        // std::string content = json_req[ "prompt" ][ "content" ].get<std::string>();
 
         // 如果是新 session，则创建一个新的 session
         if ( ssn_id->is_null() )
@@ -497,8 +499,8 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
 
         // 记录用户提出的消息
         if ( MySqlMgr::GetInstance()->CreateMessage(
-            *ssn_id, uuid, 100,
-            content, sender,
+            *ssn_id, uuid, model_id,
+            "", "user",
             json_req.dump() )
             != 0 )
         {
@@ -534,7 +536,7 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
             // 设定 rsp handler
             CliRspHandler handler( std::make_shared<
                 std::function<void( http::response<http::string_body>&& )>>(
-                    [ conn ] ( http::response<http::string_body>&& cli_rsp )
+                    [ conn, session_id = *ssn_id ] ( http::response<http::string_body>&& cli_rsp )
                     {
                         http::response<http::string_body> response;
                         response.set( http::field::content_type, "application/json" );
@@ -555,6 +557,7 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
                         }
 
                         json_res.emplace( "error", json_cli[ "error" ] );
+                        json_res.emplace( "session_id", session_id );
 
                         response.body() = json_res.dump();
                         conn->DoWrite( std::move( response ) );
