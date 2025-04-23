@@ -49,15 +49,13 @@ async def handle_send_ans(request: web.Request):
         logging.info(f"接收到 HTTP 请求: {data}")
         session_id = data.get("session_id")
         if not session_id:
-            return web.json_response({"error": 1, "message": "缺少 session_id"})
+            return web.json_response({"error": 3004})
 
 
         required_fields = ["uuid", "session_id", "model_id", "model_class", "prompt"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
-            message = f"缺少必要参数: {', '.join(missing_fields)}"
-            logging.error(message)
-            return web.json_response({"error": 3002, "message": message})
+            return web.json_response({"error": 3002})
         # 构造 wss URL（你也可以替换成固定地址）
         ws_url = get_client_ws_url(request, session_id)
         logging.info(f"准备连接 WebSocket: {ws_url}")
@@ -155,23 +153,23 @@ async def handle_send_ans(request: web.Request):
 
     except Exception as e:
         logging.error(f"处理失败: {e}")
-        return web.json_response({"error": 500, "message": str(e)})
+        return web.json_response({"error": 3005})
 
 # 启动 HTTPS 服务监听 POST
 def main():
     with open("py/apiserver/#http_to_wss_server.json", "r") as f:
         config = json.load(f)
     app = web.Application()
-    app.router.add_post("/api/v1/ws/send_ans", handle_send_ans)
+    app.router.add_post("/get_response", handle_send_ans)
     global CERT_PATH, KEY_PATH,httpport, wssport
     CERT_PATH = config["CERT_PATH"]
     KEY_PATH = config["KEY_PATH"]
     httpport = config["httpport"]
     wssport = config["wssport"]
-    #ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    #ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
+    ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
-    web.run_app(app, host="0.0.0.0", port=httpport)
+    web.run_app(app, host="0.0.0.0", port=httpport, ssl_context=ssl_ctx)
 
 if __name__ == "__main__":
     main()
