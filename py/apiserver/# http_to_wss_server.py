@@ -11,6 +11,7 @@ import deepseekfunc
 import gptfunc
 import tongyi
 import os
+
 # import gemini
 import doubao
 import default
@@ -20,20 +21,26 @@ import claude
 logging.basicConfig(level=logging.INFO)
 
 # SSL 证书路径
-#CERT_PATH = "py/apiserver/server.crt"
-#KEY_PATH = "py/apiserver/server.key"
+# CERT_PATH = "py/apiserver/server.crt"
+# KEY_PATH = "py/apiserver/server.key"
+
 
 async def ensure_async_iterable(obj):
     if hasattr(obj, "__aiter__"):
         return obj  # 是 async generator
+
     async def fake_async_gen():
         for item in obj:
             yield item
+
     return fake_async_gen()
+
+
 # 示例: 构造 WebSocket 连接地址（客户端暴露的 wss 服务地址）
 def get_client_ws_url(request, session_id: int) -> str:
     client_ip = request.remote or "localhost"  # 取发起请求者的 IP
-    return f"wss://{client_ip}:{wssport}/ws?session_id={session_id}"
+    return f"wss://{client_ip}:{wssport}/api/v1/ws/send_ans?session_id={session_id}"
+
 
 # HTTPS 请求处理逻辑
 async def handle_send_ans(request: web.Request):
@@ -45,12 +52,11 @@ async def handle_send_ans(request: web.Request):
             return web.json_response(
                 {"error": 3001, "message": "请求体必须为合法 JSON"}
             )
-        
+
         logging.info(f"接收到 HTTP 请求: {data}")
         session_id = data.get("session_id")
         if not session_id:
             return web.json_response({"error": 3004})
-
 
         required_fields = ["uuid", "session_id", "model_id", "model_class", "prompt"]
         missing_fields = [field for field in required_fields if field not in data]
@@ -67,7 +73,7 @@ async def handle_send_ans(request: web.Request):
 
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(ws_url, ssl=client_ssl) as ws:
-                #await ws.send_str(f"来自服务端：已建立连接，session_id={session_id}")
+                # await ws.send_str(f"来自服务端：已建立连接，session_id={session_id}")
                 try:
                     uuid = data.get("uuid")
                     session_id = data.get("session_id")
@@ -78,8 +84,8 @@ async def handle_send_ans(request: web.Request):
                     parameters = data.get("parameters", {})
                     temperature = parameters.get("temperature", 0.7)
                     talktype = parameters.get("type", "chat")
-                    #history = await fetch_message_history(0, session_id)
-                    #messages = history.get("messages")
+                    # history = await fetch_message_history(0, session_id)
+                    # messages = history.get("messages")
                     prompt_data = data.get("prompt", {})
 
                     # 如果是单条消息（dict），包装成列表
@@ -90,7 +96,9 @@ async def handle_send_ans(request: web.Request):
                     else:
                         messages = []
 
-                    promote = [{"role": m["role"], "content": m["content"]} for m in messages]
+                    promote = [
+                        {"role": m["role"], "content": m["content"]} for m in messages
+                    ]
 
                     if model_id == 1:
                         model_type = "deepseek-chat"
@@ -100,17 +108,23 @@ async def handle_send_ans(request: web.Request):
                             match model_class:
                                 case "deepseek":
                                     print("deepseek")
-                                    result = deepseekfunc.deepseekgate(model_type, promote, temperature)
+                                    result = deepseekfunc.deepseekgate(
+                                        model_type, promote, temperature
+                                    )
                                 case _:
-                                    result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
+                                    result = default.get_chat_completion(
+                                        api_key, URL, model_type, promote, temperature
+                                    )
 
                     has_sent_reasoning_header = False
                     has_sent_content_header = False
                     reasoning_buffer = []
                     content_buffer = []
                     result = await ensure_async_iterable(result)
-                    
-                    async for chunk in result if hasattr(result, "__aiter__") else result:
+
+                    async for chunk in (
+                        result if hasattr(result, "__aiter__") else result
+                    ):
                         if isinstance(chunk, dict):
                             if chunk.get("type") == "reasoning":
                                 if not has_sent_reasoning_header:
@@ -155,13 +169,14 @@ async def handle_send_ans(request: web.Request):
         logging.error(f"处理失败: {e}")
         return web.json_response({"error": 3005})
 
+
 # 启动 HTTPS 服务监听 POST
 def main():
     with open("py/apiserver/#http_to_wss_server.json", "r") as f:
         config = json.load(f)
     app = web.Application()
     app.router.add_post("/get_response", handle_send_ans)
-    global CERT_PATH, KEY_PATH,httpport, wssport
+    global CERT_PATH, KEY_PATH, httpport, wssport
     CERT_PATH = config["CERT_PATH"]
     KEY_PATH = config["KEY_PATH"]
     httpport = config["httpport"]
@@ -170,6 +185,7 @@ def main():
     ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
     web.run_app(app, host="0.0.0.0", port=httpport, ssl_context=ssl_ctx)
+
 
 if __name__ == "__main__":
     main()
