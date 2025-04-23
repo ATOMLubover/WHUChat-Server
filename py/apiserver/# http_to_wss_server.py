@@ -20,8 +20,8 @@ import claude
 logging.basicConfig(level=logging.INFO)
 
 # SSL 证书路径
-CERT_PATH = "py/apiserver/server.crt"
-KEY_PATH = "py/apiserver/server.key"
+#CERT_PATH = "py/apiserver/server.crt"
+#KEY_PATH = "py/apiserver/server.key"
 
 async def ensure_async_iterable(obj):
     if hasattr(obj, "__aiter__"):
@@ -33,7 +33,7 @@ async def ensure_async_iterable(obj):
 # 示例: 构造 WebSocket 连接地址（客户端暴露的 wss 服务地址）
 def get_client_ws_url(request, session_id: int) -> str:
     client_ip = request.remote or "localhost"  # 取发起请求者的 IP
-    return f"wss://{client_ip}:8765/ws?session_id={session_id}"
+    return f"wss://{client_ip}:{wssport}/ws?session_id={session_id}"
 
 # HTTPS 请求处理逻辑
 async def handle_send_ans(request: web.Request):
@@ -159,13 +159,19 @@ async def handle_send_ans(request: web.Request):
 
 # 启动 HTTPS 服务监听 POST
 def main():
+    with open("py/apiserver/#http_to_wss_server.json", "r") as f:
+        config = json.load(f)
     app = web.Application()
     app.router.add_post("/api/v1/ws/send_ans", handle_send_ans)
-
+    global CERT_PATH, KEY_PATH,httpport, wssport
+    CERT_PATH = config["CERT_PATH"]
+    KEY_PATH = config["KEY_PATH"]
+    httpport = config["httpport"]
+    wssport = config["wssport"]
     #ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     #ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
-    web.run_app(app, host="0.0.0.0", port=8443)
+    web.run_app(app, host="0.0.0.0", port=httpport)
 
 if __name__ == "__main__":
     main()
