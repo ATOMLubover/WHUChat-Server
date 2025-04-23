@@ -43,7 +43,7 @@ async def handle_send_ans(request: web.Request):
         except Exception as e:
             logging.error(f"请求体不是合法 JSON: {e}")
             return web.json_response(
-                {"errorcode": 3001, "message": "请求体必须为合法 JSON"}
+                {"error": 3001, "message": "请求体必须为合法 JSON"}
             )
         
         logging.info(f"接收到 HTTP 请求: {data}")
@@ -69,7 +69,7 @@ async def handle_send_ans(request: web.Request):
 
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(ws_url, ssl=client_ssl) as ws:
-                await ws.send_str(f"来自服务端：已建立连接，session_id={session_id}")
+                #await ws.send_str(f"来自服务端：已建立连接，session_id={session_id}")
                 try:
                     uuid = data.get("uuid")
                     session_id = data.get("session_id")
