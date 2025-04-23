@@ -13,7 +13,7 @@ KEY_PATH = "py/apiserver/server.key"
 
 # 🔁 HTTP 客户端：POST 请求服务端（HTTP）
 async def send_post_to_server():
-    url = "http://localhost:8443/api/v1/ws/send_ans"  # ✅ 改成 HTTP
+    url = "http://localhost:8443/get_response"  # ✅ 改成 HTTP
     data = {
         "uuid": 1,
         "session_id": 1145,
