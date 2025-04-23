@@ -184,7 +184,7 @@ def main():
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
-    web.run_app(app, host="0.0.0.0", port=httpport, ssl_context=ssl_ctx)
+    web.run_app(app, host="localhost", port=httpport, ssl_context=ssl_ctx)
 
 
 if __name__ == "__main__":
