@@ -166,8 +166,21 @@ int MySqlMgr::CreateMessage(
         {
             // 当是用户的信息试图插入时，要检查 raw 中的 prompt 对象 content 字段是否为空
             nlohmann::json json_raw = nlohmann::json::parse( raw );
-            if ( json_raw[ "prompt" ][ "content" ].is_null()
-                || json_raw[ "prompt" ][ "content" ].get<std::string>().empty() )
+            // 由于 prompt 是一个对象数组，所以遍历检测是否全部为空
+            // 如果全部为空或者对象为空，则返回 -1
+            bool is_blank = true;
+            for ( const auto& item : json_raw[ "prompt" ] )
+            {
+                if ( item.is_null() )
+                    break;
+
+                if ( !item[ "content" ].empty() )
+                {
+                    is_blank = false;
+                    break;
+                }
+            }
+            if ( is_blank )
                 return -1;
 
             auto sessions_of_user = SelectSessions( uuid );

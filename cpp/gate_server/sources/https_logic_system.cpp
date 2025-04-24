@@ -63,8 +63,8 @@ void HttpsLogicSystem::RegisterGetter( std::shared_ptr<SvrHttpsConn> conn )
                                 auto res
                                     = std::make_shared<http::response<http::string_body>>();
                                 std::string addr_gate_server
-                                    = ConfigMgr::GetInstance()[ "gate_server" ][ "host" ]
-                                    + ":" + ConfigMgr::GetInstance()[ "gate_server" ][ "port" ];
+                                    = ConfigMgr::GetInstance()[ "gate_server_local" ][ "host" ]
+                                    + ":" + ConfigMgr::GetInstance()[ "gate_server_local" ][ "port" ];
                                 res->set( http::field::access_control_allow_origin, addr_gate_server );
                                 res->set( http::field::access_control_allow_methods, "GET, POST, DEL, OPTIONS" );
                                 res->set( http::field::access_control_allow_headers, "Content-Type, Accept, Authorization" );

@@ -230,25 +230,24 @@ bool SvrWssMgr::CheckPipeSvrFormat( std::shared_ptr<SvrHttpsConn> conn )
 
 void SvrWssMgr::TryBuildPipe( std::shared_ptr<SvrWssConn> conn )
 {
-    auto iter = conn->GetParGet().find( "session_id" );
-    if ( iter == conn->GetParGet().end() )
+    auto par_get = conn->GetParGet();
+    auto iter_ssn = par_get.find( "session_id" );
+    if ( iter_ssn == conn->GetParGet().end() )
         return;
+    // 由于 WebsockConn 的建立是客户端自行决定时机的
+    // 无法确定 WebsockMsgPipe 先有谁建立，故先使用 session_id 验证存在性
+    int session_id = std::stoi( iter_ssn->second );
 
     try
     {
-        // 由于 WebsockConn 的建立是客户端自行决定时机的
-        // 无法确定 WebsockMsgPipe 先有谁建立，故先使用 session_id 验证存在性
-        int session_id = std::stoi( iter->second );
-        //int uuid = std::stoi( conn->GetParGet()[ "uuid" ] );
-
         // 防止多次建立同一个管道，锁定
         std::lock_guard<std::mutex> guard( m_mtx_pipe );
 
-        auto iter = m_map_pipe.find( session_id );
+        auto iter_pipe = m_map_pipe.find( session_id );
         // 如果不存在先前的，则先创建一个
-        if ( iter == m_map_pipe.end() )
+        if ( iter_pipe == m_map_pipe.end() )
         {
-            iter = m_map_pipe.insert( std::make_pair(
+            iter_pipe = m_map_pipe.insert( std::make_pair(
                 session_id,
                 std::make_shared<SvrWssPipe>( session_id ) ) )
                 .first;
@@ -260,7 +259,7 @@ void SvrWssMgr::TryBuildPipe( std::shared_ptr<SvrWssConn> conn )
         // 如果来自 ApiServer，则绑定 input
         if ( conn->GetUri() == SvrWssPipe::PIPE_URI_INPUT )
         {
-            iter->second->BindInput( conn );
+            iter_pipe->second->BindInput( conn );
             std::cout << "WebsockMsgPipe（session_id：" << session_id << "）"
                 "已接入input" << std::endl;
             return;
@@ -268,7 +267,7 @@ void SvrWssMgr::TryBuildPipe( std::shared_ptr<SvrWssConn> conn )
         // 如果来自 web client，则绑定 output
         if ( conn->GetUri() == SvrWssPipe::PIPE_URI_OUTPUT )
         {
-            iter->second->BindOutput( conn );
+            iter_pipe->second->BindOutput( conn );
             std::cout << "WebsockMsgPipe（session_id：" << session_id << "）"
                 "已接入output" << std::endl;
             return;

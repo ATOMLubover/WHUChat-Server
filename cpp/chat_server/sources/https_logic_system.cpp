@@ -462,8 +462,10 @@ void HttpsLogicSystem::TransferMsgToApiServer( std::shared_ptr<SvrHttpsConn> con
             return;
         }
 
+        std::cout << json_req.dump( 4 ) << std::endl;
+
         int uuid = json_req[ "uuid" ].get<int>();
-        std::string sender = json_req[ "prompt" ][ "role" ].get<std::string>();
+        //std::string sender = json_req[ "prompt" ][ "role" ].get<std::string>();
         int model_id = json_req[ "model_id" ].get<int>();
         // std::string content = json_req[ "prompt" ][ "content" ].get<std::string>();
 
