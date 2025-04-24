@@ -44,6 +44,9 @@ private:
     // 当 msg == "\0" 时不会发送该 msg
     void MakeOutputSend( std::string msg );
 
+    // 保存 message 进入流内
+    void SaveMsg( std::string msg );
+
 private:
     // 管道编号计数器
     static std::atomic<int> pipe_id_cnt;

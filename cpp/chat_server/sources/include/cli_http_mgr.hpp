@@ -3,6 +3,8 @@
 #include "singleton.hpp"
 #include "cli_http_conn.hpp"
 
+#include <boost/asio/ssl.hpp>
+
 // 仅管理客户端型 HTTP 连接的管理类
 class CliHttpMgr
     : public Singleton<CliHttpMgr>
@@ -14,6 +16,9 @@ public:
 
     // 字符串化函数
     std::string ToString() const;
+
+    // 初始化 SSL 上下文
+    void Init( ssl::context* ssl_ctx );
 
     // 创建一个客户端型 HTTP 连接
     std::shared_ptr<CliHttpConn> CreateConn();
@@ -31,5 +36,6 @@ private:
     CliHttpMgr& operator=( const CliHttpMgr& ) = delete;
 
 private:
-
+    // SSL 上下文
+    ssl::context* m_ssl_ctx = nullptr;
 };

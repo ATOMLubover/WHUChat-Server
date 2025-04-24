@@ -202,7 +202,7 @@ bool SvrWssMgr::CheckPipeCliFormat( std::shared_ptr<SvrHttpsConn> conn )
 bool SvrWssMgr::CheckPipeSvrFormat( std::shared_ptr<SvrHttpsConn> conn )
 {
     // 定义正则表达式，匹配参数字符串应该要有 token 和 session_id
-    std::regex pattern( R"((?:session_id=(\d+)&uuid=(\d+)|uuid=(\d+)&session_id=(\d+)))" );
+    std::regex pattern( R"(session_id=\d+)" );
     std::string raw_params = conn->GetRawParamsOfGet();
     if ( !std::regex_match( raw_params, pattern ) )
         return false;
@@ -212,7 +212,7 @@ bool SvrWssMgr::CheckPipeSvrFormat( std::shared_ptr<SvrHttpsConn> conn )
         auto params = conn->GetParamsOfGet();
 
         // 获取参数
-        std::string token = params[ "token" ];
+        // std::string token = params[ "token" ];
         int session_id = std::stoi( params[ "session_id" ] );
 
         // 确定是否存在对应会话
@@ -239,7 +239,7 @@ void SvrWssMgr::TryBuildPipe( std::shared_ptr<SvrWssConn> conn )
         // 由于 WebsockConn 的建立是客户端自行决定时机的
         // 无法确定 WebsockMsgPipe 先有谁建立，故先使用 session_id 验证存在性
         int session_id = std::stoi( iter->second );
-        int uuid = std::stoi( conn->GetParGet()[ "uuid" ] );
+        //int uuid = std::stoi( conn->GetParGet()[ "uuid" ] );
 
         // 防止多次建立同一个管道，锁定
         std::lock_guard<std::mutex> guard( m_mtx_pipe );

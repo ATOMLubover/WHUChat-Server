@@ -3,6 +3,7 @@
 #include "mysql_mgr.hpp"
 
 #include <fmt/format.h>
+#include <json/json.hpp>
 
 #include <iostream>
 
@@ -60,6 +61,9 @@ void SvrWssPipe::BindInput( std::shared_ptr<SvrWssConn> conn )
                     // 若是管道的 output 已绑定，则直接发送
                     if ( self->m_output )
                     {
+                        // 将保存 ApiServer 回答和向客户端发送消息独立
+                        self->SaveMsg( msg );
+
                         self->MakeOutputSend( std::move( msg ) );
                         return true;
                     }
@@ -75,6 +79,8 @@ void SvrWssPipe::BindInput( std::shared_ptr<SvrWssConn> conn )
                         << std::endl;
 
                     self->m_que_buf.push( msg );
+                    // 将保存 ApiServer 回答和向客户端发送消息独立
+                    self->SaveMsg( msg );
 
                     return true;
                 }
@@ -121,7 +127,7 @@ void SvrWssPipe::MakeOutputSend( std::string msg )
     // 先发送积存的信息
     while ( !m_que_buf.empty() )
     {
-        m_message << m_que_buf.front();
+        // m_message << m_que_buf.front();
 
         m_output->DoSend( std::move( m_que_buf.front() ) );
         m_que_buf.pop();
@@ -130,7 +136,19 @@ void SvrWssPipe::MakeOutputSend( std::string msg )
     // 然后再发送当前信息
     if ( msg != "\0" )
     {
-        m_message << msg;
+        // m_message << msg;
         m_output->DoSend( msg );
+    }
+}
+
+void SvrWssPipe::SaveMsg( std::string msg )
+{
+    if ( msg != "\0" )
+    {
+        nlohmann::json json;
+        json.emplace( "raw", msg );
+        std::string raw = json[ "raw" ].dump();
+        raw = raw.substr( 1, raw.size() - 2 );
+        m_message << std::move( raw );
     }
 }

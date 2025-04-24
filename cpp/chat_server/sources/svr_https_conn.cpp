@@ -123,7 +123,7 @@ void SvrHttpsConn::OnRead( beast::error_code ec )
     if ( !m_logic_getter( shared_from_this() ) )
     {
         if ( m_ssl_stream != nullptr )
-            ResponseFailure( m_req, http::status::not_found, "URI invalid" );
+            ResponseFailure( m_req, http::status::bad_request, "request failed to process" );
         std::clog << fmt::format( "SvrHttpsConn(ID: {})作为HTTPS失效：{}\n",
             m_id, m_req->target() );
         return;

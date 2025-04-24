@@ -126,7 +126,6 @@ void HttpsLogicSystem::InitGetHandlers()
                         nlohmann::json json_model;
                         json_model.emplace( "id", model.m_id );
                         json_model.emplace( "name", model.m_name );
-                        json_model.emplace( "class", model.m_class );
                         json_model.emplace( "desc", model.m_desc );
 
                         json_models.emplace_back( json_model );

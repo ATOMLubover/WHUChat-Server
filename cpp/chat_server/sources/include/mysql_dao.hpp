@@ -11,7 +11,6 @@ struct ModelInfo
 {
     int m_id;
     std::string m_name;
-    std::string m_class;
     std::string m_desc;
 };
 

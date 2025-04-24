@@ -22,11 +22,16 @@ std::string CliHttpMgr::ToString() const
     return "CliHttpMgr";
 }
 
+void CliHttpMgr::Init( ssl::context* ssl_ctx )
+{
+    m_ssl_ctx = ssl_ctx;
+}
+
 std::shared_ptr<CliHttpConn> CliHttpMgr::CreateConn()
 {
     auto& ioc
         = AsioIoContextPool::GetInstance()->GetIoService();
-    return std::make_shared<CliHttpConn>( ioc );
+    return std::make_shared<CliHttpConn>( ioc, *m_ssl_ctx );
 }
 
 void CliHttpMgr::AsyncRequest(

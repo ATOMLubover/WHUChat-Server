@@ -187,8 +187,8 @@ void SvrWssConn::OnWrite( beast::error_code ec, std::string msg )
             m_remover( shared_from_this() );
         return;
     }
-    std::clog << fmt::format(
-        "SvrWssConn(ID: {})OnWrite成功发送：{}", m_id, msg ) << std::endl;
+    // std::clog << fmt::format(
+    //     "SvrWssConn(ID: {})OnWrite成功发送：{}", m_id, msg ) << std::endl;
 
     try
     {

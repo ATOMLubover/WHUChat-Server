@@ -6,6 +6,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/ssl.hpp>
 
 #include <memory>
 #include <atomic>
@@ -27,7 +28,7 @@ class CliHttpConn
 {
 public:
     // 客户端的 http 连接无须通过 Listener 获得 socket，而是自己创建
-    CliHttpConn( net::io_context& ioc );
+    CliHttpConn( net::io_context& ioc, ssl::context& ssl_ctx );
     ~CliHttpConn();
 
     // 绑定要发送的目标服务器（注意当调用这个函数之后就会自动链式调用到发送）
@@ -46,6 +47,8 @@ public:
 private:
     // 异步 resolve 的回调函数
     void OnResolved( boost::system::error_code& err, tcp::resolver::results_type results );
+    // 异步 handshake 的回调函数
+    void OnHandshaked( boost::system::error_code err );
     // 异步 connect 的回调函数
     void OnConnected( boost::system::error_code err, const tcp::endpoint& endpoint );
     // 异步 write 的回调函数
@@ -65,8 +68,8 @@ private:
 
     // 当前连接的唯一 id
     std::uint32_t m_serial_num;
-    // 内置的 tcp::socket，用于发送 http 请求
-    std::unique_ptr<beast::tcp_stream> m_stream;
+    // 内置的 ssl::stream，用于发送 http 请求
+    std::unique_ptr<ssl::stream<beast::tcp_stream>> m_stream;
 
     // 解析器
     tcp::resolver m_resolver;
