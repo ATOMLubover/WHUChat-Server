@@ -31,10 +31,10 @@ project-root/
 ├── styles/          # css 所在文件夹
 │   └── main.css
 │
-└── index.HTML       # index（当使用默认路由时自动返回）
+└── index.html       # index（当使用默认路由时自动返回）
 ```
 
-在上面这个例子中，访问 *server-domain*:*port*/login-test 时会自动返回 index.HTML（只针对/进行了自动重定向），而其他依赖文件也会在浏览器自动构造 GET 请求后获得
+在上面这个例子中，访问 *server-domain*:*port*/login-test 时会自动返回 index.html（只针对/进行了自动重定向），而其他依赖文件也会在浏览器自动构造 GET 请求后获得
 
 ---
 
@@ -287,17 +287,17 @@ port ：**8080**
     | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
     | `model_class` | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
     | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
-    | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `prompt`      | object | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
     | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
 
 - 返回值（application/json）
 
-    | 参数名    | 类型 | 说明                                | 示例值 |
-    | --------- | ---- | ----------------------------------- | ------ |
-    | `error`   | int  | 错误码                              | `2002` |
-    | `session` | int  | 表示当前会话的 ID（尤其是新会话时） | `20`   |
+    | 参数名       | 类型 | 说明                                | 示例值 |
+    | ------------ | ---- | ----------------------------------- | ------ |
+    | `error`      | int  | 错误码                              | `2002` |
+    | `session_id` | int  | 表示当前会话的 ID（尤其是新会话时） | `20`   |
 
 - 补充
 
