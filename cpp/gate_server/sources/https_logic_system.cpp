@@ -214,7 +214,8 @@ void HttpsLogicSystem::InitGetHandlers()
                         return response;
                     }
 
-                    // 一切正常，则回传 addr
+                    // 一切正常，则回传 addr 以及 uuid
+                    json_res.emplace( "uuid", map_cookies[ "uuid" ] );
                     json_res.emplace( "addr", addr );
                     json_res.emplace( "error", EnumErrorCode::Success );
 
@@ -370,7 +371,7 @@ void HttpsLogicSystem::InitPostHandlers()
                     nlohmann::json json_req = ParseJson( *conn->GetRequest() );
                     if ( json_req.is_null() )
                     {
-                        std::cout << "/api/v1/login解析JSON出错" << std::endl;
+                        std::cout << "/api/v1/gate/login解析JSON出错" << std::endl;
 
                         response->body() = json_res.dump();
                         return response;
@@ -487,13 +488,13 @@ void HttpsLogicSystem::InitPostHandlers()
                 try
                 {
                     std::string str_req = beast::buffers_to_string( conn->GetRequest()->body().data() );
-                    std::cout << "/api/v1/gate/login收到数据：" << str_req << std::endl;
+                    std::cout << "/api/v1/gate/send_vrf收到数据：" << str_req << std::endl;
 
                     // 解析请求体
                     nlohmann::json json_req = ParseJson( *conn->GetRequest() );
                     if ( json_req.is_null() )
                     {
-                        std::cout << "/api/v1/login解析JSON出错" << std::endl;
+                        std::cout << "/api/v1/gate/send_vrf解析JSON出错" << std::endl;
                         json_res.emplace( "error", EnumErrorCode::ErrorJson );
 
                         response->body() = json_res.dump();

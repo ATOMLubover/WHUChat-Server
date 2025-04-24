@@ -2,7 +2,7 @@
 
 #include "singleton.hpp"
 
-#include "cli_http_conn.hpp"
+#include "cli_https_conn.hpp"
 
 #include <memory>
 
@@ -19,7 +19,7 @@ public:
     // std::string ToString();
 
     // 创建 HTTP 客户端型连接
-    std::shared_ptr<CliHttpConn> CreateCliHttpConn();
+    std::shared_ptr<CliHttpsConn> CreateCliHttpConn();
 
 private:
     HttpMgr();

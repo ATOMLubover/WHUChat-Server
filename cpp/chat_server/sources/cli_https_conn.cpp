@@ -1,13 +1,13 @@
-#include "cli_http_conn.hpp"
+#include "include/cli_https_conn.hpp"
 
 #include "sync_logger.hpp"
 
 #include <iostream>
 #include <format>
 
-std::atomic<std::uint32_t> CliHttpConn::serial_cnt = 0;
+std::atomic<std::uint32_t> CliHttpsConn::serial_cnt = 0;
 
-CliHttpConn::CliHttpConn( net::io_context& ioc, ssl::context& ssl_ctx )
+CliHttpsConn::CliHttpsConn( net::io_context& ioc, ssl::context& ssl_ctx )
     : m_ioc( ioc )
     , m_stream( std::make_unique<ssl::stream<beast::tcp_stream>>(
         net::make_strand( ioc ), ssl_ctx ) ) // 启用串行化
@@ -25,7 +25,7 @@ CliHttpConn::CliHttpConn( net::io_context& ioc, ssl::context& ssl_ctx )
         m_serial_num );
 }
 
-CliHttpConn::~CliHttpConn()
+CliHttpsConn::~CliHttpsConn()
 {
     SyncLogger::GetInstance()->Log(
         LogLevel::Debug,
@@ -33,7 +33,7 @@ CliHttpConn::~CliHttpConn()
         m_serial_num );
 }
 
-void CliHttpConn::AsyncSendTo( const std::string& host, const std::string& port )
+void CliHttpsConn::AsyncSendTo( const std::string& host, const std::string& port )
 {
     auto self = shared_from_this();
     // 异步解析（解析成功会自动链式调用到发送函数）
@@ -48,29 +48,29 @@ void CliHttpConn::AsyncSendTo( const std::string& host, const std::string& port 
         } );
 }
 
-void CliHttpConn::SetRequest( http::request<http::string_body>&& req )
+void CliHttpsConn::SetRequest( http::request<http::string_body>&& req )
 {
     m_request = std::move( req );
 }
 
-void CliHttpConn::SetRspHandler( CliRspHandler rsp_handler )
+void CliHttpsConn::SetRspHandler( CliRspHandler rsp_handler )
 {
     m_rsp_handler = rsp_handler;
 }
 
-void CliHttpConn::SetTimeoutHandler( CliTimeoutHandler timeout_handler )
+void CliHttpsConn::SetTimeoutHandler( CliTimeoutHandler timeout_handler )
 {
     m_timeout_handler = timeout_handler;
 }
 
-std::string CliHttpConn::ToString() const
+std::string CliHttpsConn::ToString() const
 {
     return std::format(
-        "CliHttpConn({}:{}，ID: {})",
+        "CliHttpsConn({}:{}，ID: {})",
         m_host, m_port, m_serial_num );
 }
 
-void CliHttpConn::OnResolved(
+void CliHttpsConn::OnResolved(
     boost::system::error_code& err,
     tcp::resolver::results_type results )
 {
@@ -107,7 +107,7 @@ void CliHttpConn::OnResolved(
     }
 }
 
-void CliHttpConn::OnHandshaked( boost::system::error_code err )
+void CliHttpsConn::OnHandshaked( boost::system::error_code err )
 {
     try
     {
@@ -156,7 +156,7 @@ void CliHttpConn::OnHandshaked( boost::system::error_code err )
     }
 }
 
-void CliHttpConn::OnConnected(
+void CliHttpsConn::OnConnected(
     boost::system::error_code err,
     const tcp::endpoint& endpoint )
 {
@@ -211,7 +211,7 @@ void CliHttpConn::OnConnected(
     }
 }
 
-void CliHttpConn::OnWritten(
+void CliHttpsConn::OnWritten(
     boost::system::error_code err,
     std::size_t bytes_trans )
 {
@@ -253,7 +253,7 @@ void CliHttpConn::OnWritten(
     }
 }
 
-void CliHttpConn::OnRead( boost::system::error_code err, std::size_t bytes_trans )
+void CliHttpsConn::OnRead( boost::system::error_code err, std::size_t bytes_trans )
 {
     // 忽略 EOF 错误
     if ( err && err != http::error::end_of_stream )
@@ -293,7 +293,7 @@ void CliHttpConn::OnRead( boost::system::error_code err, std::size_t bytes_trans
     }
 }
 
-void CliHttpConn::EnableTimeout()
+void CliHttpsConn::EnableTimeout()
 {
     auto self = shared_from_this();
     // 异步等待

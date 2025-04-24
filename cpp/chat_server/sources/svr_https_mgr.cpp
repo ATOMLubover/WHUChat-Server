@@ -2,7 +2,7 @@
 
 #include "config_mgr.hpp"
 #include "https_logic_system.hpp"
-#include "cli_http_mgr.hpp"
+#include "include/cli_https_mgr.hpp"
 
 #include <iostream>
 
@@ -32,7 +32,7 @@ SvrHttpsMgr::SvrHttpsMgr()
 
         // 初始化子管理器
         HttpsLogicSystem::GetInstance()->Init();
-        CliHttpMgr::GetInstance()->Init( &( *m_ctx ) );
+        CliHttpsMgr::GetInstance()->Init( &( *m_ctx ) );
     }
     catch ( std::exception& exp )
     {

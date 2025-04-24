@@ -1,18 +1,18 @@
 #pragma once
 
 #include "singleton.hpp"
-#include "cli_http_conn.hpp"
+#include "cli_https_conn.hpp"
 
 #include <boost/asio/ssl.hpp>
 
-// 仅管理客户端型 HTTP 连接的管理类
-class CliHttpMgr
-    : public Singleton<CliHttpMgr>
+// 仅管理客户端型 HTTPS 连接的管理类
+class CliHttpsMgr
+    : public Singleton<CliHttpsMgr>
 {
-    friend class Singleton<CliHttpMgr>;
+    friend class Singleton<CliHttpsMgr>;
 
 public:
-    ~CliHttpMgr();
+    ~CliHttpsMgr();
 
     // 字符串化函数
     std::string ToString() const;
@@ -21,7 +21,7 @@ public:
     void Init( ssl::context* ssl_ctx );
 
     // 创建一个客户端型 HTTP 连接
-    std::shared_ptr<CliHttpConn> CreateConn();
+    std::shared_ptr<CliHttpsConn> CreateConn();
 
     // 向特定服务器发送请求
     void AsyncRequest(
@@ -31,9 +31,9 @@ public:
         CliTimeoutHandler timeout_handler );
 
 private:
-    CliHttpMgr();
-    CliHttpMgr( const CliHttpMgr& ) = delete;
-    CliHttpMgr& operator=( const CliHttpMgr& ) = delete;
+    CliHttpsMgr();
+    CliHttpsMgr( const CliHttpsMgr& ) = delete;
+    CliHttpsMgr& operator=( const CliHttpsMgr& ) = delete;
 
 private:
     // SSL 上下文

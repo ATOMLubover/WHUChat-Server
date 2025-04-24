@@ -1,6 +1,6 @@
 #include "http_mgr.hpp"
 
-std::shared_ptr<CliHttpConn> HttpMgr::CreateCliHttpConn()
+std::shared_ptr<CliHttpsConn> HttpMgr::CreateCliHttpConn()
 {
-    return std::shared_ptr<CliHttpConn>();
+    return std::shared_ptr<CliHttpsConn>();
 }

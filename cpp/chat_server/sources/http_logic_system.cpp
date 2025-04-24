@@ -11,7 +11,7 @@
 #include "asio_iocontext_pool.hpp"
 #include "config_mgr.hpp"
 #include "cookie_processer.hpp"
-#include "cli_http_mgr.hpp"
+#include "include/cli_https_mgr.hpp"
 #include "sync_logger.hpp"
 #include "svr_https_conn.hpp"
 
@@ -185,8 +185,8 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
                 } ) );
         // 设定 timeout_handler
         CliTimeoutHandler timeout_handler( std::make_shared<
-            std::function<void( std::shared_ptr<CliHttpConn> )>>(
-                [ conn ] ( std::shared_ptr<CliHttpConn> cli_conn )
+            std::function<void( std::shared_ptr<CliHttpsConn> )>>(
+                [ conn ] ( std::shared_ptr<CliHttpsConn> cli_conn )
                 {
                     SyncLogger::GetInstance()->Log(
                         LogLevel::Error,
@@ -201,7 +201,7 @@ void HttpLogicSystem::TransMsgContent( std::shared_ptr<HttpConn> conn )
                 } ) );
 
         // 异步地发送 http 请求
-        CliHttpMgr::GetInstance()->AsyncRequest(
+        CliHttpsMgr::GetInstance()->AsyncRequest(
             host, post,
             std::move( req ),
             handler,

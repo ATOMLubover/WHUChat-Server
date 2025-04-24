@@ -17,19 +17,19 @@
 using CliRspHandler = std::shared_ptr<
     std::function<void( http::response<http::string_body>&& )>>;
 
-class CliHttpConn;
+class CliHttpsConn;
 // HTTP 客户端型链接超时的处理回调函数
 using CliTimeoutHandler = std::shared_ptr<
-    std::function<void( std::shared_ptr<CliHttpConn> )>>;
+    std::function<void( std::shared_ptr<CliHttpsConn> )>>;
 
 // 作为客户端的 http 连接
-class CliHttpConn
-    : public std::enable_shared_from_this<CliHttpConn>
+class CliHttpsConn
+    : public std::enable_shared_from_this<CliHttpsConn>
 {
 public:
     // 客户端的 http 连接无须通过 Listener 获得 socket，而是自己创建
-    CliHttpConn( net::io_context& ioc, ssl::context& ssl_ctx );
-    ~CliHttpConn();
+    CliHttpsConn( net::io_context& ioc, ssl::context& ssl_ctx );
+    ~CliHttpsConn();
 
     // 绑定要发送的目标服务器（注意当调用这个函数之后就会自动链式调用到发送）
     void AsyncSendTo( const std::string& host, const std::string& port );
@@ -60,7 +60,7 @@ private:
     void EnableTimeout();
 
 private:
-    // 为 CliHttpConn 创建唯一 id 的原子变量
+    // 为 CliHttpsConn 创建唯一 id 的原子变量
     static std::atomic<std::uint32_t> serial_cnt;
 
     // 对使用的 ioc 的引用

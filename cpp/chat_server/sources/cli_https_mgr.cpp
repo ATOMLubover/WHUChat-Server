@@ -1,40 +1,40 @@
-#include "cli_http_mgr.hpp"
+#include "include/cli_https_mgr.hpp"
 
 #include "asio_iocontext_pool.hpp"
 #include "sync_logger.hpp"
 
-CliHttpMgr::~CliHttpMgr()
+CliHttpsMgr::~CliHttpsMgr()
 {
     SyncLogger::GetInstance()->Log(
         LogLevel::Info,
         "{}被析构", ToString() );
 }
 
-CliHttpMgr::CliHttpMgr()
+CliHttpsMgr::CliHttpsMgr()
 {
     SyncLogger::GetInstance()->Log(
         LogLevel::Info,
         "{}构造", ToString() );
 }
 
-std::string CliHttpMgr::ToString() const
+std::string CliHttpsMgr::ToString() const
 {
-    return "CliHttpMgr";
+    return "CliHttpsMgr";
 }
 
-void CliHttpMgr::Init( ssl::context* ssl_ctx )
+void CliHttpsMgr::Init( ssl::context* ssl_ctx )
 {
     m_ssl_ctx = ssl_ctx;
 }
 
-std::shared_ptr<CliHttpConn> CliHttpMgr::CreateConn()
+std::shared_ptr<CliHttpsConn> CliHttpsMgr::CreateConn()
 {
     auto& ioc
         = AsioIoContextPool::GetInstance()->GetIoService();
-    return std::make_shared<CliHttpConn>( ioc, *m_ssl_ctx );
+    return std::make_shared<CliHttpsConn>( ioc, *m_ssl_ctx );
 }
 
-void CliHttpMgr::AsyncRequest(
+void CliHttpsMgr::AsyncRequest(
     const std::string& host, const std::string& port,
     http::request<http::string_body>&& req,
     CliRspHandler rsp_handler,
