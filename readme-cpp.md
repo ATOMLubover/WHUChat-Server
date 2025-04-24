@@ -2,16 +2,16 @@
 
 ## 后端大致架构
 
-与前端直接交互的是 C++ boost::asio 和 boost::beast 开发的 ` GateServer ` 和 ` ChatServer `  
+与前端直接交互的是 C++ boost::asio 和 boost::beast 开发的 HTTPS 服务器 ` GateServer ` 和 ` ChatServer `  
 ` GateServer ` 处理前端 Web 发送的 **HTTP 请求**，并决定如何调用其他服务器，获得其他服务器的处理结果，并最后综合返回 **HTTP 响应** 给 Web  
-` ChatServer ` 处理前端 Web 发送的 **HTTP 请求**，并且决定是返回 **HTTP 响应** 给前端，还是升级为 **Websocket 连接**  
+` ChatServer ` 处理前端 Web 发送的 **HTTP 请求**，并且决定是返回 **HTTP 响应** 给前端，还是升级为 **Websocket 连接** （库自动处理）  
 
 后端服务器调用关系：
 
 ` GateServer ` 通过 gRPC 调用 Node.js 开发的 ` VerifiServer ` 进行注册账号时的验证码发送  
 ` GateServer ` 通过 gRPC 调用 C++ 开发的 ` StatusServer ` 进行客户端分配，
-随后指示客户端转调用 ` ChatServer ` 的接口进行数据处理  
-` ChatServer ` 会通过 Websocoket 和 HTTP 与 ` ApiServer ` 交互进行 AI 接口调用处理
+随后指示客户端跳转页面，并转调用 ` ChatServer ` 的 HTTPS 和 WSS 接口进行数据处理  
+` ChatServer ` 会通过 WSS 和 HTTPS 与 ` ApiServer ` 交互进行 AI 接口调用处理
 
 ---
 
@@ -31,10 +31,10 @@ project-root/
 ├── styles/          # css 所在文件夹
 │   └── main.css
 │
-└── index.html       # index（当使用默认路由时自动返回）
+└── index.HTML       # index（当使用默认路由时自动返回）
 ```
 
-在上面这个例子中，访问 *server-domain*:*port*/login-test 时会自动返回 index.html（只针对/进行了自动重定向），而其他依赖文件也会在浏览器自动构造 GET 请求后获得
+在上面这个例子中，访问 *server-domain*:*port*/login-test 时会自动返回 index.HTML（只针对/进行了自动重定向），而其他依赖文件也会在浏览器自动构造 GET 请求后获得
 
 ---
 
@@ -88,13 +88,13 @@ port ：**8080**
 
     无
 
-- 返回值（text/html）  
+- 返回值（text/HTML）  
 
-    返回登录页面 html 页面
+    返回登录页面 HTML 页面
 
 - 补充  
 
-    浏览器会自动获取其相关的 js 和 css 文件
+    浏览器会根据 HTML 中的引用路径自动获取其相关的 JS 和 CSS 文件
 
 #### `/register`
 
@@ -102,13 +102,28 @@ port ：**8080**
 
     无
 
-- 返回值（text/html）  
+- 返回值（text/HTML）  
 
-    返回注册页面 html 页面
+    返回注册页面 HTML 页面
 
 - 补充  
 
-    浏览器会自动获取其相关的 js 和 css 文件
+    浏览器会根据 HTML 中的引用路径自动获取其相关的 JS 和 CSS 文件
+
+#### `/chat`
+
+- 请求参数  
+
+    无
+
+- 返回值（text/HTML）  
+
+    返回 chatbox 页面 HTML 页面
+
+- 补充  
+
+    浏览器会根据 HTML 中的引用路径自动获取其相关的 JS 和 CSS 文件  
+    注意这个路由会检测 cookie，因此必须在 /api/v1/gate/login 成功之后才能访问
 
 #### `/api/v1/gate/get_chatserver`
 
@@ -120,13 +135,14 @@ port ：**8080**
 
     | 参数名  | 类型   | 说明              | 示例值               |
     | :------ | :----- | :---------------- | :------------------- |
+    | `uuid`  | int    | 用户唯一标识      | `1`                  |
     | `addr`  | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
     | `error` | int    | 错误信息          | `1013`               |
 
 - 补充  
 
-    在发送该请求之前，应该先确定获得了有效的 cookie（在 /api/v1/login 成功之后会更新 cookie）  
-    当由前端自行在合适的时间请求，从而获得能够连接 `ChatServer` 接口 （比如在 /chat 页面加载完成之后）  
+    该路径会检查 cookie  
+    该接口的是为了补足跳转到 /chat 路径重新加载 HTML 等后失去一开始的 uuid 等信息，因此会基于 cookie 返回 uuid  
 
 ### POST
 
@@ -148,7 +164,7 @@ port ：**8080**
 
 - 补充  
 
-    当登录成功会返回 0 错误码，且会返回用于免密登录的 cookie（含有 uuid，updated_at 和 token）  
+    当登录成功会返回 0 错误码，且会返回用于免密登录的 cookie（含有 uuid 以及 token）  
 
 #### `/api/v1/gate/send_vrf`
 
@@ -160,10 +176,10 @@ port ：**8080**
 
 - 返回值（JSON）
 
-    | 参数名         | 类型   | 说明                   | 示例值              |
-    | :------------- | :----- | :--------------------- | :------------------ |
-    | `target_email` | string | 实际发送验证码的邮箱   | `"user@domain.com"` |
-    | `error`        | int    | 错误信息（成功时为空） | `1006`              |
+    | 参数名         | 类型   | 说明                 | 示例值              |
+    | :------------- | :----- | :------------------- | :------------------ |
+    | `target_email` | string | 实际发送验证码的邮箱 | `"user@domain.com"` |
+    | `error`        | int    | 错误信息             | `1006`              |
 
 - 补充  
 
@@ -183,11 +199,11 @@ port ：**8080**
 
 - 返回值（JSON）
 
-    | 参数名         | 类型   | 说明                   | 示例值              |
-    | :------------- | :----- | :--------------------- | :------------------ |
-    | `target_uuid`  | int    | 新创建用户的 uuid      | `2`                 |
-    | `target_email` | string | 实际注册的邮箱地址     | `"user@domain.com"` |
-    | `error`        | int    | 错误信息（成功时为空） | `1003`              |
+    | 参数名         | 类型   | 说明               | 示例值              |
+    | :------------- | :----- | :----------------- | :------------------ |
+    | `target_uuid`  | int    | 新创建用户的 uuid  | `2`                 |
+    | `target_email` | string | 实际注册的邮箱地址 | `"user@domain.com"` |
+    | `error`        | int    | 错误信息           | `1003`              |
 
 - 补充  
 
@@ -248,11 +264,11 @@ port ：**8080**
 
     `models` 中对象的说明
 
-    | 参数名  | 类型   | 说明         | 示例值             |
-    | :------ | :----- | :----------- | :----------------- |
-    | `id`    | int    | 模型序号     | `3`                |
-    | `name`  | string | 模型具体名字 | `"DeepSeek V3"`    |
-    | `desc`  | string | 模型描述     | `"A powerful LLM"` |
+    | 参数名 | 类型   | 说明         | 示例值             |
+    | :----- | :----- | :----------- | :----------------- |
+    | `id`   | int    | 模型序号     | `3`                |
+    | `name` | string | 模型具体名字 | `"DeepSeek V3"`    |
+    | `desc` | string | 模型描述     | `"A powerful LLM"` |
 
 - 补充  
 
@@ -354,30 +370,30 @@ port ：**8080**
 > 如果返回体是 JSON 格式，则会以 "error" 字段存储  
 > 斜体的 *trs* 表示是转发其他服务器的错误码
 
-| int32值 | 名称                        | 描述                                         |
-| :------ | :-------------------------- | :------------------------------------------- |
-| 0       | Success                     | 正常处理请求                                 |
-| 1       | ErrorException              | ` GateServer ` 中产生未定义错误              |
-| 101     | ErrorRedis *trs*            | ` VerifiServer ` 调用 Redis 出现错误         |
-| 102     | ErrorSend *trs*             | ` VerifiServer ` 未能成功发送验证邮件        |
-| 103     | ErrorException *trs*        | ` VerifiServer ` 未定义异常                  |
-| 1001    | ErrorServerNotResponding    | ` GateServer ` 未收到其他服务器的响应        |
-| 1002    | ErrorGrpc                   | ` GateServer ` 调用 gRPC 出现错误            |
-| 1003    | ErrorJson                   | ` GateServer ` 处理前端传输  JSON 出现错误   |
-| 1004    | ErrorMySql                  | ` GateServer ` 调用 MySQL 时发生异常         |
-| 1005    | ErrorUsernameExists         | ` GateServer ` 无法注册新用户：用户名已存在  |
-| 1006    | ErrorEmailConflicts         | ` GateServer ` 无法注册新用户：email已被注册 |
-| 1007    | ErrorPwdIncorreponds        | ` GateServer ` 无法注册新用户：密码不一致    |
-| 1008    | ErrorVrfInvalid             | ` GateServer ` 无法注册新用户：验证码无效    |
-| 1009    | ErrorPwdWrong               | ` GateServer ` 无法登录用户：密码错误        |
-| 1010    | ErrorEmailInvalid           | ` GateServer ` 无法登录用户：email 未注册    |
-| 1011    | ErrorLoginCookieInvalid     | ` GateServer ` 拒绝访问：cookie 无效         |
-| 1012    | ErrorCookieNotFound         | ` GateServer ` 未找到 cookie                 |
-| 1013    | ErrorUnableGetServer        | ` GateServer `无法获取 ChatServer 地址       |
-| 2001    | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket            |
-| 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie               |
+| int32值 | 名称                        | 描述                                             |
+| :------ | :-------------------------- | :----------------------------------------------- |
+| 0       | Success                     | 正常处理请求                                     |
+| 1       | ErrorException              | ` GateServer ` 中产生未定义错误                  |
+| 101     | ErrorRedis *trs*            | ` VerifiServer ` 调用 Redis 出现错误             |
+| 102     | ErrorSend *trs*             | ` VerifiServer ` 未能成功发送验证邮件            |
+| 103     | ErrorException *trs*        | ` VerifiServer ` 未定义异常                      |
+| 1001    | ErrorServerNotResponding    | ` GateServer ` 未收到其他服务器的响应            |
+| 1002    | ErrorGrpc                   | ` GateServer ` 调用 gRPC 出现错误                |
+| 1003    | ErrorJson                   | ` GateServer ` 处理前端传输  JSON 出现错误       |
+| 1004    | ErrorMySql                  | ` GateServer ` 调用 MySQL 时发生异常             |
+| 1005    | ErrorUsernameExists         | ` GateServer ` 无法注册新用户：用户名已存在      |
+| 1006    | ErrorEmailConflicts         | ` GateServer ` 无法注册新用户：email已被注册     |
+| 1007    | ErrorPwdIncorreponds        | ` GateServer ` 无法注册新用户：密码不一致        |
+| 1008    | ErrorVrfInvalid             | ` GateServer ` 无法注册新用户：验证码无效        |
+| 1009    | ErrorPwdWrong               | ` GateServer ` 无法登录用户：密码错误            |
+| 1010    | ErrorEmailInvalid           | ` GateServer ` 无法登录用户：email 未注册        |
+| 1011    | ErrorLoginCookieInvalid     | ` GateServer ` 拒绝访问：cookie 无效             |
+| 1012    | ErrorCookieNotFound         | ` GateServer ` 未找到 cookie                     |
+| 1013    | ErrorUnableGetServer        | ` GateServer `无法获取 ChatServer 地址           |
+| 2001    | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket                |
+| 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie                   |
 | 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的正常响应 |
-| 2003    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id       |
+| 2003    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id           |
 
 ## 对 Python ` ApiServer ` 希望的接口
 
