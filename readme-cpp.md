@@ -252,7 +252,6 @@ port ：**8080**
     | :------ | :----- | :----------- | :----------------- |
     | `id`    | int    | 模型序号     | `3`                |
     | `name`  | string | 模型具体名字 | `"DeepSeek V3"`    |
-    | `class` | string | 模型的类别   | `"claude-3-haiku"` |
     | `desc`  | string | 模型描述     | `"A powerful LLM"` |
 
 - 补充  
@@ -279,9 +278,10 @@ port ：**8080**
 
 - 返回值（application/json）
 
-    | 参数名  | 类型 | 说明   | 示例值 |
-    | ------- | ---- | ------ | ------ |
-    | `error` | int  | 错误码 | `2002` |
+    | 参数名    | 类型 | 说明                                | 示例值 |
+    | --------- | ---- | ----------------------------------- | ------ |
+    | `error`   | int  | 错误码                              | `2002` |
+    | `session` | int  | 表示当前会话的 ID（尤其是新会话时） | `20`   |
 
 - 补充
 
@@ -309,7 +309,7 @@ port ：**8080**
     | :------------ | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
     | `uuid`        | int    | 用户唯一标识                                                    | `1`                                                        |
     | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
-    | `sender`      | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                     |
+    | `sender`      | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                   |
     | `model_id`    | int    | 选择的模型 ID                                                   | `3`                                                        |
     | `model_class` | string | 选择的模型大类                                                  | `"OpenAI"`                                                 |
     | `prompt`      | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
@@ -376,7 +376,7 @@ port ：**8080**
 | 1013    | ErrorUnableGetServer        | ` GateServer `无法获取 ChatServer 地址       |
 | 2001    | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket            |
 | 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie               |
-| 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的响应 |
+| 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的正常响应 |
 | 2003    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id       |
 
 ## 对 Python ` ApiServer ` 希望的接口
