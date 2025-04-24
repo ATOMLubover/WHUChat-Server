@@ -13,7 +13,7 @@ KEY_PATH = "py/apiserver/server.key"
 
 # 🔁 HTTPS 客户端：POST 请求服务端
 async def send_post_to_server():
-    url = "https://localhost:8443/api/v1/ws/send_ans"
+    url = "https://localhost:8443/get_response"
     data = {
         "uuid": 1,
         "session_id": 1145,
@@ -54,7 +54,7 @@ async def websocket_handler(request):
 
 async def start_wss_server():
     app = web.Application()
-    app.router.add_get("/ws", websocket_handler)
+    app.router.add_get("/api/v1/ws/send_ans", websocket_handler)
 
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
@@ -64,7 +64,7 @@ async def start_wss_server():
     site = web.TCPSite(runner, "localhost", 8765, ssl_context=ssl_ctx)
     await site.start()
 
-    logging.info("✅ WSS 监听启动 wss://localhost:8765/ws")
+    logging.info("✅ WSS 监听启动 wss://localhost:8765/api/v1/ws/send_ans")
     return runner
 
 # 主函数

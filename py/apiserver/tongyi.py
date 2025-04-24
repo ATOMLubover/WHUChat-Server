@@ -79,3 +79,41 @@ def tongyi_gate(messages=None,temperature=0.7,model="qwen-plus"):
             return tongyi_reasoner(messages,temperature)
         case _:
             return tongyi_chat(model,messages,temperature)
+        
+def tongyi_reasoner(messages=None, temperature=0.7, model="qwq-32b", api_key=None, base_url=None):
+    api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
+    base_url = base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+    try:
+        client = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+        )
+
+        completion = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            stream=True,
+            temperature=temperature
+        )
+
+        for chunk in completion:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+
+            if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
+                yield {
+                    "type": "reasoning",
+                    "reasoning_content": delta.reasoning_content
+                }
+            elif hasattr(delta, "content") and delta.content:
+                yield {
+                    "type": "content",
+                    "content": delta.content
+                }
+
+    except Exception as e:
+        print(f"错误信息：{e}")
+        print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
+        return

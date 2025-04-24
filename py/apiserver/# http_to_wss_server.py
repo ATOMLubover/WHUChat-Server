@@ -11,6 +11,7 @@ import deepseekfunc
 import gptfunc
 import tongyi
 import os
+import configparser
 
 # import gemini
 import doubao
@@ -79,15 +80,22 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 prompt_data = data.get("prompt", {})
                 messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
                 promote = [{"role": m["role"], "content": m["content"]} for m in messages]
+                
+                config = configparser.ConfigParser()
+                config.read("py/apiserver/model_map.ini")
+                model_id_map = dict(config["models"])
+                model_id = str(data.get("model_id"))
+                model_type = model_id_map.get(model_id)
 
-                if model_id == 1:
-                    model_type = "deepseek-chat"
+                if not model_type:
+                    return web.json_response({"error": 3006})
+
 
                 match talktype:
                     case "chat":
-                        match model_class:
-                            case "deepseek":
-                                result = deepseekfunc.deepseekgate(model_type, promote, temperature)
+                        match model_type:
+                            case "deepseek-chat":
+                                result = deepseekfunc.deepseek_chat(promote, temperature)
                             case _:
                                 result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
 
@@ -140,7 +148,7 @@ async def handle_send_ans(request: web.Request):
         except Exception as e:
             logging.error(f"请求体不是合法 JSON: {e}")
             return web.json_response(
-                {"error": 3001, "message": "请求体必须为合法 JSON"}
+                {"error": 3001}
             )
 
         logging.info(f"接收到 HTTP 请求: {data}")
