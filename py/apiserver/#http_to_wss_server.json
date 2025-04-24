@@ -1,6 +1,7 @@
 {
     "CERT_PATH": "py/apiserver/server.crt",
     "KEY_PATH": "py/apiserver/server.key",
-    "httpport": 8090,
-    "wssport": 8081
+    "httpport": 8443,
+    "wssport": 8765,
+    "historyURL": "https://localhost:8081/api/v1/chat/browse_messages"
 }
