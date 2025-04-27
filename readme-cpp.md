@@ -285,8 +285,8 @@ port ：**8080**
     | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
     | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
     | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
-    | `model_class` | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
-    | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `model_class` | string | 是   | 选择的模型大类 ID                                               | `"claude"`                                                 |
+    | `model_id`    | int    | 是   | 选择的模型具体编号                                              | `1`                                                        |
     | `prompt`      | object | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
     | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
@@ -393,7 +393,7 @@ port ：**8080**
 | 2001    | ErrorWebsocketUpgradeDinied | ` ChatServer ` 拒绝升级 WebSocket                |
 | 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie                   |
 | 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的正常响应 |
-| 2003    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id           |
+| 2004    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id           |
 
 ## 对 Python ` ApiServer ` 希望的接口
 
