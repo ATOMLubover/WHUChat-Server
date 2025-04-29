@@ -89,7 +89,12 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 messages = [prompt_data1] if isinstance(prompt_data1, dict) else (prompt_data1 if isinstance(prompt_data1, list) else [])
                 print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
 
-                promote = [{"role": m["role"], "content": m["content"]} for m in messages]
+                promote = [
+                    {"role": p["role"], "content": p["content"]}
+                    for msg in messages["messages"]
+                    for p in (msg["prompt"] if isinstance(msg["prompt"], list) else [msg["prompt"]])
+                ]
+
                 print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
                 
                 config = configparser.ConfigParser()
