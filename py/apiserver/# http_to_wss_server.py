@@ -85,8 +85,8 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 #prompt_data = data.get("prompt", {})
                 #prompt_data = await fetch_message_history(0, session_id)
                 #print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
-
-                messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
+                prompt_data1 = prompt_data.get("messages", [])
+                messages = [prompt_data1] if isinstance(prompt_data1, dict) else (prompt_data1 if isinstance(prompt_data1, list) else [])
                 print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
 
                 promote = [{"role": m["role"], "content": m["content"]} for m in messages]
