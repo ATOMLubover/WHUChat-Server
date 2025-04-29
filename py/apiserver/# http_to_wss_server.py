@@ -80,7 +80,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 frugalMode = parameters.get("frugalMode", False)
                 
                 #prompt_data = data.get("prompt", {})
-                prompt_data = fetch_message_history(data["uuid"], session_id)
+                prompt_data = await fetch_message_history(data["uuid"], session_id)
                 print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
 
                 messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
