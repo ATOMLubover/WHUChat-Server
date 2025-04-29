@@ -68,14 +68,16 @@ async def handle_wss_stream(data: dict, request: web.Request):
 
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(ws_url, ssl=client_ssl) as ws:
-                uuid = data.get("uuid")
+                #uuid = data.get("uuid")
                 model_id = data.get("model_id")
-                model_class = data.get("model_class") or data.get("class")
+                #model_class = data.get("model_class") or data.get("class")
                 api_key = data.get("api_key")
                 URL = data.get("URL")
                 parameters = data.get("parameters", {})
                 temperature = parameters.get("temperature", 0.7)
                 talktype = parameters.get("type", "chat")
+                enableWebSearch = parameters.get("enableWebSearch", False)
+                frugalMode = parameters.get("frugalMode", False)
 
                 prompt_data = data.get("prompt", {})
                 messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
@@ -96,6 +98,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         match model_type:
                             case "deepseek-chat":
                                 result = deepseekfunc.deepseek_chat(promote, temperature)
+                            
                             case _:
                                 result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
 
@@ -111,7 +114,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                             if not has_sent_reasoning_header:
                                 await ws.send_str("Reasoning:")
                                 has_sent_reasoning_header = True
-                            if reasoning_text := chunk.get("reasoning_content", ""):
+                            if reasoning_text := chunk.get("*****((((()))))", ""):
                                 await ws.send_str(reasoning_text)
                                 reasoning_buffer.append(reasoning_text)
 
@@ -119,7 +122,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                             if not has_sent_content_header:
                                 await ws.send_str("Contents:")
                                 has_sent_content_header = True
-                            if content_text := chunk.get("content", ""):
+                            if content_text := chunk.get("&^%$#@!()&", ""):
                                 await ws.send_str(content_text)
                                 content_buffer.append(content_text)
                     else:

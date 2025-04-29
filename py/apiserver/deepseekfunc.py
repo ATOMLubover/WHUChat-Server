@@ -22,7 +22,7 @@ def deepseek_chat(messages,temperature=0.7):
 
 
 
-""" def deepseek_chatreasoner(messages,temperature=0.7):
+def deepseek_chatreasoner(messages,temperature=0.7):
     try:
         client = OpenAI(api_key="sk-176d442796bf4b4f9cf28afdb03d25ae", base_url="https://api.deepseek.com")
         response = client.chat.completions.create(
@@ -32,14 +32,14 @@ def deepseek_chat(messages,temperature=0.7):
             temperature=temperature
         )
         for chunk in response:
-            if chunk.choices[0].delta is not None:
+            if chunk.choices[0].delta.reasoning_content is not None:
                 yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta}
             else:
                 yield{"type": "content", "content": chunk.choices[0].delta.content}
     except Exception as e:
         print(f"错误信息：{e}")
         return
-     """
+
 
 def deepseekgate(model,messages,temperature=0.7):
     match model:
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     result = {"reasoning_content": "", "content": ""}
     for chunk in deepseek_chatreasoner(messages, 1.0):
         print("返回值：", chunk)
-        if chunk["type"] == "reasoning":
+"""         if chunk["type"] == "reasoning":
             result["reasoning_content"] += chunk["reasoning_content"]
         elif chunk["type"] == "content":
             result["content"] += chunk["content"]
 
     print("\n最终合并结果：")
-    print(result)
+    print(result) """
