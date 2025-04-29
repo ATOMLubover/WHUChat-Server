@@ -79,7 +79,8 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 enableWebSearch = parameters.get("enableWebSearch", False)
                 frugalMode = parameters.get("frugalMode", False)
 
-                prompt_data = data.get("prompt", {})
+                #prompt_data = data.get("prompt", {})
+                prompt_data = fetch_message_history(data["uuid"], session_id)
                 messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
                 promote = [{"role": m["role"], "content": m["content"]} for m in messages]
                 
