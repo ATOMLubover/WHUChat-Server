@@ -205,10 +205,12 @@ int MySqlMgr::CreateMessage(
                 return -1;
 
             nlohmann::json json_prompt;
+            // TODO: 这一行删了
             json_prompt[ "role" ] = "assistant";
             json_prompt[ "content" ] = content;
 
             nlohmann::json json_raw;
+            json_raw[ "role" ] = "assistant";
             json_raw[ "prompt" ] = json_prompt;
             json_raw[ "model_id" ] = model_id;
             json_raw[ "session_id" ] = ssn_id;

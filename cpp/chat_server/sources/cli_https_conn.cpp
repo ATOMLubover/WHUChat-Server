@@ -141,9 +141,9 @@ void CliHttpsConn::OnHandshaked( boost::system::error_code err )
                     self->OnWritten( err, bytes_trans );
                 } ) );
 
-        // 发送请求后开始计时（也可以在连接成功后就开始计时，取决于超时定义的范围）
-        // 如果计时器已经在 OnConnected 启动，这里不需要重复启动
-        EnableTimeout();
+        // // 发送请求后开始计时（也可以在连接成功后就开始计时，取决于超时定义的范围）
+        // // 如果计时器已经在 OnConnected 启动，这里不需要重复启动
+        // EnableTimeout();
     }
     catch ( std::exception& exp )
     {
@@ -189,17 +189,8 @@ void CliHttpsConn::OnConnected(
                 self->OnHandshaked( ec );
             } );
 
-        // auto self = shared_from_this();
-        // // 成功连接，则尝试发送（使用 http 库的 async_write 函数自动处理）
-        // http::async_write(
-        //     *m_stream,
-        //     m_request,
-        //     [ self ](
-        //         boost::system::error_code err,
-        //         std::size_t bytes_trans )
-        //     {
-        //         self->OnWritten( err, bytes_trans );
-        //     } );
+        // 启用超时计时
+        EnableTimeout();
     }
     catch ( std::exception& exp )
     {
@@ -240,8 +231,8 @@ void CliHttpsConn::OnWritten(
                 self->OnRead( err, bytes_trans );
             } );
 
-        // 同时开始计时
-        EnableTimeout();
+        // // 同时开始计时
+        // EnableTimeout();
     }
     catch ( std::exception& exp )
     {

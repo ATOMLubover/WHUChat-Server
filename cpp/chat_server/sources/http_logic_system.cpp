@@ -307,6 +307,8 @@ HttpLogicSystem::HttpLogicSystem()
                 nlohmann::json json_model;
                 json_model.emplace( "id", iter->m_id );
                 json_model.emplace( "name", iter->m_name );
+                json_model.emplace( "online", iter->m_online );
+                json_model.emplace( "reasonable", iter->m_reasonable );
                 json_model.emplace( "desc", iter->m_desc );
 
                 json_models.emplace_back( json_model );

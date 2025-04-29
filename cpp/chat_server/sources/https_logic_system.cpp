@@ -261,10 +261,9 @@ void HttpsLogicSystem::InitPostHandlers()
                         return response;
                     }
 
+                    std::cout << json_req.dump( 4 ) << std::endl;
                     int uuid = json_req[ "uuid" ].get<int>();
                     int ssn_id = json_req[ "session_id" ].get<int>();
-
-                    std::cout << json_req.dump( 4 ) << std::endl;
 
                     // 检查 cookie，并且与 uuid 进行比对
                     if ( !self->CheckCookieWithUuid( *conn->GetRequest(), uuid ) )
