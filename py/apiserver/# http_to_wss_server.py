@@ -42,8 +42,11 @@ async def fetch_message_history(uuid: int, session_id: int | None):
         "uuid": uuid,
         "session_id": session_id,
     }
+    client_ssl = ssl.create_default_context()
+    client_ssl.check_hostname = False
+    client_ssl.verify_mode = ssl.CERT_NONE
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload) as resp:
+        async with session.post(url, json=payload,ssl=client_ssl) as resp:
             if resp.status == 200:
                 return await resp.json()
             else:
