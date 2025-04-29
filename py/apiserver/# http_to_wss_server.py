@@ -36,6 +36,7 @@ async def ensure_async_iterable(obj):
 
     return fake_async_gen()
 
+
 async def fetch_message_history(uuid: int, session_id: int | None):
     url = historyURL
     payload = {
@@ -46,18 +47,21 @@ async def fetch_message_history(uuid: int, session_id: int | None):
     client_ssl.check_hostname = False
     client_ssl.verify_mode = ssl.CERT_NONE
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload,ssl=client_ssl) as resp:
+        async with session.post(url, json=payload, ssl=client_ssl) as resp:
             if resp.status == 200:
                 return await resp.json()
             else:
                 logging.warning(f"拉取历史消息失败: 状态码 {resp.status}")
                 return {"error": 1, "messages": []}
+
+
 # 示例: 构造 WebSocket 连接地址（客户端暴露的 wss 服务地址）
 def get_client_ws_url(request, session_id: int) -> str:
     client_ip = request.remote or "localhost"  # 取发起请求者的 IP
     if client_ip == "::1":
         client_ip = "localhost"
     return f"wss://{client_ip}:{wssport}/api/v1/ws/send_ans?session_id={session_id}"
+
 
 async def handle_wss_stream(data: dict, request: web.Request):
     try:
@@ -71,9 +75,9 @@ async def handle_wss_stream(data: dict, request: web.Request):
 
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(ws_url, ssl=client_ssl) as ws:
-                #uuid = data.get("uuid")
+                # uuid = data.get("uuid")
                 model_id = data.get("model_id")
-                #model_class = data.get("model_class") or data.get("class")
+                # model_class = data.get("model_class") or data.get("class")
                 api_key = data.get("api_key")
                 URL = data.get("URL")
                 parameters = data.get("parameters", {})
@@ -81,22 +85,30 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 talktype = parameters.get("type", "chat")
                 enableWebSearch = parameters.get("enableWebSearch", False)
                 frugalMode = parameters.get("frugalMode", False)
-                
-                #prompt_data = data.get("prompt", {})
-                #prompt_data = await fetch_message_history(0, session_id)
-                #print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
+
+                # prompt_data = data.get("prompt", {})
+                # prompt_data = await fetch_message_history(0, session_id)
+                # print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
                 prompt_data1 = prompt_data.get("messages", [])
-                messages = [prompt_data1] if isinstance(prompt_data1, dict) else (prompt_data1 if isinstance(prompt_data1, list) else [])
+                messages = (
+                    [prompt_data1]
+                    if isinstance(prompt_data1, dict)
+                    else (prompt_data1 if isinstance(prompt_data1, list) else [])
+                )
                 print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
 
                 promote = [
                     {"role": p["role"], "content": p["content"]}
-                    for msg in messages["messages"]
-                    for p in (msg["prompt"] if isinstance(msg["prompt"], list) else [msg["prompt"]])
+                    for msg in messages
+                    for p in (
+                        msg["prompt"]
+                        if isinstance(msg["prompt"], list)
+                        else [msg["prompt"]]
+                    )
                 ]
 
                 print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
-                
+
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
                 model_id_map = dict(config["models"])
@@ -106,15 +118,18 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 if not model_type:
                     return web.json_response({"error": 3006})
 
-
                 match talktype:
                     case "chat":
                         match model_type:
                             case "deepseek-chat":
-                                result = deepseekfunc.deepseek_chat(promote, temperature)
-                            
+                                result = deepseekfunc.deepseek_chat(
+                                    promote, temperature
+                                )
+
                             case _:
-                                result = default.get_chat_completion(api_key, URL, model_type, promote, temperature)
+                                result = default.get_chat_completion(
+                                    api_key, URL, model_type, promote, temperature
+                                )
 
                 has_sent_reasoning_header = False
                 has_sent_content_header = False
@@ -157,6 +172,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
         logging.error(f"[推送线程异常] {e}")
         return web.json_response({"error": 3003})
 
+
 # HTTPS 请求处理逻辑
 async def handle_send_ans(request: web.Request):
     try:
@@ -164,9 +180,7 @@ async def handle_send_ans(request: web.Request):
             data = await request.json()
         except Exception as e:
             logging.error(f"请求体不是合法 JSON: {e}")
-            return web.json_response(
-                {"error": 3001}
-            )
+            return web.json_response({"error": 3001})
 
         logging.info(f"接收到 HTTP 请求: {data}")
         session_id = data.get("session_id")
@@ -177,16 +191,14 @@ async def handle_send_ans(request: web.Request):
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             return web.json_response({"error": 3002})
-        
+
         global prompt_data
         prompt_data = await fetch_message_history(0, session_id)
         print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
-        error =prompt_data.get("error")
-        if(not prompt_data or error !=0):
+        error = prompt_data.get("error")
+        if not prompt_data or error != 0:
             return web.json_response({"error": 3007})
 
-        
-        
         asyncio.create_task(handle_wss_stream(data, request))
 
         return web.json_response({"error": 0})
@@ -202,7 +214,7 @@ def main():
         config = json.load(f)
     app = web.Application()
     app.router.add_post("/get_response", handle_send_ans)
-    global CERT_PATH, KEY_PATH, httpport, wssport,historyURL
+    global CERT_PATH, KEY_PATH, httpport, wssport, historyURL
     historyURL = config["historyURL"]
     CERT_PATH = config["CERT_PATH"]
     KEY_PATH = config["KEY_PATH"]
