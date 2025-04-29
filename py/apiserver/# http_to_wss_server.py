@@ -140,7 +140,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 async for chunk in result:
                     if isinstance(chunk, dict):
                         if chunk.get("type") == "reasoning":
-                            ws.send_str("*****((((()))))")
+                            await ws.send_str("*****((((()))))")
                             if not has_sent_reasoning_header:
                                 await ws.send_str("Reasoning:")
                                 has_sent_reasoning_header = True
@@ -149,7 +149,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                                 reasoning_buffer.append(reasoning_text)
 
                         elif chunk.get("type") == "content":
-                            ws.send_str("&^%$#@!()&")
+                            await ws.send_str("&^%$#@!()&")
                             if not has_sent_content_header:
                                 await ws.send_str("Contents:")
                                 has_sent_content_header = True
