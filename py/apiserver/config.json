@@ -1,7 +1,7 @@
 {
   "database": {
     "historyURL": "https://localhost:8081/api/v1/chat/browse_messages",
-    "httpport": 8080,
+    "httpport": 8090,
     "wssURL": "wss://localhost:8081",
     "certfile_path": "py/apiserver/server.crt",
     "key_path": "py/apiserver/server.key"

@@ -165,7 +165,7 @@ async def handle_send_ans(request: web.Request):
         if not session_id:
             return web.json_response({"error": 3004})
 
-        required_fields = ["uuid", "session_id", "model_id", "model_class", "prompt"]
+        required_fields = ["uuid", "session_id", "model_id", "prompt"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             return web.json_response({"error": 3002})
