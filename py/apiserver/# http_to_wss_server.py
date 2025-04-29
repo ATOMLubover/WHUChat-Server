@@ -176,7 +176,7 @@ async def handle_send_ans(request: web.Request):
         global prompt_data
         prompt_data = await fetch_message_history(0, session_id)
         print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
-        if(not prompt_data or "error" in prompt_data):
+        if(not prompt_data or prompt_data.error !=0):
             return web.json_response({"error": 3007})
 
         
