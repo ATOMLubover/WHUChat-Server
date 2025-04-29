@@ -11,6 +11,8 @@ struct ModelInfo
 {
     int m_id;
     std::string m_name;
+    int m_reasonable;
+    int m_online;
     std::string m_desc;
 };
 

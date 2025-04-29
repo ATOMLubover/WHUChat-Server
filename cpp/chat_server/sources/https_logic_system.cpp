@@ -126,6 +126,8 @@ void HttpsLogicSystem::InitGetHandlers()
                         nlohmann::json json_model;
                         json_model.emplace( "id", model.m_id );
                         json_model.emplace( "name", model.m_name );
+                        json_model.emplace( "reasonable", model.m_reasonable );
+                        json_model.emplace( "online", model.m_online );
                         json_model.emplace( "desc", model.m_desc );
 
                         json_models.emplace_back( json_model );
@@ -261,6 +263,8 @@ void HttpsLogicSystem::InitPostHandlers()
 
                     int uuid = json_req[ "uuid" ].get<int>();
                     int ssn_id = json_req[ "session_id" ].get<int>();
+
+                    std::cout << json_req.dump( 4 ) << std::endl;
 
                     // 检查 cookie，并且与 uuid 进行比对
                     if ( !self->CheckCookieWithUuid( *conn->GetRequest(), uuid ) )

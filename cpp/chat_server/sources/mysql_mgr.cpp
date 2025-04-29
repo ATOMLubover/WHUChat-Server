@@ -74,15 +74,19 @@ std::list<MessageInfo> MySqlMgr::SelectMessagesInSession( int uuid, int ssn_id )
 {
     try
     {
-        auto sessions = dao.SelectSessions( uuid );
-        if ( std::find_if(
-            sessions.begin(),
-            sessions.end(),
-            [ ssn_id ] ( const SessionInfo& info ) { return info.m_id == ssn_id; }
-        )
-            == sessions.end() )
+        // 当 uuid 大于 0 时为用户请求，进行二次检测
+        if ( uuid != 0 )
         {
-            return {};
+            auto sessions = dao.SelectSessions( uuid );
+            if ( std::find_if(
+                sessions.begin(),
+                sessions.end(),
+                [ ssn_id ] ( const SessionInfo& info ) { return info.m_id == ssn_id; }
+            )
+                == sessions.end() )
+            {
+                return {};
+            }
         }
 
         return dao.SelectMessages( ssn_id );;

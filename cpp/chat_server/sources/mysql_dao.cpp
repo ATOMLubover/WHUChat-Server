@@ -97,14 +97,16 @@ std::list<ModelInfo> MySqlDao::SelectModels()
     MySqlStmt stmt( conn );
     std::unique_ptr<sql::ResultSet> resultset
         = stmt.Commit(
-            "SELECT `id`, `name`, `description` FROM `models`" );
+            "SELECT `id`, `name`, `reasonable`, `online`, `description` FROM `models`" );
     std::list<ModelInfo> result;
     while ( resultset->next() )
     {
         ModelInfo info{
             resultset->getInt( 1 ),
             resultset->getString( 2 ),
-            resultset->getString( 3 ) };
+            resultset->getInt( 3 ),
+            resultset->getInt( 4 ),
+            resultset->getString( 5 ) };
         result.push_back( std::move( info ) );
     }
 
