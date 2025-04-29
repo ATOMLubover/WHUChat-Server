@@ -78,11 +78,16 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 talktype = parameters.get("type", "chat")
                 enableWebSearch = parameters.get("enableWebSearch", False)
                 frugalMode = parameters.get("frugalMode", False)
-
+                
                 #prompt_data = data.get("prompt", {})
                 prompt_data = fetch_message_history(data["uuid"], session_id)
+                print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
+
                 messages = [prompt_data] if isinstance(prompt_data, dict) else (prompt_data if isinstance(prompt_data, list) else [])
+                print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
+
                 promote = [{"role": m["role"], "content": m["content"]} for m in messages]
+                print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
                 
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
