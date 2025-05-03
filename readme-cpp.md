@@ -287,7 +287,8 @@ port ：**8080**
     | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
     | `model_class` | string | 是   | 选择的模型大类 ID                                               | `"claude"`                                                 |
     | `model_id`    | int    | 是   | 选择的模型具体编号                                              | `1`                                                        |
-    | `prompt`      | object | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `sender` | string | 是 | 发送消息的是用户还是模型 | "user" | 
+    | `prompt`      | array | 是   | 用户输入的提示内容                                              | `[{"type": "image", "content": 图片url？没想好具体怎么传，反正现在还没有实现}, {"type": "text","content": "你好，你想让我做什么？"}]` |
     | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
@@ -301,7 +302,8 @@ port ：**8080**
 
 - 补充
 
-    Web 前端在接受到正常的 HTTP 响应后，要自行建立 Websocket 连接接受 ApiServer 的回答  
+    Web 前端在接受到正常的 HTTP 响应后，要自行建立 Websocket 连接接受 ApiServer 的回答
+    prompt的元素现在至多两个，一个图片对象，一个文本对象，形式见上方示例
 
 #### `/api/v1/chat/browse_messages`
 
@@ -328,7 +330,7 @@ port ：**8080**
     | `sender`      | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                   |
     | `model_id`    | int    | 选择的模型 ID                                                   | `3`                                                        |
     | `model_class` | string | 选择的模型大类                                                  | `"OpenAI"`                                                 |
-    | `prompt`      | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `prompt`      | array  | 用户输入的提示内容                                              | `[{"type": "image", "content": 待定}, {"type": "text","content": "你好，你想让我做什么？"}]` |
     | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
@@ -336,6 +338,7 @@ port ：**8080**
 - 补充
 
     Web 前端和 ` ApiServer ` 均可以使用，用于获取特定会话的历史记录（注：` ApiServer ` 使用时务必设置 `uuid` 为 0）
+    基本同 send_message 接口
 
 #### `/api/v1/chat/history`
 
