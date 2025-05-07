@@ -41,18 +41,6 @@ def deepseek_chatreasoner(messages,temperature=0.7):
         return
 
 
-def deepseekgate(model,messages,temperature=0.7):
-    match model:
-        case "deepseek-chat":
-            return deepseek_chat(messages,temperature)
-            """         case "deepseek-reasoner":
-            return deepseek_chatreasoner(messages,temperature) """
-        case _:
-            return
-
-
-
-
 if __name__ == "__main__":
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},

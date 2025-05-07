@@ -89,25 +89,28 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 # prompt_data = data.get("prompt", {})
                 # prompt_data = await fetch_message_history(0, session_id)
                 # print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
-                prompt_data1 = prompt_data.get("messages", [])
-                messages = (
-                    [prompt_data1]
-                    if isinstance(prompt_data1, dict)
-                    else (prompt_data1 if isinstance(prompt_data1, list) else [])
-                )
-                print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
-
-                promote = [
-                    {"role": p["role"], "content": p["content"]}
-                    for msg in messages
-                    for p in (
-                        msg["prompt"]
-                        if isinstance(msg["prompt"], list)
-                        else [msg["prompt"]]
+                if frugalMode == False:
+                    prompt_data1 = prompt_data.get("messages", [])
+                    messages = (
+                        [prompt_data1]
+                        if isinstance(prompt_data1, dict)
+                        else (prompt_data1 if isinstance(prompt_data1, list) else [])
                     )
-                ]
+                    print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
 
-                print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
+                    promote = [
+                        {"role": p["role"], "content": p["content"]}
+                        for msg in messages
+                        for p in (
+                            msg["prompt"]
+                            if isinstance(msg["prompt"], list)
+                            else [msg["prompt"]]
+                        )
+                    ]
+
+                    print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
+                else:
+                    promote = data.get("prompt")
 
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
@@ -212,7 +215,7 @@ async def handle_send_ans(request: web.Request):
 
 # 启动 HTTPS 服务监听 POST
 def main():
-    with open("py/apiserver/#http_to_wss_server.json", "r") as f:
+    with open("py/apiserver/http_to_wss_server.json", "r") as f:
         config = json.load(f)
     app = web.Application()
     app.router.add_post("/get_response", handle_send_ans)

@@ -18,7 +18,9 @@
         "URL": null,
         "parameters": {
         "temperature": 0.7,
-        "type": "chat"
+        "type": "chat",
+        "enableWebSearch": false,
+        "frugalMode": false
         }
     }
 }
