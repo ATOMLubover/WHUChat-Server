@@ -133,11 +133,12 @@ port ：**8080**
 
 - 返回值（JSON）  
 
-    | 参数名  | 类型   | 说明              | 示例值               |
-    | :------ | :----- | :---------------- | :------------------- |
-    | `uuid`  | int    | 用户唯一标识      | `1`                  |
-    | `addr`  | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
-    | `error` | int    | 错误信息          | `1013`               |
+    | 参数名     | 类型   | 说明              | 示例值               |
+    | :--------- | :----- | :---------------- | :------------------- |
+    | `uuid`     | int    | 用户唯一标识      | `1`                  |
+    | `username` | string | 用户名            | `"some_username"`    |
+    | `addr`     | string | `ChatServer` 地址 | `"271.22.65.1:8081"` |
+    | `error`    | int    | 错误信息          | `1013`               |
 
 - 补充  
 
@@ -264,11 +265,13 @@ port ：**8080**
 
     `models` 中对象的说明
 
-    | 参数名 | 类型   | 说明         | 示例值             |
-    | :----- | :----- | :----------- | :----------------- |
-    | `id`   | int    | 模型序号     | `3`                |
-    | `name` | string | 模型具体名字 | `"DeepSeek V3"`    |
-    | `desc` | string | 模型描述     | `"A powerful LLM"` |
+    | 参数名       | 类型   | 说明                 | 示例值             |
+    | :----------- | :----- | :------------------- | :----------------- |
+    | `id`         | int    | 模型序号             | `3`                |
+    | `name`       | string | 模型具体名字         | `"DeepSeek V3"`    |
+    | `reasonable` | int    | 是否包括推理内容     | `0`                |
+    | `online`     | int    | 是否包含联网搜索内容 | `1`                |
+    | `desc`       | string | 模型描述             | `"A powerful LLM"` |
 
 - 补充  
 
@@ -281,6 +284,7 @@ port ：**8080**
 
 - 请求参数（application/json）
 
+<<<<<<< HEAD
     | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                     |
     | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
     | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
@@ -292,6 +296,17 @@ port ：**8080**
     | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+=======
+    | 参数名       | 类型   | 必填 | 说明                                                            | 示例值                                                     |
+    | :----------- | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`       | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
+    | `session_id` | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
+    | `model_id`   | int    | 是   | 选择的模型具体编号                                              | `1`                                                        |
+    | `prompt`     | object | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`        | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`    | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+>>>>>>> 8600723 (get_chatserver接口返回值增加了重构用户显示信息的内容)
 
 - 返回值（application/json）
 
@@ -323,6 +338,7 @@ port ：**8080**
 
     `messages` 中对象的说明
 
+<<<<<<< HEAD
     | 参数名        | 类型   | 说明                                                            | 示例值                                                     |
     | :------------ | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
     | `uuid`        | int    | 用户唯一标识                                                    | `1`                                                        |
@@ -334,6 +350,18 @@ port ：**8080**
     | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
     | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
     | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+=======
+    | 参数名       | 类型   | 说明                                                            | 示例值                                                     |
+    | :----------- | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`       | int    | 用户唯一标识                                                    | `1`                                                        |
+    | `session_id` | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
+    | `sender`     | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                   |
+    | `model_id`   | int    | 选择的模型 ID                                                   | `3`                                                        |
+    | `prompt`     | array  | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters` | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`        | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`    | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+>>>>>>> 8600723 (get_chatserver接口返回值增加了重构用户显示信息的内容)
 
 - 补充
 
@@ -408,16 +436,15 @@ port ：**8080**
 
 - 请求参数（JSON）
 
-    | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                     |
-    | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
-    | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
-    | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
-    | `model_class` | string | 是   | 选择的模型 ID                                                   | `"claude-3-haiku"`                                         |
-    | `model_id`    | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
-    | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
-    | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
-    | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
-    | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+    | 参数名       | 类型   | 必填 | 说明                                                            | 示例值                                                     |
+    | :----------- | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
+    | `uuid`       | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
+    | `session_id` | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
+    | `model_id`   | string | 是   | 选择的模型大类                                                  | `"gemini"`                                                 |
+    | `prompt`     | array  | 是   | 用户输入的提示内容                                              | `"{"role": "system","content": "你好，你想让我做什么？"}"` |
+    | `parameters` | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
+    | `URL`        | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
+    | `api_key`    | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
 
 - 返回值（application/json）
 
