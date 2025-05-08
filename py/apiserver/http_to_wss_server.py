@@ -82,7 +82,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 URL = data.get("URL")
                 parameters = data.get("parameters", {})
                 temperature = parameters.get("temperature", 0.7)
-                talktype = parameters.get("type", "chat")
+                # talktype = parameters.get("type", "chat")
                 enableWebSearch = parameters.get("enableWebSearch", False)
                 frugalMode = parameters.get("frugalMode", False)
 
@@ -168,89 +168,87 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 if not model_type:
                     return web.json_response({"error": 3006})
 
-                match talktype:
-                    case "chat":
-                        match model_type:
-                            case "deepseek-chat":
-                                result = deepseekfunc.deepseek_chat(
-                                    promotes, temperature
-                                )
-                            case "gpt-3.5":
-                                result = gptfunc.chatgpt_chat3(
-                                    temperature,enableWebSearch,messages=promotes
-                                )
-                            case "gpt-4":
-                                result = gptfunc.chatgpt_chat4(
-                                    temperature,enableWebSearch,messages=promotes
-                                )
-                            case "o4-mini":
-                                result = gptfunc.chatgpt_chatreasoning(
-                                    temperature,enableWebSearch,messages=promotes
-                                )
-                            case "claude-v1.3":
-                                result = claude.stream_claude_response(
-                                    messages=promotes
-                                )
-                            case "claude-3-7-sonnet-20250219":
-                                result = claude.stream_claude_response(
-                                    messages=promotes, model="claude-3-7-sonnet-20250219"
-                                )
-                            case "deepseek-reasoner":
-                                result = deepseekfunc.deepseek_chatreasoner(
-                                    promotes, temperature
-                                )
-                            case "doubao-1-5-pro":
-                                result = doubao.doubao_completion(
-                                    model="doubao-1-5-pro",
-                                    messages=promotes,
-                                    temperature=temperature,
-                                )
-                            case "doubao-1-5-thinking-pro":
-                                result = doubao.doubao_reasoner(
-                                    model="doubao-1-5-thinking-pro",
-                                    messages=promotes,
-                                    temperature=temperature,
-                                )
-                            case "gemini-2.5-pro-exp-03-25":
-                                result = gemini.gemini_chat(
-                                    messages=promotes, temperature=temperature
-                                )
-                            case "gemini-2.5-flash-preview-04-17":
-                                result = geminireasoner.gemini_chat(
-                                    messages=promotes, temperature=temperature
-                                )
-                            case "kimi-latest":
-                                result = kimi.kimi_chat(
-                                    messages=promotes, temperature=temperature, enableWebSearch=enableWebSearch
-                                )
-                            case "moonshot-v1-128k":
-                                result = kimi.moonshot_chat(
-                                    messages=promotes,
-                                    temperature=temperature,
-                                    enableWebSearch=enableWebSearch,
-                                )
-                            case "sonar":
-                                result = sonar.sonar_chat(
-                                    messages=promotes, temperature=temperature
-                                )
-                            case "sonarpro":
-                                result = sonar.sonarpro_chat(
-                                    messages=promotes, temperature=temperature
-                                )
-                            case "qwen-max":
-                                result = tongyi.tongyi_chat(
-                                    messages=promotes,
-                                    temperature=temperature,
-                                )
-                            case "qwq-plus":
-                                result = tongyi.tongyi_reasoner(
-                                    messages=promotes,
-                                    temperature=temperature,
-                                )
-                            case _:
-                                result = default.get_chat_completion(
-                                    api_key, URL, model_type, promotes, temperature
-                                )
+                match model_type:
+                    case "deepseek-chat":
+                        result = deepseekfunc.deepseek_chat(
+                            promotes, temperature
+                        )
+                    case "gpt-3.5":
+                        result = gptfunc.chatgpt_chat3(
+                            temperature,enableWebSearch,messages=promotes
+                        )
+                    case "gpt-4":
+                        result = gptfunc.chatgpt_chat4(
+                            temperature,enableWebSearch,messages=promotes
+                        )
+                    case "o4-mini":
+                        result = gptfunc.chatgpt_chatreasoning(
+                            temperature,enableWebSearch,messages=promotes
+                        )
+                    case "claude-v1.3":
+                        result = claude.stream_claude_response(
+                            messages=promotes
+                        )
+                    case "claude-3-7-sonnet-20250219":
+                        result = claude.stream_claude_response(
+                            messages=promotes, model="claude-3-7-sonnet-20250219"
+                        )
+                    case "deepseek-reasoner":
+                        result = deepseekfunc.deepseek_chatreasoner(
+                            promotes, temperature
+                        )
+                    case "doubao-1-5-pro":
+                        result = doubao.doubao_completion(
+                            model="doubao-1-5-pro",
+                            messages=promotes,
+                            temperature=temperature,
+                        )
+                    case "doubao-1-5-thinking-pro":
+                        result = doubao.doubao_reasoner(
+                            model="doubao-1-5-thinking-pro",
+                            messages=promotes,
+                            temperature=temperature,
+                        )
+                    case "gemini-2.5-pro-exp-03-25":
+                        result = gemini.gemini_chat(
+                            messages=promotes, temperature=temperature
+                        )
+                    case "gemini-2.5-flash-preview-04-17":
+                        result = geminireasoner.gemini_chat(
+                            messages=promotes, temperature=temperature
+                        )
+                    case "kimi-latest":
+                        result = kimi.kimi_chat(
+                            messages=promotes, temperature=temperature, enableWebSearch=enableWebSearch
+                        )
+                    case "moonshot-v1-128k":
+                        result = kimi.moonshot_chat(
+                            messages=promotes,
+                            temperature=temperature,
+                            enableWebSearch=enableWebSearch,
+                        )
+                    case "sonar":
+                        result = sonar.sonar_chat(
+                            messages=promotes, temperature=temperature
+                        )
+                    case "sonarpro":
+                        result = sonar.sonarpro_chat(
+                            messages=promotes, temperature=temperature
+                        )
+                    case "qwen-max":
+                        result = tongyi.tongyi_chat(
+                            messages=promotes,
+                            temperature=temperature,
+                        )
+                    case "qwq-plus":
+                        result = tongyi.tongyi_reasoner(
+                            messages=promotes,
+                            temperature=temperature,
+                        )
+                    case _:
+                        result = default.get_chat_completion(
+                            api_key, URL, model_type, promotes, temperature
+                        )
 
                 has_sent_reasoning_header = False
                 has_sent_content_header = False
