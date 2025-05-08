@@ -97,15 +97,15 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         role = msg["sender"]
 
                         # Get the prompt data, which can be a list or a single item
-                        prompt_data1 = msg["prompt"]
+                        prompt_data2 = msg["prompt"]
 
                         # Prepare the list for the 'content' field in the output
                         content_parts = []
 
                         # Handle both list and non-list prompt formats from the input
-                        if isinstance(prompt_data1, list):
+                        if isinstance(prompt_data2, list):
                             # If prompt_data is a list, iterate through its elements (prompt parts)
-                            for part in prompt_data1:
+                            for part in prompt_data2:
                                 if part["type"] == "text":
                                     # Transform text part format
                                     content_parts.append({"type": "text", "text": part["content"]})
