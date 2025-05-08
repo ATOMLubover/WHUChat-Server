@@ -168,19 +168,26 @@ int MySqlMgr::CreateMessage(
         // 不等于 0 的是用户发送的消息
         if ( uuid != 0 )
         {
-            // 当是用户的信息试图插入时，要检查 raw 中的 prompt 对象 content 字段是否为空
+            // 当是用户的信息试图插入时，要检查 raw 中的 prompt 对象 text 字段是否为空
             nlohmann::json json_raw = nlohmann::json::parse( raw );
+
             // 由于 prompt 是一个对象数组，所以遍历检测是否全部为空
             // 如果全部为空或者对象为空，则返回 -1
             bool is_blank = true;
-            for ( const auto& item : json_raw[ "prompt" ] )
+            for ( auto& item : json_raw[ "prompt" ] )
             {
                 if ( item.is_null() )
                     break;
 
-                if ( !item[ "content" ].empty() )
+                if ( !item[ "text" ].empty() )
                 {
                     is_blank = false;
+
+                    std::string temp_1 = item[ "text" ];
+                    std::string temp = item[ "text" ].dump();
+                    temp = temp.substr( 1, temp.size() - 2 );
+                    item[ "text" ] = temp;
+
                     break;
                 }
             }
@@ -196,6 +203,8 @@ int MySqlMgr::CreateMessage(
             {
                 return -1;
             }
+
+            //raw = json_raw.dump();
         }
         // 如果是 AI 的回答，则需要处理生成 raw 数据
         else
@@ -204,10 +213,11 @@ int MySqlMgr::CreateMessage(
             if ( content.empty() )
                 return -1;
 
+            nlohmann::json json_prompt_cnt;
+            json_prompt_cnt[ "text" ] = content;
+            json_prompt_cnt[ "type" ] = "text";
             nlohmann::json json_prompt;
-            // TODO: 这一行删了
-            json_prompt[ "role" ] = "assistant";
-            json_prompt[ "content" ] = content;
+            json_prompt.emplace_back( json_prompt_cnt );
 
             nlohmann::json json_raw;
             json_raw[ "role" ] = "assistant";

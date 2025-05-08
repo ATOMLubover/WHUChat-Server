@@ -133,7 +133,7 @@ std::list<SessionInfo> MySqlDao::SelectSessions( int uuid )
     std::unique_ptr<sql::ResultSet> resultset
         = stmt.Commit( fmt::format(
             "SELECT `id`, `user_id`, `title`, `updated_at` "
-            "FROM `sessions` WHERE `user_id` = {}", uuid ) );
+            "FROM `sessions` WHERE `status` = 'active' AND `user_id` = {}", uuid ) );
     std::list<SessionInfo> result;
     while ( resultset->next() )
     {
