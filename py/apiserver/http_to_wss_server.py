@@ -108,13 +108,13 @@ async def handle_wss_stream(data: dict, request: web.Request):
                             for part in prompt_data2:
                                 if part["type"] == "text":
                                     # Transform text part format
-                                    content_parts.append({"type": "text", "text": part["content"]})
+                                    content_parts.append({"type": "text", "text": part["text"]})
                                 elif part["type"] == "image":
                                     # Transform image part format to image_url with nested url
                                     # Assuming part["content"] already contains the base64 image data or URL
                                     content_parts.append({
                                         "type": "image_url",
-                                        "image_url": {"url": part["content"]}
+                                        "image_url": {"url": part["image_url"]}
                                     })
                                 # Add handling for other content types if necessary
                                 # else:
@@ -141,13 +141,13 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         for part in prompt_data2:
                             if part.get("type") == "text":
                                 # 转换文本格式：content -> text
-                                content_parts.append({"type": "text", "text": part.get("content", "")})
+                                content_parts.append({"type": "text", "text": part.get("text", "")})
                             elif part.get("type") == "image":
                                 # 转换图片格式：image -> image_url, content -> image_url.url
                                 # 假设 content 字段包含图片数据（base64 或 URL）
                                 content_parts.append({
                                     "type": "image_url",
-                                    "image_url": {"url": part.get("content", "")}
+                                    "image_url": {"url": part.get("text", "")}
                                 })
                             # 根据需要添加其他类型的处理
                             # else:

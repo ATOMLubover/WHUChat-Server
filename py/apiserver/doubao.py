@@ -1,11 +1,11 @@
 import os
 from openai import OpenAI
 baseurl = "https://ark.cn-beijing.volces.com/api/v3/"
-api_key="WWpsa1lUQmtOR0UzTWpVek5EVmlZemczWXpRd01HUTFZakE0T1RRNU5qWQ=="
-def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperature=0.7):
+api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76"
+def doubao_completion(model="Doubao-1.5-pro", messages=None,temperature=0.7):
     try:
         client = OpenAI(
-            api_key="WWpsa1lUQmtOR0UzTWpVek5EVmlZemczWXpRd01HUTFZakE0T1RRNU5qWQ==",
+            api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
             base_url="https://ark.cn-beijing.volces.com/api/v3/"
         )
         completion = client.chat.completions.create(
@@ -21,10 +21,10 @@ def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperatu
         print(f"错误信息：{e}")
         return
 
-def doubao_reasoner(model="doubao-1-5-pro-32k-250115", messages=None,temperature=0.7):
+def doubao_reasoner(model="Doubao-1.5-thinking-pro", messages=None,temperature=0.7):
     try:
         client = OpenAI(
-            api_key="WWpsa1lUQmtOR0UzTWpVek5EVmlZemczWXpRd01HUTFZakE0T1RRNU5qWQ==",
+            api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
             base_url="https://ark.cn-beijing.volces.com/api/v3/"
         )
         response = client.chat.completions.create(
