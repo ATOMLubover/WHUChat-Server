@@ -81,10 +81,11 @@ def tongyi_reasoner(messages=None, temperature=0.7, model="qwq-32b", api_key=Non
             delta = chunk.choices[0].delta
 
             if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
-                yield {
-                    "type": "reasoning",
-                    "reasoning_content": delta.reasoning_content
-                }
+                # yield {
+                #     "type": "reasoning",
+                #     "reasoning_content": delta.reasoning_content
+                # }
+                12222
             elif hasattr(delta, "content") and delta.content:
                 yield {
                     "type": "content",

@@ -5,19 +5,19 @@ import ssl
 import json
 import logging
 from aiohttp import web
-import tiangong
+import kimi
 import gptreadimage
 import deepseekfunc
 import gptfunc
 import tongyi
 import os
 import configparser
-
-# import gemini
+import geminireasoner
+import gemini
 import doubao
 import default
 import claude
-
+import sonar
 
 logging.basicConfig(level=logging.INFO)
 
@@ -91,26 +91,73 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 # print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
                 if frugalMode == False:
                     prompt_data1 = prompt_data.get("messages", [])
-                    messages = (
-                        [prompt_data1]
-                        if isinstance(prompt_data1, dict)
-                        else (prompt_data1 if isinstance(prompt_data1, list) else [])
-                    )
-                    print(f"转换后的 messages: {messages}")  # 打印转换后的消息列表
+                    promotes = []
+                    for msg in prompt_data1:
+                        # Get the role from the message object
+                        role = msg["sender"]
 
-                    promote = [
-                        {"role": p["role"], "content": p["content"]}
-                        for msg in messages
-                        for p in (
-                            msg["prompt"]
-                            if isinstance(msg["prompt"], list)
-                            else [msg["prompt"]]
-                        )
-                    ]
+                        # Get the prompt data, which can be a list or a single item
+                        prompt_data1 = msg["prompt"]
 
-                    print(f"构造出的 promote: {promote}")  # 打印最终用于推理的消息内容
+                        # Prepare the list for the 'content' field in the output
+                        content_parts = []
+
+                        # Handle both list and non-list prompt formats from the input
+                        if isinstance(prompt_data1, list):
+                            # If prompt_data is a list, iterate through its elements (prompt parts)
+                            for part in prompt_data1:
+                                if part["type"] == "text":
+                                    # Transform text part format
+                                    content_parts.append({"type": "text", "text": part["content"]})
+                                elif part["type"] == "image":
+                                    # Transform image part format to image_url with nested url
+                                    # Assuming part["content"] already contains the base64 image data or URL
+                                    content_parts.append({
+                                        "type": "image_url",
+                                        "image_url": {"url": part["content"]}
+                                    })
+                                # Add handling for other content types if necessary
+                                # else:
+                                #     # Optional: handle or skip unknown part types
+                                #     pass
+                        else:
+                            # If prompt_data is not a list, assume it's a single text string
+                            # Wrap it in the required list format for text type
+                            content_parts.append({"type": "text", "text": prompt_data1})
+
+                        # Append the complete message entry to the promotes list
+                        # Only append if there's actual content
+                        if content_parts:
+                            promotes.append({"role": role, "content": content_parts})
+
+                    print(f"构造出的 promote: {promotes}")  # 打印最终用于推理的消息内容
                 else:
-                    promote = data.get("prompt")
+                    sender = data.get("sender")
+                    prompt_data2 = data.get("prompt")
+                    content_parts = []
+
+                    # 遍历 prompt 中的每个部分进行格式转换
+                    if isinstance(prompt_data2, list): # 确保 prompt_data 确实是列表
+                        for part in prompt_data2:
+                            if part.get("type") == "text":
+                                # 转换文本格式：content -> text
+                                content_parts.append({"type": "text", "text": part.get("content", "")})
+                            elif part.get("type") == "image":
+                                # 转换图片格式：image -> image_url, content -> image_url.url
+                                # 假设 content 字段包含图片数据（base64 或 URL）
+                                content_parts.append({
+                                    "type": "image_url",
+                                    "image_url": {"url": part.get("content", "")}
+                                })
+                            # 根据需要添加其他类型的处理
+                            # else:
+                            #     # 可选：处理未知类型或跳过
+                            #     pass
+
+                    # 构建包含当前消息的 promotes 列表
+                    # promotes 将是一个包含一个元素的列表，这个元素代表当前消息
+                    # 如果 content_parts 为空，则 promotes 列表也可能为空
+                    promotes = [{"role": sender, "content": content_parts}] if content_parts else []
 
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
@@ -126,12 +173,83 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         match model_type:
                             case "deepseek-chat":
                                 result = deepseekfunc.deepseek_chat(
-                                    promote, temperature
+                                    promotes, temperature
                                 )
-
+                            case "gpt-3.5":
+                                result = gptfunc.chatgpt_chat3(
+                                    temperature,enableWebSearch,messages=promotes
+                                )
+                            case "gpt-4":
+                                result = gptfunc.chatgpt_chat4(
+                                    temperature,enableWebSearch,messages=promotes
+                                )
+                            case "o4-mini":
+                                result = gptfunc.chatgpt_chatreasoning(
+                                    temperature,enableWebSearch,messages=promotes
+                                )
+                            case "claude-v1.3":
+                                result = claude.stream_claude_response(
+                                    messages=promotes
+                                )
+                            case "claude-3-7-sonnet-20250219":
+                                result = claude.stream_claude_response(
+                                    messages=promotes, model="claude-3-7-sonnet-20250219"
+                                )
+                            case "deepseek-reasoner":
+                                result = deepseekfunc.deepseek_chatreasoner(
+                                    promotes, temperature
+                                )
+                            case "doubao-1-5-pro":
+                                result = doubao.doubao_completion(
+                                    model="doubao-1-5-pro",
+                                    messages=promotes,
+                                    temperature=temperature,
+                                )
+                            case "doubao-1-5-thinking-pro":
+                                result = doubao.doubao_reasoner(
+                                    model="doubao-1-5-thinking-pro",
+                                    messages=promotes,
+                                    temperature=temperature,
+                                )
+                            case "gemini-2.5-pro-exp-03-25":
+                                result = gemini.gemini_chat(
+                                    messages=promotes, temperature=temperature
+                                )
+                            case "gemini-2.5-flash-preview-04-17":
+                                result = geminireasoner.gemini_chat(
+                                    messages=promotes, temperature=temperature
+                                )
+                            case "kimi-latest":
+                                result = kimi.kimi_chat(
+                                    messages=promotes, temperature=temperature, enableWebSearch=enableWebSearch
+                                )
+                            case "moonshot-v1-128k":
+                                result = kimi.moonshot_chat(
+                                    messages=promotes,
+                                    temperature=temperature,
+                                    enableWebSearch=enableWebSearch,
+                                )
+                            case "sonar":
+                                result = sonar.sonar_chat(
+                                    messages=promotes, temperature=temperature
+                                )
+                            case "sonarpro":
+                                result = sonar.sonarpro_chat(
+                                    messages=promotes, temperature=temperature
+                                )
+                            case "qwen-max":
+                                result = tongyi.tongyi_chat(
+                                    messages=promotes,
+                                    temperature=temperature,
+                                )
+                            case "qwq-plus":
+                                result = tongyi.tongyi_reasoner(
+                                    messages=promotes,
+                                    temperature=temperature,
+                                )
                             case _:
                                 result = default.get_chat_completion(
-                                    api_key, URL, model_type, promote, temperature
+                                    api_key, URL, model_type, promotes, temperature
                                 )
 
                 has_sent_reasoning_header = False

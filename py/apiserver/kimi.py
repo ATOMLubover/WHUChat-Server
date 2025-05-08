@@ -102,7 +102,7 @@ def kimi_reasoner(messages,temperature=0.7,enableWebSearch=False):
                 if choice.delta and hasattr(choice.delta, "reasoning_content"):
                     if not thinking:
                         thinking = True
-                    yield getattr(choice.delta, "reasoning_content")
+                    #yield getattr(choice.delta, "reasoning_content")
                 if choice.delta and choice.delta.content:
                     if thinking:
                         thinking = False

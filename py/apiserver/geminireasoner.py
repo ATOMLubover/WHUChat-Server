@@ -25,6 +25,22 @@ def chatgpt_chat(model="gemini-2.5-flash-preview-04-17", messages=None, temperat
                 elif current_type == "content":
                     yield {"type": "content", "content": delta_content}
 
+def gemini_chat(messages,temperature=0.7):
+    try:
+        client = OpenAI(api_key="AIzaSyDfsvYh5Okgo-qQEyaLNZZLAoLnI9jkbMg", base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
+        response = client.chat.completions.create(
+            model="gemini-2.5-flash-preview-04-17",
+            messages=messages,  # 使用 messages 参数
+            stream=True,
+            temperature=temperature
+        )
+        for chunk in response:
+            if chunk.choices[0].delta.content is not None:
+                yield{"type": "content", "content": chunk.choices[0].delta.content}
+    except Exception as e:
+        print(f"错误信息：{e}")
+        return
+
 if __name__ == "__main__":
     prompt = "Explain the concept of Occam's Razor and provide a simple, everyday example."
     messages = [{"role": "user", "content": prompt}]
