@@ -259,18 +259,18 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 async for chunk in result:
                     if isinstance(chunk, dict):
                         if chunk.get("type") == "reasoning":
-                            await ws.send_str("*****((((()))))")
+                            # await ws.send_str("\u200C\u001C\u200C")
                             if not has_sent_reasoning_header:
-                                await ws.send_str("Reasoning:")
+                                await ws.send_str("\u200C\u200C\u200C")
                                 has_sent_reasoning_header = True
                             if reasoning_text := chunk.get("reasoning_content", ""):
                                 await ws.send_str(reasoning_text)
                                 reasoning_buffer.append(reasoning_text)
 
                         elif chunk.get("type") == "content":
-                            await ws.send_str("&^%$#@!()&")
+                            # await ws.send_str("&^%$#@!()&")
                             if not has_sent_content_header:
-                                await ws.send_str("Contents:")
+                                await ws.send_str("\u001C\u001C\u001C")
                                 has_sent_content_header = True
                             if content_text := chunk.get("content", ""):
                                 await ws.send_str(content_text)
@@ -279,14 +279,14 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         logging.warning(f"非字典 chunk: {chunk}")
 
                 if reasoning_buffer:
-                    await ws.send_str("######@@@@@@%%%%%%")
+                    await ws.send_str("\u200C\u001C\u200C")
                     logging.info("发送 reasoning 分隔符完成")
 
                 if content_buffer:
-                    await ws.send_str("&&&&&&******^^^^^^")
+                    await ws.send_str("\u001C\u200C\u001C")
                     logging.info("发送 content 分隔符完成")
 
-                await ws.send_str("*^%$%&&$$$$$$%^^$##E%##^^$#$%")
+                await ws.send_str("\u200C\u200C\u200C\u200C\u200C\u200C")
                 logging.info("发送 end 标志完成")
 
     except Exception as e:
@@ -317,8 +317,8 @@ async def handle_send_ans(request: web.Request):
         prompt_data = await fetch_message_history(0, session_id)
         print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
         error = prompt_data.get("error")
-        # if not prompt_data or error != 0:
-        #     return web.json_response({"error": 3007})
+        if not prompt_data or error != 0:
+            return web.json_response({"error": 3007})
 
         asyncio.create_task(handle_wss_stream(data, request))
 
