@@ -335,12 +335,14 @@ def main():
         config = json.load(f)
     app = web.Application()
     app.router.add_post("/get_response", handle_send_ans)
-    global CERT_PATH, KEY_PATH, httpport, wssport, historyURL
-    historyURL = config["historyURL"]
+    global CERT_PATH, KEY_PATH, httpport, wssport, historyURL,Host
+    wssport = config["wssport"]
+    Host = config["Host"]
+    # historyURL = config["historyURL"]
     CERT_PATH = config["CERT_PATH"]
     KEY_PATH = config["KEY_PATH"]
     httpport = config["httpport"]
-    wssport = config["wssport"]
+    historyURL = "https://{Host}:{wssport}/api/v1/chat/browse_messages"
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
