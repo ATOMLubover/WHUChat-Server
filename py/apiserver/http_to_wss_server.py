@@ -185,15 +185,15 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         result = deepseekfunc.deepseek_chat(promotes, temperature)
                     case "gpt-3.5":
                         result = gptfunc.chatgpt_chat3(
-                            temperature, enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
                         )
                     case "gpt-4":
                         result = gptfunc.chatgpt_chat4(
-                            temperature, enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
                         )
                     case "o4-mini":
                         result = gptfunc.chatgpt_chatreasoning(
-                            temperature, enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
                         )
                     case "claude-v1.3":
                         result = claude.stream_claude_response(messages=promotes)
@@ -257,7 +257,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         )
                     case _:
                         result = default.get_chat_completion(
-                            api_key, URL, model_type, promotes, temperature
+                            api_key=api_key, URL=URL, model_type=model_type, promotes=promotes, temperature=temperature
                         )
 
                 has_sent_reasoning_header = False

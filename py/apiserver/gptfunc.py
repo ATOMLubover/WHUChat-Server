@@ -1,11 +1,11 @@
 import openai
 from openai import OpenAI
-api_key="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"
+api_key="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"
 
 def chatgpt_chatreasoning(model="o1-mini-2024-09-12", messages=None, temperature=1.0,enableWebSearch=False):
     try:
         
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
@@ -36,7 +36,7 @@ def chatgpt_chatreasoning(model="o1-mini-2024-09-12", messages=None, temperature
 
 def chatgpt_chat4(model="gpt-4o-2024-11-20", messages=None, temperature=0.7,enableWebSearch=False):
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = [{"role": "system", "content": "你是一个有用的助手"}] + (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
@@ -67,7 +67,7 @@ def chatgpt_chat4(model="gpt-4o-2024-11-20", messages=None, temperature=0.7,enab
 
 def chatgpt_chat3(model="gpt-3.5-turbo-0125", messages=None, temperature=0.7,enableWebSearch=False):
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = [{"role": "system", "content": "你是一个有用的助手"}] + (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
@@ -99,11 +99,23 @@ def chatgpt_chat3(model="gpt-3.5-turbo-0125", messages=None, temperature=0.7,ena
 if __name__ == "__main__":
     # 测试代码
     messages = [
-        {"role": "user", "content": "你能告诉我今天的天气吗？"}
-    ]
-    for chunk in chatgpt_chatreasoning(messages=messages):
-        print(chunk)
-        print("end\n")
-    for chunk in chatgpt_chat4(messages=messages):
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What’s your name?"
+        },
+        {
+          "type": "text",
+          "text": "How are you?"
+        }
+      ],
+    }
+  ]
+    # for chunk in chatgpt_chatreasoning(messages=messages):
+    #     print(chunk)
+    #     print("end\n")
+    for chunk in chatgpt_chat3(messages=messages):
         print(chunk)
 
