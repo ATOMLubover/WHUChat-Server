@@ -108,14 +108,18 @@ async def handle_wss_stream(data: dict, request: web.Request):
                             for part in prompt_data2:
                                 if part["type"] == "text":
                                     # Transform text part format
-                                    content_parts.append({"type": "text", "text": part["text"]})
+                                    content_parts.append(
+                                        {"type": "text", "text": part["text"]}
+                                    )
                                 elif part["type"] == "image":
                                     # Transform image part format to image_url with nested url
                                     # Assuming part["content"] already contains the base64 image data or URL
-                                    content_parts.append({
-                                        "type": "image_url",
-                                        "image_url": {"url": part["image_url"]}
-                                    })
+                                    content_parts.append(
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {"url": part["image_url"]},
+                                        }
+                                    )
                                 # Add handling for other content types if necessary
                                 # else:
                                 #     # Optional: handle or skip unknown part types
@@ -137,18 +141,22 @@ async def handle_wss_stream(data: dict, request: web.Request):
                     content_parts = []
 
                     # 遍历 prompt 中的每个部分进行格式转换
-                    if isinstance(prompt_data2, list): # 确保 prompt_data 确实是列表
+                    if isinstance(prompt_data2, list):  # 确保 prompt_data 确实是列表
                         for part in prompt_data2:
                             if part.get("type") == "text":
                                 # 转换文本格式：content -> text
-                                content_parts.append({"type": "text", "text": part.get("text", "")})
+                                content_parts.append(
+                                    {"type": "text", "text": part.get("text", "")}
+                                )
                             elif part.get("type") == "image":
                                 # 转换图片格式：image -> image_url, content -> image_url.url
                                 # 假设 content 字段包含图片数据（base64 或 URL）
-                                content_parts.append({
-                                    "type": "image_url",
-                                    "image_url": {"url": part.get("text", "")}
-                                })
+                                content_parts.append(
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {"url": part.get("text", "")},
+                                    }
+                                )
                             # 根据需要添加其他类型的处理
                             # else:
                             #     # 可选：处理未知类型或跳过
@@ -157,7 +165,11 @@ async def handle_wss_stream(data: dict, request: web.Request):
                     # 构建包含当前消息的 promotes 列表
                     # promotes 将是一个包含一个元素的列表，这个元素代表当前消息
                     # 如果 content_parts 为空，则 promotes 列表也可能为空
-                    promotes = [{"role": sender, "content": content_parts}] if content_parts else []
+                    promotes = (
+                        [{"role": sender, "content": content_parts}]
+                        if content_parts
+                        else []
+                    )
 
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
@@ -170,25 +182,21 @@ async def handle_wss_stream(data: dict, request: web.Request):
 
                 match model_type:
                     case "deepseek-chat":
-                        result = deepseekfunc.deepseek_chat(
-                            promotes, temperature
-                        )
+                        result = deepseekfunc.deepseek_chat(promotes, temperature)
                     case "gpt-3.5":
                         result = gptfunc.chatgpt_chat3(
-                            temperature,enableWebSearch,messages=promotes
+                            temperature, enableWebSearch, messages=promotes
                         )
                     case "gpt-4":
                         result = gptfunc.chatgpt_chat4(
-                            temperature,enableWebSearch,messages=promotes
+                            temperature, enableWebSearch, messages=promotes
                         )
                     case "o4-mini":
                         result = gptfunc.chatgpt_chatreasoning(
-                            temperature,enableWebSearch,messages=promotes
+                            temperature, enableWebSearch, messages=promotes
                         )
                     case "claude-v1.3":
-                        result = claude.stream_claude_response(
-                            messages=promotes
-                        )
+                        result = claude.stream_claude_response(messages=promotes)
                     case "claude-3-7-sonnet-20250219":
                         result = claude.stream_claude_response(
                             messages=promotes, model="claude-3-7-sonnet-20250219"
@@ -219,7 +227,9 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         )
                     case "kimi-latest":
                         result = kimi.kimi_chat(
-                            messages=promotes, temperature=temperature, enableWebSearch=enableWebSearch
+                            messages=promotes,
+                            temperature=temperature,
+                            enableWebSearch=enableWebSearch,
                         )
                     case "moonshot-v1-128k":
                         result = kimi.moonshot_chat(
@@ -261,7 +271,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         if chunk.get("type") == "reasoning":
                             # await ws.send_str("\u200C\u001C\u200C")
                             if not has_sent_reasoning_header:
-                                await ws.send_str("\u200C\u200C\u200C")
+                                await ws.send_str("\u200c\u200c\u200c")
                                 has_sent_reasoning_header = True
                             if reasoning_text := chunk.get("reasoning_content", ""):
                                 await ws.send_str(reasoning_text)
@@ -270,7 +280,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         elif chunk.get("type") == "content":
                             # await ws.send_str("&^%$#@!()&")
                             if not has_sent_content_header:
-                                await ws.send_str("\u001C\u001C\u001C")
+                                await ws.send_str("\u001c\u001c\u001c")
                                 has_sent_content_header = True
                             if content_text := chunk.get("content", ""):
                                 await ws.send_str(content_text)
@@ -279,14 +289,14 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         logging.warning(f"非字典 chunk: {chunk}")
 
                 if reasoning_buffer:
-                    await ws.send_str("\u200C\u001C\u200C")
+                    await ws.send_str("\u200c\u001c\u200c")
                     logging.info("发送 reasoning 分隔符完成")
 
                 if content_buffer:
-                    await ws.send_str("\u001C\u200C\u001C")
+                    await ws.send_str("\u001c\u200c\u001c")
                     logging.info("发送 content 分隔符完成")
 
-                await ws.send_str("\u200C\u200C\u200C\u200C\u200C\u200C")
+                await ws.send_str("\u200c\u200c\u200c\u200c\u200c\u200c")
                 logging.info("发送 end 标志完成")
 
     except Exception as e:
@@ -335,14 +345,14 @@ def main():
         config = json.load(f)
     app = web.Application()
     app.router.add_post("/get_response", handle_send_ans)
-    global CERT_PATH, KEY_PATH, httpport, wssport, historyURL,Host
+    global CERT_PATH, KEY_PATH, httpport, wssport, historyURL, Host
     wssport = config["wssport"]
     Host = config["Host"]
     # historyURL = config["historyURL"]
     CERT_PATH = config["CERT_PATH"]
     KEY_PATH = config["KEY_PATH"]
     httpport = config["httpport"]
-    historyURL = "https://{Host}:{wssport}/api/v1/chat/browse_messages"
+    historyURL = f"https://{Host}:{wssport}/api/v1/chat/browse_messages"
     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_ctx.load_cert_chain(CERT_PATH, KEY_PATH)
 
