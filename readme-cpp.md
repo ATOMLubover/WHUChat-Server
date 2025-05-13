@@ -284,17 +284,17 @@ port ：**8080**
 
 - 请求参数（application/json）
 
-    | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                     |
-    | :------------ | :----- | :--- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
-    | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                        |
-    | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                        |
-    | `model_class` | string | 是   | 选择的模型大类 ID                                               | `"claude"`                                                 |
-    | `model_id`    | int    | 是   | 选择的模型具体编号                                              | `1`                                                        |
-    | `sender` | string | 是 | 发送消息的是用户还是模型 | "user" |
-    | `prompt`      | array | 是   | 用户输入的提示内容                                              | `[{"type": "image", "content": 图片url？没想好具体怎么传，反正现在还没有实现}, {"type": "text","content": "你好，你想让我做什么？"}]` |
-    | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
-    | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
-    | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+    | 参数名        | 类型   | 必填 | 说明                                                            | 示例值                                                                                                                                |
+    | :------------ | :----- | :--- | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+    | `uuid`        | int    | 是   | 用户唯一标识                                                    | `1`                                                                                                                                   |
+    | `session_id`  | int    | 是   | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `1`                                                                                                                                   |
+    | `model_class` | string | 是   | 选择的模型大类 ID                                               | `"claude"`                                                                                                                            |
+    | `model_id`    | int    | 是   | 选择的模型具体编号                                              | `1`                                                                                                                                   |
+    | `sender`      | string | 是   | 发送消息的是用户还是模型                                        | "user"                                                                                                                                |
+    | `prompt`      | array  | 是   | 用户输入的提示内容                                              | `[{"type": "image", "content": 图片url？没想好具体怎么传，反正现在还没有实现}, {"type": "text","content": "你好，你想让我做什么？"}]` |
+    | `parameters`  | object | 是   | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                                                                                             |
+    | `URL`         | string | 否   | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                                                                                                          |
+    | `api_key`     | string | 否   | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                                                                                            |
 
 - 返回值（application/json）
 
@@ -326,17 +326,17 @@ port ：**8080**
 
     `messages` 中对象的说明
 
-    | 参数名        | 类型   | 说明                                                            | 示例值                                                     |
-    | :------------ | :----- | :-------------------------------------------------------------- | :--------------------------------------------------------- |
-    | `uuid`        | int    | 用户唯一标识                                                    | `1`                                                        |
-    | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                        |
-    | `sender`      | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                   |
-    | `model_id`    | int    | 选择的模型 ID                                                   | `3`                                                        |
-    | `model_class` | string | 选择的模型大类                                                  | `"OpenAI"`                                                 |
+    | 参数名        | 类型   | 说明                                                            | 示例值                                                                                       |
+    | :------------ | :----- | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------- |
+    | `uuid`        | int    | 用户唯一标识                                                    | `1`                                                                                          |
+    | `session_id`  | int    | 会话 ID（新对话时传递 null，由后端赋予，继续对话时传递已有 ID） | `2`                                                                                          |
+    | `sender`      | string | 当前消息的发送者（用户为 `user`，AI 为 `assistant`）            | `"user"`                                                                                     |
+    | `model_id`    | int    | 选择的模型 ID                                                   | `3`                                                                                          |
+    | `model_class` | string | 选择的模型大类                                                  | `"OpenAI"`                                                                                   |
     | `prompt`      | array  | 用户输入的提示内容                                              | `[{"type": "image", "content": 待定}, {"type": "text","content": "你好，你想让我做什么？"}]` |
-    | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                  |
-    | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                               |
-    | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                 |
+    | `parameters`  | object | 调用参数，如 temperature, thinking, online 等等                 | {"temperature": 0.7, ...}                                                                    |
+    | `URL`         | string | 自定义模型调用网址                                              | `"https://api.deepseek.com"`                                                                 |
+    | `api_key`     | string | 自定义模型调用api key                                           | `"sk-176d442796bf4b4f9cf28afdb5r7438fhus"`                                                   |
 
 - 补充
 
@@ -371,6 +371,26 @@ port ：**8080**
 
     Web 前端用于获取用来简单显示的会话列表信息
 
+#### `/api/v1/chat/update_title`
+
+- 请求参数（application/json）
+
+    | 参数名       | 类型   | 必填 | 说明         | 示例值 |
+    | ------------ | ------ | ---- | ------------ | ------ |
+    | `new_title`  | string | 是   | 新的会话标题 | `1`    |
+    | `uuid`       | int    | 是   | 用户 ID      | `2`    |
+    | `session_id` | int    | 是   | 会话 ID      | `2`    |
+
+- 返回值（application/json）
+
+    | 参数名  | 类型 | 说明   | 示例值 |
+    | ------- | ---- | ------ | ------ |
+    | `error` | int  | 错误码 | `0`    |
+
+- 补充
+
+    无
+
 ## HTTP 请求反馈错误码一览
 
 > 如果返回体是 JSON 格式，则会以 "error" 字段存储  
@@ -400,6 +420,7 @@ port ：**8080**
 | 2002    | ErrorSendCookieInvalid      | ` ChatServer ` 无法解析 cookie                   |
 | 2003    | ErrorApiNotResponding       | ` ChatServer ` 未接受到 ` ApiServer ` 的正常响应 |
 | 2004    | ErrorSsnIdInvalid           | ` ChatServer ` 无法找到对应 session_id           |
+| 2005    | ErrorUpdateTitleFailed      | ` ChatServer ` 无法更新对应会话的标题            |
 
 ## 对 Python ` ApiServer ` 希望的接口
 
