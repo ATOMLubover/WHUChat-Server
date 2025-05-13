@@ -365,6 +365,66 @@ void HttpsLogicSystem::InitPostHandlers()
 
                 return response;
             } ) );
+
+    RegisterPostHandler(
+        "/api/v1/chat/update_title",
+        std::make_shared<HttpsReadFunc>(
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+            {
+                auto response
+                    = std::make_shared<http::response<http::string_body>>();
+                response->set( http::field::content_type, "application/json" );
+                nlohmann::json json_res;
+
+                try
+                {
+                    // 解析请求体为 json
+                    auto json_req = self->ParseJson( *conn->GetRequest() );
+                    if ( !json_req.is_object() )
+                    {
+                        json_res.emplace( "error", EnumErrorCode::ErrorJson );
+                        response->body() = json_res.dump();
+
+                        return response;
+                    }
+
+                    int uuid = json_req[ "uuid" ].get<int>();
+                    int ssn_id = json_req[ "session_id" ].get<int>();
+                    std::string title = json_req[ "new_title" ].get<std::string>();
+
+                    // 检查 cookie，并且与 uuid 进行比对
+                    if ( !self->CheckCookieWithUuid( *conn->GetRequest(), uuid ) )
+                    {
+                        nlohmann::json json_res;
+                        json_res.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                        response->body() = json_res.dump();
+
+                        return response;
+                    }
+
+                    // 验证完后修改对应会话的 title
+                    bool result = MySqlMgr::GetInstance()->
+                        UpdateSessionTitle( ssn_id, title );
+                    if ( !result )
+                    {
+                        json_res.emplace( "error", EnumErrorCode::ErrorUpdateTitleFailed );
+                        response->body() = json_res.dump();
+
+                        return response;
+                    }
+                }
+                catch ( std::exception& exp )
+                {
+                    std::cerr << "/api/v1/chat/update_title回调函数处发生异常：" << exp.what() << std::endl;
+
+                    json_res.emplace( "error", EnumErrorCode::ErrorException );
+                    response->body() = json_res.dump();
+
+                    return response;
+                }
+
+                return response;
+            } ) );
 }
 
 HttpsReadHandler HttpsLogicSystem::FindGetHandler( const std::string& uri )

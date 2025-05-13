@@ -145,10 +145,12 @@ void SvrWssPipe::SaveMsg( std::string msg )
 {
     if ( msg != "\0" )
     {
-        nlohmann::json json;
-        json.emplace( "raw", msg );
-        std::string raw = json[ "raw" ].dump();
-        raw = raw.substr( 1, raw.size() - 2 );
-        m_message << std::move( raw );
+        // nlohmann::json json;
+        // json.emplace( "raw", msg );
+        // std::string raw = json[ "raw" ].dump();
+        // raw = raw.substr( 1, raw.size() - 2 );
+
+        // 由于开启了 MySQL 不自动转移反斜杠，这里不用再手搓逻辑了
+        m_message << std::move( msg );
     }
 }
