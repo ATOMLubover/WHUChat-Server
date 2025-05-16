@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 api_key="sk-354859a6d3ae438fb8ab9b98194f5266"
 base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-def tongyi_chat(model="qwen-plus",messages=None,temperature=0.7):
+def tongyi_chat(messages=None,temperature=0.7):
     try:        
         client = OpenAI(
             api_key="sk-354859a6d3ae438fb8ab9b98194f5266",
@@ -10,16 +10,13 @@ def tongyi_chat(model="qwen-plus",messages=None,temperature=0.7):
         )
 
         completion = client.chat.completions.create(
-            model=model,
+            model="qwen-plus",
             messages=messages,
             stream=True,
             temperature=temperature
         )
         for chunk in completion:
-            if chunk.choices[0].delta.reasoning_content is not None:
-                yield{"type": "reasoning", "reasoning_content": chunk.choices[0].delta.reasoning_content}
-            else:
-                yield{"type": "content", "content": chunk.choices[0].delta.content}
+            yield{"type": "content", "content": chunk.choices[0].delta.content}
     except Exception as e:
         print(f"错误信息：{e}")
         print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
@@ -118,5 +115,5 @@ if __name__ == "__main__":
         {"role": "user", "content": "Fe-109是什么，以及1$1等于几"}
     ]
     print(api_key)
-    for chunk in tongyi_reasoner(messages):
+    for chunk in tongyi_chat(messages):
         print("返回值：", chunk)
