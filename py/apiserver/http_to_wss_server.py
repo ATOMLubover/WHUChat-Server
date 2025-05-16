@@ -25,7 +25,15 @@ logging.basicConfig(level=logging.INFO)
 # CERT_PATH = "py/apiserver/server.crt"
 # KEY_PATH = "py/apiserver/server.key"
 
-
+async def convert_promote_to_message(promote):
+    message = []
+    for item in promote:
+        role = item.get("role")
+        contents = item.get("content", [])
+        # 只提取所有 type == 'text' 的 text 字段并拼接
+        text = "".join(c.get("text", "") for c in contents if c.get("type") == "text")
+        message.append({"role": role, "content": text})
+    return message
 async def ensure_async_iterable(obj):
     if hasattr(obj, "__aiter__"):
         return obj  # 是 async generator
@@ -170,7 +178,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         if content_parts
                         else []
                     )
-
+                promotes=convert_promote_to_message(promotes)
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
                 model_id_map = dict(config["models"])
