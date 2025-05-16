@@ -6,7 +6,7 @@ def gemini_chat(messages,temperature=0.7):
     try:
         client = OpenAI(api_key="AIzaSyDfsvYh5Okgo-qQEyaLNZZLAoLnI9jkbMg", base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
         response = client.chat.completions.create(
-            model="gemini-2.5-pro-exp-03-25",
+            model="gemini-2.0-flash",
             messages=messages,  # 使用 messages 参数
             stream=True,
             temperature=temperature

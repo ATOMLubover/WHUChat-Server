@@ -43,13 +43,28 @@ def deepseek_chatreasoner(messages,temperature=0.7):
 
 
 if __name__ == "__main__":
+    # messages = [
+    #     {"role": "system", "content": "You are a helpful assistant."},
+    #     {"role": "user", "content": "Hello!"}
+    # ]
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello!"}
-    ]
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What’s your name?"
+        },
+        {
+          "type": "text",
+          "text": "How are you?"
+        }
+      ],
+    }
+  ]
     print(API_KEY)
     result = {"reasoning_content": "", "content": ""}
-    for chunk in deepseek_chatreasoner(messages, 1.0):
+    for chunk in deepseek_chat(messages, 1.0):
         print("返回值：", chunk)
 """         if chunk["type"] == "reasoning":
             result["reasoning_content"] += chunk["reasoning_content"]

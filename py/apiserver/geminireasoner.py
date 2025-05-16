@@ -46,7 +46,7 @@ if __name__ == "__main__":
     messages = [{"role": "user", "content": prompt}]
     
     # 调用 chatgpt_chat
-    for chunk in chatgpt_chat(messages=messages):
+    for chunk in gemini_chat(messages=messages):
         print("receive")
         print(chunk)  # 打印每个 chunk 的内容
         if chunk["type"] == "reasoning":
