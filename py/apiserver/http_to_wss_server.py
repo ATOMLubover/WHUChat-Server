@@ -268,6 +268,8 @@ async def handle_wss_stream(data: dict, request: web.Request):
 
                 async for chunk in result:
                     if isinstance(chunk, dict):
+                        if not has_sent_content_header:
+                            await ws.send_str("\u001c\u001c\u001c")
                         if chunk.get("type") == "reasoning":
                             # await ws.send_str("\u200C\u001C\u200C")
                             if not has_sent_reasoning_header:
@@ -293,7 +295,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                     logging.info("发送 reasoning 分隔符完成")
 
                 if content_buffer:
-                    await ws.send_str("\u001c\u200c\u001c")
+                    # await ws.send_str("\u001c\u200c\u001c")
                     logging.info("发送 content 分隔符完成")
 
                 await ws.send_str("\u001c\u200c\u001c")
