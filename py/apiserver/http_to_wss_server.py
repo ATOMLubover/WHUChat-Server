@@ -296,7 +296,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                     await ws.send_str("\u001c\u200c\u001c")
                     logging.info("发送 content 分隔符完成")
 
-                await ws.send_str("\u200c\u200c\u200c\u200c\u200c\u200c")
+                await ws.send_str("\u001c\u200c\u001c")
                 logging.info("发送 end 标志完成")
 
     except Exception as e:
