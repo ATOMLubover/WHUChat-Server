@@ -242,7 +242,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                             messages=promotes, temperature=temperature
                         )
                     case "sonarpro":
-                        result = sonar.sonarpro_chat(
+                        result = sonar.sonarpro(
                             messages=promotes, temperature=temperature
                         )
                     case "qwen-max":
@@ -270,6 +270,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                     if isinstance(chunk, dict):
                         if not has_sent_content_header:
                             await ws.send_str("\u001c\u001c\u001c")
+                            has_sent_reasoning_header = True
                         if chunk.get("type") == "reasoning":
                             # await ws.send_str("\u200C\u001C\u200C")
                             if not has_sent_reasoning_header:

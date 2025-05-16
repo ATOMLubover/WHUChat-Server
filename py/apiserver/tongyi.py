@@ -115,5 +115,5 @@ if __name__ == "__main__":
         {"role": "user", "content": "Fe-109是什么，以及1$1等于几"}
     ]
     print(api_key)
-    for chunk in tongyi_chat(messages):
+    for chunk in tongyi_reasoner(messages):
         print("返回值：", chunk)
