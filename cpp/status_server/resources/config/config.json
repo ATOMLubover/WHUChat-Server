@@ -3,7 +3,7 @@
         "port": "8080"
     },
     "chat_server_info": {
-        "num": "2"
+        "num": "1"
     },
     "chat_server_0": {
         "host": "127.0.0.1",

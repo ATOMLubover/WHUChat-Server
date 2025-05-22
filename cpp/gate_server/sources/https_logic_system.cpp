@@ -555,7 +555,15 @@ HttpsReadHandler HttpsLogicSystem::FindGetHandler( const std::string& uri )
 {
     auto iter = m_get_handlers.find( uri );
     if ( iter == m_get_handlers.end() )
+    {
+        // 针对 SPA 做特殊处理
+        if ( uri.find( "/login/" ) == 0 )
+            return m_get_handlers[ "/login/" ];
+        if ( uri.find( "/chat/" ) == 0 )
+            return m_get_handlers[ "/chat/" ];
+
         return nullptr;
+    }
 
     return iter->second;
 }
@@ -772,13 +780,48 @@ std::string HttpsLogicSystem::GetMimeType( const std::string& file )
         return "application/octet-stream";
 
     std::string ext = file.substr( last_dot + 1 );
-    if ( ext == "txt" ) return "text/plain; charset=utf-8";
+
+    // 文本类
     if ( ext == "html" || ext == "htm" ) return "text/html; charset=utf-8";
-    if ( ext == "js" ) return "application/js";
-    if ( ext == "css" ) return "text/css; charset=utf-8";
+    if ( ext == "css" )  return "text/css; charset=utf-8";
+    if ( ext == "txt" )  return "text/plain; charset=utf-8";
+    if ( ext == "csv" )  return "text/csv; charset=utf-8";
+    if ( ext == "xml" )  return "text/xml; charset=utf-8";
+
+    // 脚本类
+    if ( ext == "js" )   return "application/javascript";  // 修正点：标准 MIME 类型
+    if ( ext == "mjs" )  return "application/javascript";  // ES 模块文件
+    if ( ext == "json" ) return "application/json";
+
+    // 图片类
     if ( ext == "jpg" || ext == "jpeg" ) return "image/jpeg";
-    if ( ext == "png" ) return "image/png";
-    if ( ext == "pdf" ) return "application/pdf";
+    if ( ext == "png" )  return "image/png";
+    if ( ext == "gif" )  return "image/gif";
+    if ( ext == "svg" )  return "image/svg+xml";
+    if ( ext == "webp" ) return "image/webp";
+    if ( ext == "ico" )  return "image/x-icon";
+
+    // 字体类（新增字体类型支持）
+    if ( ext == "woff" )  return "font/woff";
+    if ( ext == "woff2" ) return "font/woff2";
+    if ( ext == "ttf" )   return "font/ttf";
+    if ( ext == "otf" )   return "font/otf";
+    if ( ext == "eot" )   return "application/vnd.ms-fontobject";
+
+    // 应用类
+    if ( ext == "pdf" )  return "application/pdf";
+    if ( ext == "zip" )  return "application/zip";
+    if ( ext == "doc" )  return "application/msword";
+    if ( ext == "docx" ) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if ( ext == "xls" )  return "application/vnd.ms-excel";
+    if ( ext == "xlsx" ) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    // 音视频类
+    if ( ext == "mp3" )  return "audio/mpeg";
+    if ( ext == "wav" )  return "audio/wav";
+    if ( ext == "mp4" )  return "video/mp4";
+    if ( ext == "webm" ) return "video/webm";
+
     return "application/octet-stream";
 }
 

@@ -210,7 +210,8 @@ int MySqlMgr::CreateMessage(
         else
         {
             // 当是 AI 的回答时，要检查 content 是否为空
-            if ( content.empty() )
+            const int TOTAL_INVISIBLE_CHARACTERS = 8;
+            if ( content.length() <= TOTAL_INVISIBLE_CHARACTERS )
                 return -1;
 
             nlohmann::json json_prompt_cnt;
