@@ -273,7 +273,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 reasoning_buffer = []
                 content_buffer = []
                 result = await ensure_async_iterable(result)
-
+                await ws.send_str("\u001c\u001c\u001c")
                 async for chunk in result:
                     if isinstance(chunk, dict):
                         if not has_sent_content_header:
@@ -291,7 +291,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         elif chunk.get("type") == "content":
                             # await ws.send_str("&^%$#@!()&")
                             if not has_sent_content_header:
-                                await ws.send_str("\u001c\u001c\u001c")
+                                # await ws.send_str("\u001c\u001c\u001c")
                                 has_sent_content_header = True
                             if content_text := chunk.get("content", ""):
                                 await ws.send_str(content_text)
