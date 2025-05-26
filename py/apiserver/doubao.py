@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 baseurl = "https://ark.cn-beijing.volces.com/api/v3/"
 api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76"
-def doubao_completion(model="Doubao-1.5-pro", messages=None,temperature=0.7):
+def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperature=0.7):
     try:
         client = OpenAI(
             api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
@@ -21,7 +21,7 @@ def doubao_completion(model="Doubao-1.5-pro", messages=None,temperature=0.7):
         print(f"错误信息：{e}")
         return
 
-def doubao_reasoner(model="Doubao-1.5-thinking-pro", messages=None,temperature=0.7):
+def doubao_reasoner(model="doubao-1-5-thinking-pro-250415", messages=None,temperature=0.7):
     try:
         client = OpenAI(
             api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
@@ -41,13 +41,12 @@ def doubao_reasoner(model="Doubao-1.5-thinking-pro", messages=None,temperature=0
                 #
                 # 我们先通过 hasattr 判断当前输出内容是否包含 reasoning_content 字段，如果包含，再通过 getattr 取出该字段并打印。
                 if choice.delta and hasattr(choice.delta, "reasoning_content"):
-                    if not thinking:
-                        thinking = True
-                    yield getattr(choice.delta, "reasoning_content")
+                    # if not thinking:
+                    #     thinking = True
+                    # yield getattr(choice.delta, "reasoning_content")
+                    111
                 if choice.delta and choice.delta.content:
-                    if thinking:
-                        thinking = False
-                    yield choice.delta.content
+                    yield {"type": "content", "content": chunk.choices[0].delta.content}
     except Exception as e:
         print(f"错误信息：{e}")
         return
@@ -57,7 +56,7 @@ if __name__ == "__main__":
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Who won the world series in 2020?"},
     ]
-    for chunk in doubao_completion(model="doubao-1-5-pro-32k-250115", messages=messages,temperature=0.7):
+    for chunk in doubao_completion(messages=messages,temperature=0.7):
         print(chunk)
-    for chunk in doubao_reasoner(model="doubao-1-5-pro-32k-250115", messages=messages,temperature=0.7):
+    for chunk in doubao_reasoner(messages=messages,temperature=0.7):
         print(chunk)
