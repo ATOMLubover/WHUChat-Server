@@ -178,7 +178,8 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         if content_parts
                         else []
                     )
-                promotes=convert_promote_to_message(promotes)
+                promotes = await convert_promote_to_message(promotes)
+                print(f"构造出的 promotes: {promotes}") 
                 config = configparser.ConfigParser()
                 config.read("py/apiserver/model_map.ini")
                 model_id_map = dict(config["models"])
