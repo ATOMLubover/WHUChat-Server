@@ -17,6 +17,11 @@ set( CMAKE_CXX_STANDARD 20 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
 
+# 适用于所有目标（可执行文件/库）
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fuse-ld=lld")
+set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld")
+
 # 设置源码集合
 file( GLOB SOURCE_CODE "sources/**/*.cpp" "sources/**/*.cc" "sources/*.cpp" )
 # 打印源码文件宏

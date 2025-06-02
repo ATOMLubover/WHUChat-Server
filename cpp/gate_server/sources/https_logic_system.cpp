@@ -13,7 +13,8 @@
 #include <iostream>
 #include <filesystem>
 
-const std::string HttpsLogicSystem::FRONTEND_STATIC_DIR = "../resources/static/frontend";
+// ../resources/static
+const std::string HttpsLogicSystem::FRONTEND_STATIC_DIR = "/home/lubover/proj/whuchat_web-main/dist";
 
 HttpsLogicSystem::~HttpsLogicSystem()
 {
@@ -91,45 +92,46 @@ HttpsLogicSystem::HttpsLogicSystem()
 
 void HttpsLogicSystem::InitGetHandlers()
 {
-    RegisterDir( FRONTEND_STATIC_DIR, "login/" );
-    RegisterDir( FRONTEND_STATIC_DIR, "chat/", true );
+    //RegisterDir( FRONTEND_STATIC_DIR, "login/" );
+    //RegisterDir( FRONTEND_STATIC_DIR, "chat/", true );
+    RegisterDir( FRONTEND_STATIC_DIR );
 
-    const std::string ICO_URL = "/favicon.ico";
-    RegisterGetHandler(
-        ICO_URL,
-        std::make_shared<HttpsReadFunc>(
-            [ self = shared_from_this(), ICO_URL ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
-            {
-                auto response
-                    = std::make_shared<http::response<http::file_body>>();
-                response->set( http::field::content_type, "application/octet-stream" );
-                nlohmann::json json_res;
+    // const std::string ICO_URL = "/favicon.ico";
+    // RegisterGetHandler(
+    //     ICO_URL,
+    //     std::make_shared<HttpsReadFunc>(
+    //         [ self = shared_from_this(), ICO_URL ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+    //         {
+    //             auto response
+    //                 = std::make_shared<http::response<http::file_body>>();
+    //             response->set( http::field::content_type, "application/octet-stream" );
+    //             nlohmann::json json_res;
 
-                try
-                {
-                    const std::string REL_PATH = FRONTEND_STATIC_DIR + ICO_URL;
-                    response->body() = std::move( PrepareFileBody( REL_PATH ) );
-                    response->result( http::status::ok );
-                }
-                catch ( std::exception& exp )
-                {
-                    std::cerr << "/favicon.ico回调函数处发生异常：" << exp.what() << std::endl;
+    //             try
+    //             {
+    //                 const std::string REL_PATH = FRONTEND_STATIC_DIR + ICO_URL;
+    //                 response->body() = std::move( PrepareFileBody( REL_PATH ) );
+    //                 response->result( http::status::ok );
+    //             }
+    //             catch ( std::exception& exp )
+    //             {
+    //                 std::cerr << "/favicon.ico回调函数处发生异常：" << exp.what() << std::endl;
 
-                    auto res_err
-                        = std::make_shared<http::response<http::string_body>>();
-                    nlohmann::json json_res;
+    //                 auto res_err
+    //                     = std::make_shared<http::response<http::string_body>>();
+    //                 nlohmann::json json_res;
 
-                    json_res.emplace( "error", EnumErrorCode::ErrorException );
-                    res_err->body() = json_res.dump();
-                    res_err->set( http::field::content_type, "application/json" );
+    //                 json_res.emplace( "error", EnumErrorCode::ErrorException );
+    //                 res_err->body() = json_res.dump();
+    //                 res_err->set( http::field::content_type, "application/json" );
 
-                    res_err->result( http::status::ok );
+    //                 res_err->result( http::status::ok );
 
-                    return res_err;
-                }
+    //                 return res_err;
+    //             }
 
-                return response;
-            } ) );
+    //             return response;
+    //         } ) );
 
     RegisterGetHandler(
         "/home",
@@ -182,6 +184,7 @@ void HttpsLogicSystem::InitGetHandlers()
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
                 response->result( http::status::ok );
+                response->set( http::field::content_type, "application/json" );
                 nlohmann::json json_res;
 
                 try
@@ -214,8 +217,23 @@ void HttpsLogicSystem::InitGetHandlers()
                         return response;
                     }
 
+                    // 获取用户信息
+                    UserInfo user_info = MySqlMgr::GetInstance()->SelectUserById(
+                        std::stoi( map_cookies[ "uuid" ] ) );
+                    if ( user_info.id <= 0 )
+                    {
+                        std::cerr << fmt::format( "SvrHttpsConn(ID: {})未找到对应的用户信息：{}\n",
+                            conn->GetId(), user_info.id );
+
+                        json_res.emplace( "error", EnumErrorCode::ErrorMySql );
+
+                        response->body() = json_res.dump();
+                        return response;
+                    }
+
                     // 一切正常，则回传 addr 以及 uuid
                     json_res.emplace( "uuid", map_cookies[ "uuid" ] );
+                    json_res.emplace( "username", user_info.username );
                     json_res.emplace( "addr", addr );
                     json_res.emplace( "error", EnumErrorCode::Success );
 
@@ -297,6 +315,7 @@ void HttpsLogicSystem::InitPostHandlers()
 
                     // 最后尝试注册
                     UserInfo info{
+                        0, // id 在注册时不需要
                         username,
                         email,
                         password };
@@ -400,6 +419,18 @@ void HttpsLogicSystem::InitPostHandlers()
                         return response;
                     }
 
+                    // 获取用户详细信息
+                    UserInfo user_info = MySqlMgr::GetInstance()->SelectUserById( uuid );
+                    if ( user_info.id <= 0 )
+                    {
+                        json_res.emplace( "error", EnumErrorCode::ErrorMySql );
+
+                        response->body() = json_res.dump();
+                        return response;
+                    }
+                    std::string db_username = user_info.username;
+                    std::string db_email = user_info.email;
+
                     // 最后调用 StatusServer 分配 ChatServer
                     auto grpc_rsp
                         = StatusGrpcMgr::GetInstance()->GetChatServer( uuid );
@@ -423,6 +454,8 @@ void HttpsLogicSystem::InitPostHandlers()
 
                     // 不直接重定向，而是给出错误码，让客户端自行判断是否跳转
                     json_res.emplace( "uuid", uuid );
+                    json_res.emplace( "username", db_username );
+                    json_res.emplace( "email", db_email );
                     json_res.emplace( "error", EnumErrorCode::Success );
 
                     response->body() = json_res.dump();
@@ -437,6 +470,7 @@ void HttpsLogicSystem::InitPostHandlers()
                             {
                                 { "Path", "/" },
                                 { "HttpOnly", "" },
+                                { "Domain", ConfigMgr::GetInstance()[ "gate_server_local" ][ "host" ] },
                                 { "Secure", "" },
                                 { "SameSite", "None"},
                                 { "Max-Age", "259200" } // 三天的 expire time
@@ -448,6 +482,7 @@ void HttpsLogicSystem::InitPostHandlers()
                             grpc_rsp.token(),
                             {
                                 { "Path", "/" },
+                                { "Domain", ConfigMgr::GetInstance()[ "gate_server_local" ][ "host" ] },
                                 { "HttpOnly", "" },
                                 { "Secure", "" },
                                 { "SameSite", "None"},
@@ -532,7 +567,7 @@ void HttpsLogicSystem::InitPostHandlers()
                 }
                 catch ( std::exception& exp )
                 {
-                    std::cerr << "/api/v1/chat/send_message回调函数处发生异常：" << exp.what() << std::endl;
+                    std::cerr << "/api/v1/gate/send_vrf回调函数处发生异常：" << exp.what() << std::endl;
 
                     auto res_err
                         = std::make_shared<http::response<http::string_body>>();
@@ -556,13 +591,8 @@ HttpsReadHandler HttpsLogicSystem::FindGetHandler( const std::string& uri )
     auto iter = m_get_handlers.find( uri );
     if ( iter == m_get_handlers.end() )
     {
-        // 针对 SPA 做特殊处理
-        if ( uri.find( "/login/" ) == 0 )
-            return m_get_handlers[ "/login/" ];
-        if ( uri.find( "/chat/" ) == 0 )
-            return m_get_handlers[ "/chat/" ];
-
-        return nullptr;
+        // SPA 特殊处理
+        return m_get_handlers[ "/index.html" ];
     }
 
     return iter->second;
@@ -591,27 +621,55 @@ void HttpsLogicSystem::RegisterPostHandler( const std::string& uri, HttpsReadHan
     std::clog << "注册POST请求：" << uri << std::endl;
 }
 
-void HttpsLogicSystem::RegisterDir(
-    const std::string& prefix_offset, const std::string& url_dir, bool need_cookie )
+void HttpsLogicSystem::RegisterDir( const std::string& prefix_offset )
 {
     namespace fs = std::filesystem;
 
-    if ( url_dir.empty() || url_dir.back() != '/' )
-        return;
-
-    std::string full_dir = prefix_offset + "/" + url_dir; // 完整静态文件相对路径
+    std::string full_dir = prefix_offset + "/"; // 完整静态文件相对路径
     bool is_dir = fs::exists( full_dir ) && fs::is_directory( full_dir );
     if ( !is_dir )
         return;
 
-    std::string root = url_dir; // 裸路径（无最后斜杠）
-    root.pop_back();
+    // std::string root = url_dir; // 裸路径（无最后斜杠）
+    // root.pop_back();
 
-    // 先手动注册 dir 本身的重定向
+    // // 先手动注册 dir 本身的重定向
+    // RegisterGetHandler(
+    //     "/" + root, // 去除尾部的斜杠
+    //     std::make_shared<HttpsReadFunc>(
+    //         [ self = shared_from_this(), url_dir, root ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+    //         {
+    //             auto response
+    //                 = std::make_shared<http::response<http::string_body>>();
+
+    //             try
+    //             {
+    //                 response->result( http::status::moved_permanently );
+    //                 response->set( http::field::location, "/" + url_dir + "index.html" );
+    //             }
+    //             catch ( std::exception& exp )
+    //             {
+    //                 std::cerr << "/" + root << "回调函数处发生异常：" << exp.what() << std::endl;
+
+    //                 auto res_err
+    //                     = std::make_shared<http::response<http::string_body>>();
+    //                 nlohmann::json json_res;
+
+    //                 json_res.emplace( "error", EnumErrorCode::ErrorException );
+    //                 res_err->body() = json_res.dump();
+    //                 res_err->set( http::field::content_type, "application/json" );
+
+    //                 res_err->result( http::status::ok );
+
+    //                 return res_err;
+    //             }
+
+    //             return response;
+    //         } ) );
     RegisterGetHandler(
-        "/" + root, // 去除尾部的斜杠
+        "/", // 根目录重定向到 index.html
         std::make_shared<HttpsReadFunc>(
-            [ self = shared_from_this(), url_dir, root ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+            [ self = shared_from_this() ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
             {
                 auto response
                     = std::make_shared<http::response<http::string_body>>();
@@ -619,43 +677,11 @@ void HttpsLogicSystem::RegisterDir(
                 try
                 {
                     response->result( http::status::moved_permanently );
-                    response->set( http::field::location, "/" + url_dir + "index.html" );
+                    response->set( http::field::location, "/index.html" );
                 }
                 catch ( std::exception& exp )
                 {
-                    std::cerr << "/" + root << "回调函数处发生异常：" << exp.what() << std::endl;
-
-                    auto res_err
-                        = std::make_shared<http::response<http::string_body>>();
-                    nlohmann::json json_res;
-
-                    json_res.emplace( "error", EnumErrorCode::ErrorException );
-                    res_err->body() = json_res.dump();
-                    res_err->set( http::field::content_type, "application/json" );
-
-                    res_err->result( http::status::ok );
-
-                    return res_err;
-                }
-
-                return response;
-            } ) );
-    RegisterGetHandler(
-        "/" + url_dir, // 根目录重定向到 index.html
-        std::make_shared<HttpsReadFunc>(
-            [ self = shared_from_this(), url_dir ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
-            {
-                auto response
-                    = std::make_shared<http::response<http::string_body>>();
-
-                try
-                {
-                    response->result( http::status::moved_permanently );
-                    response->set( http::field::location, "/" + url_dir + "index.html" );
-                }
-                catch ( std::exception& exp )
-                {
-                    std::cerr << "/" + url_dir << "回调函数处发生异常：" << exp.what() << std::endl;
+                    std::cerr << "/" << "回调函数处发生异常：" << exp.what() << std::endl;
 
                     auto res_err
                         = std::make_shared<http::response<http::string_body>>();
@@ -682,28 +708,13 @@ void HttpsLogicSystem::RegisterDir(
         RegisterGetHandler(
             url,
             std::make_shared<HttpsReadFunc>(
-                [ self = shared_from_this(), need_cookie, rel_path ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
+                [ self = shared_from_this(), rel_path ] ( std::shared_ptr<SvrHttpsConn> conn ) -> HttpsResVar
                 {
                     auto response
                         = std::make_shared<http::response<http::file_body>>();
 
                     try
                     {
-                        // 如果需要 cookie，则额外验证 cookie
-                        if ( need_cookie )
-                        {
-                            if ( !CheckCookie( *conn->GetRequest() ) )
-                            {
-                                auto res_err
-                                    = std::make_shared<http::response<http::string_body>>();
-                                // 有错误，重定位到 login 页面
-                                res_err->result( http::status::temporary_redirect );
-                                res_err->set( http::field::location, "/login" );
-
-                                return res_err;
-                            }
-                        }
-
                         // 假设 cookie 通过验证，开始传输文件
                         response->set( http::field::server, "ChatServer" );
                         response->set( http::field::content_type,
@@ -714,7 +725,7 @@ void HttpsLogicSystem::RegisterDir(
                     }
                     catch ( std::exception& exp )
                     {
-                        std::cerr << "/api/v1/chat/send_message回调函数处发生异常：" << exp.what() << std::endl;
+                        std::cerr << rel_path + "回调函数处发生异常：" << exp.what() << std::endl;
 
                         auto res_err
                             = std::make_shared<http::response<http::string_body>>();

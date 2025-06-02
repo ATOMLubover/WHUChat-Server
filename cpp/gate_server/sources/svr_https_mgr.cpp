@@ -49,6 +49,9 @@ void SvrHttpsMgr::InitSslContext()
         ctx.set_options(
             ssl::context::default_workarounds |
             ssl::context::no_sslv2 |
+            ssl::context::no_sslv3 |        // 显式禁用SSLv3
+            ssl::context::no_tlsv1 |        // 禁用TLS 1.0
+            ssl::context::no_tlsv1_1 |      // 禁用TLS 1.1
             ssl::context::single_dh_use );
 
         std::string cert_dir = ConfigMgr::GetInstance()[ "gate_server" ][ "cert_dir" ];

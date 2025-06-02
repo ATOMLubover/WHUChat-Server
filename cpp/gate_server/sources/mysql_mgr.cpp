@@ -56,3 +56,14 @@ std::string MySqlMgr::SelectUserLastLoginTime( int uuid )
 {
     return dao.SelectUserUpdatedAt( uuid );
 }
+
+UserInfo MySqlMgr::SelectUserById( int id )
+{
+    UserInfo user_info = dao.SelectUserById( id );
+    if ( user_info.id <= 0 )
+    {
+        std::cerr << "MySqlMgr SelectUserById: 未找到用户 ID " << id << std::endl;
+        return {};
+    }
+    return user_info;
+}

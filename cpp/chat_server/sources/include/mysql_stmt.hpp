@@ -20,6 +20,36 @@ public:
         : ref_conn( conn )
     { }
 
+    // 设置普通语句
+    void SetNormalStatement()
+    {
+        try
+        {
+            stmt.reset( ref_conn->GetRawConn().createStatement() );
+        }
+        catch ( sql::SQLException& e )
+        {
+            std::stringstream ss;
+            ss << "MySqlStmt::SetNormalStatement: " << e.what();
+        }
+    }
+    // 执行 NonQuery
+    int Execute( const std::string& query )
+    {
+        int result = 0;
+        try
+        {
+            if ( stmt )
+                result = stmt->executeUpdate( query );
+        }
+        catch ( std::exception& exp )
+        {
+            std::cout << "MySqlStmt执行statement语句出现异常：" << exp.what() << std::endl;
+            return -1;
+        }
+        return result;
+    }
+
     // 设置预编译语句
     void SetStatement( const std::string& pstmt )
     {
@@ -55,4 +85,5 @@ public:
 private:
     std::unique_ptr<MySqlConn>& ref_conn;
     std::unique_ptr<sql::PreparedStatement> prestmt;
+    std::unique_ptr<sql::Statement> stmt;
 };

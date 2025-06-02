@@ -2,7 +2,6 @@
 
 #include "singleton.hpp"
 #include "mysql_dao.hpp"
-#include "user_info.h"
 
 // MySQL 管理类
 class MySqlMgr
@@ -31,6 +30,9 @@ public:
 
     // 获取用户的上次登录时间
     std::string SelectUserLastLoginTime( int uuid );
+
+    // 通过 id 查找用户信息
+    UserInfo SelectUserById( int id );
 
 private:
     MySqlMgr() = default;

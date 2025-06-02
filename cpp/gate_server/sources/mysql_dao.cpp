@@ -163,3 +163,35 @@ int MySqlDao::ProcRegisterUser( const MySqlUsersElem& new_user )
     // 没有查询到结果时返回 -2（与 MySQL 异常的 -1 进行区分）
     return -2;
 }
+
+UserInfo MySqlDao::SelectUserById( int id )
+{
+    std::unique_ptr<MySqlConn> conn = conn_pool->TakeConn();
+    if ( conn == nullptr )
+    {
+        std::cout << "MySqlDao无法获取正常连接" << std::endl;
+        return {};
+    }
+
+    // 如果获得的链接非空，则需要在最后返回连接
+    Defer defer(
+        [ this, &conn ] ()
+        {
+            this->conn_pool->ReturnConn( std::move( conn ) );
+        } );
+
+    MySqlStmt stmt( conn );
+    std::unique_ptr<sql::ResultSet> resultset
+        = stmt.Commit( fmt::format(
+            "SELECT id, username, email FROM users WHERE id = '{}'", id ) );
+    if ( resultset->next() )
+    {
+        UserInfo user_info;
+        user_info.id = resultset->getInt( "id" );
+        user_info.username = resultset->getString( "username" );
+        user_info.email = resultset->getString( "email" );
+        return user_info;
+    }
+
+    return {};
+}

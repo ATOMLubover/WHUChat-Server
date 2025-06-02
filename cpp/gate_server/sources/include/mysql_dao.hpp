@@ -4,6 +4,14 @@
 
 #include <memory>
 
+struct UserInfo
+{
+    int id;          // 用户 ID
+    std::string username; // 用户名
+    std::string email;    // 邮箱
+    std::string password; // 密码
+};
+
 // DAO 层，封装 MySQL 数据库的直接操作
 // 接受多线程访问
 class MySqlDao
@@ -27,6 +35,9 @@ public:
     /// @return 错误码：-2 未能找到结果，-1 MySQL 事务执行异常，
     /// 0 成功执行，1 用户已存在，2 邮箱重复
     int ProcRegisterUser( const MySqlUsersElem& new_user );
+
+    /// @brief 通过 id 查找用户信息
+    UserInfo SelectUserById( int id );
 
 private:
     const int SIZE_CONN_POOL = 4; // 连接池的大小

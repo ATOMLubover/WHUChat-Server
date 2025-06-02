@@ -41,7 +41,7 @@ private:
     void RegisterPostHandler( const std::string& uri, HttpsReadHandler handler );
 
     // 代理整个文件夹文件的 GET 请求
-    void RegisterDir( const std::string& prefix, const std::string& url_dir, bool need_cookie = false );
+    void RegisterDir( const std::string& prefix );
     // 获取一个文件夹所有子文件（夹）的函数
     std::vector<std::string> GetDirFiles( const std::string& dir );
     // 获取 MIME 类型

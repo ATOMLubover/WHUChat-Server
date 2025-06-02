@@ -5,7 +5,7 @@
         "cert_dir": "../resources/cert/"
     },
     "gate_server_local": {
-        "host": "127.0.0.1",
+        "host": "localhost",
         "port": "8091",
         "cert_dir": "../resources/cert/"
     },

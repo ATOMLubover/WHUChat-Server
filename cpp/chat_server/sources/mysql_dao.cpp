@@ -229,18 +229,11 @@ int MySqlDao::UpdateSessionTitle( int ssn_id, const std::string& title )
         } );
 
     MySqlStmt stmt( conn );
-    stmt.SetStatement( fmt::format(
-        "CALL UpdateSessionTitle( {}, '{}', @result )",
-        ssn_id, title ) );
-    std::unique_ptr<sql::ResultSet> resultset
-        = stmt.Commit( "SELECT @result" );
-    if ( resultset->next() )
-    {
-        int result = resultset->getInt( 1 );
-        return result;
-    }
+    stmt.SetNormalStatement();
+    int result = stmt.Execute( fmt::format( "UPDATE `sessions` SET `title` = '{}' WHERE `id` = {}",
+        title, ssn_id ) );
 
-    return 0;
+    return result;
 }
 
 int MySqlDao::CreateMessage(
