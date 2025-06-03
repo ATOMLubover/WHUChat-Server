@@ -336,11 +336,11 @@ async def handle_send_ans(request: web.Request):
             return web.json_response({"error": 3002})
 
         global prompt_data
-        # prompt_data = await fetch_message_history(0, session_id)
-        # print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
-        # error = prompt_data.get("error")
-        # if not prompt_data or error != 0:
-        #     return web.json_response({"error": 3007})
+        prompt_data = await fetch_message_history(0, session_id)
+        print(f"获取的 prompt_data: {prompt_data}")  # 打印原始历史记录
+        error = prompt_data.get("error")
+        if not prompt_data or error != 0:
+            return web.json_response({"error": 3007})
 
         asyncio.create_task(handle_wss_stream(data, request))
 
