@@ -196,7 +196,7 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         result = gptfunc.chatgpt_chat3(
                             temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
                         )
-                    case "gpt-4":
+                    case "gpt-4.1":
                         result = gptfunc.chatgpt_chat4(
                             temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
                         )
@@ -263,6 +263,12 @@ async def handle_wss_stream(data: dict, request: web.Request):
                         result = tongyi.tongyi_reasoner(
                             messages=promotes,
                             temperature=temperature,
+                        )
+                    case "kimi-reasoner":
+                        result = kimi.kimi_reasoner(
+                            messages=promotes,
+                            temperature=temperature,
+                            enableWebSearch=enableWebSearch,
                         )
                     case _:
                         result = default.get_chat_completion(

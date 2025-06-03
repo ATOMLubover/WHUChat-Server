@@ -106,7 +106,7 @@ def kimi_reasoner(messages,temperature=0.7,enableWebSearch=False):
                 if choice.delta and choice.delta.content:
                     if thinking:
                         thinking = False
-                    yield choice.delta.content
+                    yield {"type": "content", "content": choice.delta.content}
     except Exception as e:
         print(f"错误信息：{e}")
         return
