@@ -5,7 +5,7 @@ api_key="sk-proj-B2y9c-6KrTZTqqN0GwafQLSzq9ZeULQYZXLO2Pva884jQareyPcX-eQ3_ZDzrJa
 def chatgpt_chatreasoning(model="o1-mini-2024-09-12", messages=None, temperature=1.0,enableWebSearch=False):
     try:
         
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
@@ -36,7 +36,7 @@ def chatgpt_chatreasoning(model="o1-mini-2024-09-12", messages=None, temperature
 
 def chatgpt_chat4(model="gpt-4o-2024-11-20", messages=None, temperature=0.7,enableWebSearch=False):
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = [{"role": "system", "content": "你是一个有用的助手"}] + (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
@@ -67,7 +67,7 @@ def chatgpt_chat4(model="gpt-4o-2024-11-20", messages=None, temperature=0.7,enab
 
 def chatgpt_chat3(model="gpt-3.5-turbo-0125", messages=None, temperature=0.7,enableWebSearch=False):
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="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")
         messages1 = [{"role": "system", "content": "你是一个有用的助手"}] + (messages or [])
         if enableWebSearch:    
             response = client.chat.completions.create(
