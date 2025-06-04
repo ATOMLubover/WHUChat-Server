@@ -64,7 +64,7 @@ void SvrWssPipe::BindInput( std::shared_ptr<SvrWssConn> conn )
                         // 将保存 ApiServer 回答和向客户端发送消息独立
                         self->SaveMsg( msg );
 
-                        self->MakeOutputSend( std::move( msg ) );
+                        self->MakeOutputSend( msg );
                         return true;
                     }
                 }
@@ -107,15 +107,17 @@ void SvrWssPipe::BindOutput( std::shared_ptr<SvrWssConn> conn )
     m_output = conn;
 
     // 一但接入 output，先检查是否需要发送积存信息
-    MakeOutputSend( "\0" );
+    MakeOutputSend( "" );
 
     std::clog << fmt::format(
         "SvrWssPipe(ID: {})绑定输出conn(ID: {})，其session_id为 {}\n",
         m_id, conn->GetId(), m_session_id );
 }
 
-bool SvrWssPipe::IsUnloaded() const
+bool SvrWssPipe::IsUnloaded()
 {
+    std::lock_guard<std::mutex> lock( m_mtx );
+
     if ( m_input || m_output )
         return false;
 
@@ -129,12 +131,12 @@ void SvrWssPipe::MakeOutputSend( std::string msg )
     {
         // m_message << m_que_buf.front();
 
-        m_output->DoSend( std::move( m_que_buf.front() ) );
+        m_output->DoSend( m_que_buf.front() );
         m_que_buf.pop();
     }
 
     // 然后再发送当前信息
-    if ( msg != "\0" )
+    if ( msg != "" )
     {
         // m_message << msg;
         m_output->DoSend( msg );

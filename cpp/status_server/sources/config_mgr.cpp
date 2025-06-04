@@ -25,11 +25,7 @@ SubSection::SubSection( SubSection&& rhs )
     datas = std::move( rhs.datas );
 }
 
-#ifdef DEBUG
 const std::string ConfigMgr::SERVER_CONFIG_FILE = "../resources/config/config.json";
-#else
-const std::string ConfigMgr::SERVER_CONFIG_FILE = "./resources/config/config.json";
-#endif
 
 ConfigMgr& ConfigMgr::GetInstance()
 {

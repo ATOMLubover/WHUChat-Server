@@ -55,15 +55,16 @@ void SvrWssMgr::UpgradeConn( std::shared_ptr<SvrHttpsConn> http_conn )
         conn->SetRemover(
             [ self = shared_from_this() ] ( std::shared_ptr<SvrWssConn> conn )
             {
+                std::cout << "SvrWssMgr正在移除连接：" << conn->GetId() << std::endl;
                 self->RmvConn( conn->GetId() );
             } );
+
+        // 最后 WSS 挥手，开始监听
+        conn->DoAccept( http_conn->GetRequest() );
 
         // 检查是否是管道的 WSS 连接
         if ( m_set_pipe_uri.find( conn->GetUri() ) != m_set_pipe_uri.end() )
             TryBuildPipe( conn );
-
-        // 最后 WSS 挥手，开始监听
-        conn->DoAccept( http_conn->GetRequest() );
     }
     catch ( std::exception& exp )
     {

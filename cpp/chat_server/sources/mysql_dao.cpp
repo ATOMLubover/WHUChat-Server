@@ -259,18 +259,31 @@ int MySqlDao::CreateMessage(
             this->conn_pool->ReturnConn( std::move( conn ) );
         } );
 
-    MySqlStmt stmt( conn );
-    stmt.SetStatement( fmt::format(
-        "CALL CreateMessage( {}, {}, {}, '{}', '{}', @result )",
-        uuid, ssn_id, model_id,
-        sender, raw ) );
-    std::unique_ptr<sql::ResultSet> resultset
-        = stmt.Commit( "SELECT @result" );
-    if ( resultset->next() )
-    {
-        int result = resultset->getInt( 1 );
-        std::cout << "CreateMessage执行完毕: " << result << std::endl;
+    // 1. 使用预处理语句调用存储过程
+    std::unique_ptr<sql::PreparedStatement> pstmt(
+        ( conn->GetRawConn() ).prepareStatement( "CALL CreateMessage(?, ?, ?, ?, ?, @result)" )
+    );
 
+    // 2. 绑定参数（自动防注入）
+    pstmt->setInt( 1, uuid );
+    pstmt->setInt( 2, ssn_id );
+    pstmt->setInt( 3, model_id );
+    pstmt->setString( 4, sender );
+    pstmt->setString( 5, raw );
+
+    // 3. 执行存储过程
+    pstmt->execute();
+
+    // 4. 获取存储过程的输出参数
+    std::unique_ptr<sql::Statement> stmt( ( conn->GetRawConn() ).createStatement() );
+    std::unique_ptr<sql::ResultSet> res(
+        stmt->executeQuery( "SELECT @result" )
+    );
+
+    if ( res->next() )
+    {
+        int result = res->getInt( 1 );
+        std::cout << "CreateMessage执行完毕: " << result << std::endl;
         return result;
     }
 

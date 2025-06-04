@@ -17,9 +17,9 @@ SvrWssConn::SvrWssConn( std::shared_ptr<SvrHttpsConn> https_conn )
     , m_uri( https_conn->GetUri() )
     , m_par_get( https_conn->GetParamsOfGet() )
 {
-    m_wss_stream.set_option(
-        websocket::stream_base::timeout::suggested(
-            beast::role_type::server ) );
+    // m_wss_stream.set_option(
+    //     websocket::stream_base::timeout::suggested(
+    //         beast::role_type::server ) );
 
     std::clog << fmt::format( "SvrWssConn(ID: {})构造", m_id ) << std::endl;
 }
@@ -53,7 +53,10 @@ void SvrWssConn::DoAccept( std::shared_ptr<http::request<http::dynamic_body>> re
 void SvrWssConn::Close()
 {
     if ( !m_wss_stream.is_open() )
+    {
+        std::cout << "SvrWssConn已经关闭，略过关闭：" << m_id << std::endl;
         return;
+    }
 
     // 先通过 websocket 发送关闭帧
     beast::error_code ec;
@@ -138,6 +141,10 @@ void SvrWssConn::OnRead( beast::error_code ec )
             return;
         }
 
+        std::cout << fmt::format(
+            "SvrWssConn(ID: {}) OnRead函数成功接收到：{} bytes",
+            m_id, m_buf_recv.size() ) << std::endl;
+
         // 再开启一次 DoRead
         DoRead();
     }
@@ -161,19 +168,44 @@ void SvrWssConn::DoSend( std::string msg )
         m_que_wait.push( msg );
         if ( m_que_wait.size() > 1 )
             return;
+
+        // 如果只有 msg 在等待，则开启一次新的发送
+        DoWrite( msg );
     }
 
-    // 如果只有 msg 在等待，则开启一次新的发送
-    DoWrite( std::move( msg ) );
+    // // 如果只有 msg 在等待，则开启一次新的发送
+    // DoWrite( msg );
 }
 
 void SvrWssConn::DoWrite( std::string msg )
 {
+    if ( !m_wss_stream.is_open() )
+    {
+        std::cout << "SvrWssConn已经关闭，略过发送：" << m_id
+            << ", " << msg << std::endl;
+        if ( m_remover )
+        {
+            std::cout << "SvrWssConn在DoWrite中移除自己：" << m_id << std::endl;
+            auto self = shared_from_this();
+            m_remover( self );
+        }
+        return;
+    }
+
+    if ( msg.empty() )
+    {
+        std::cerr << "SvrWssConn 发送空消息：" << m_id << std::endl;
+        return;
+    }
+
     m_wss_stream.async_write(
         net::buffer( msg ),
         [ self = shared_from_this(), msg ]
         ( beast::error_code ec, std::size_t bytes_trans )
         {
+            std::clog << fmt::format(
+                "SvrWssConn(ID: {})DoWrite准备调用回调：{}, {} bytes, err ",
+                self->m_id, msg, bytes_trans, ec.message() ) << std::endl;
             self->OnWrite( ec, std::move( msg ) );
         } );
 }

@@ -109,14 +109,14 @@ void HttpsLogicSystem::InitGetHandlers()
 
                 try
                 {
-                    // 先检查 cookie
-                    if ( !self->CheckCookieWithUuid( *conn->GetRequest(), -1 ) )
-                    {
-                        json_res.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
-                        response->body() = json_res.dump();
+                    // // 先检查 cookie
+                    // if ( !self->CheckCookieWithUuid( *conn->GetRequest(), -1 ) )
+                    // {
+                    //     json_res.emplace( "error", EnumErrorCode::ErrorChatCookieInvalid );
+                    //     response->body() = json_res.dump();
 
-                        return response;
-                    }
+                    //     return response;
+                    // }
 
                     // 检查成功之后查找数据库中的 models 信息
                     auto models = MySqlMgr::GetInstance()->SelectModels();

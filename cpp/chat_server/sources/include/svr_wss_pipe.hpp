@@ -31,7 +31,7 @@ public:
     void UnbindOutput() { m_output = nullptr; }
 
     // 确定是否为空管道（无效管道）
-    bool IsUnloaded() const;
+    bool IsUnloaded();
 
 public:
     // ApiServer 端 input 的 URI
