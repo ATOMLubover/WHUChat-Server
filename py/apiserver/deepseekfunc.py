@@ -4,14 +4,17 @@ from openai import OpenAI
 # 你的 API Key
 API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-176d442796bf4b4f9cf28afdb03d25ae")  # 默认值仅用于开发测试
 BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-def deepseek_chat(messages,temperature=0.7):
+def deepseek_chat(messages,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="sk-176d442796bf4b4f9cf28afdb03d25ae", base_url="https://api.deepseek.com")
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=messages,  # 使用 messages 参数
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in response:
             if chunk.choices[0].delta.content is not None:
@@ -30,14 +33,17 @@ def convert_promote_to_message(promote):
         message.append({"role": role, "content": text})
     return message
 
-def deepseek_chatreasoner(messages,temperature=0.7):
+def deepseek_chatreasoner(messages,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="sk-176d442796bf4b4f9cf28afdb03d25ae", base_url="https://api.deepseek.com")
         response = client.chat.completions.create(
             model="deepseek-reasoner",
             messages=messages,  # 使用 messages 参数
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in response:
             if chunk.choices[0].delta.reasoning_content is not None:
@@ -83,7 +89,7 @@ if __name__ == "__main__":
     messages3=convert_promote_to_message(messages2)
     print(API_KEY)
     result = {"reasoning_content": "", "content": ""}
-    for chunk in deepseek_chat(messages3, 1.0):
+    for chunk in deepseek_chat(messages3, 1.0,1024,0.0,1.0):
         print("返回值：", chunk)
 """         if chunk["type"] == "reasoning":
             result["reasoning_content"] += chunk["reasoning_content"]

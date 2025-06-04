@@ -18,7 +18,7 @@ def search_impl(arguments: Dict[str, Any]) -> Any:
     这最大程度保证了兼容性，允许你在不同的模型间切换，并且不需要对代码有破坏性的修改。
     """
     return arguments
-def kimi_chat(messages,temperature=0.7,enableWebSearch=False):
+def kimi_chat(messages,temperature=0.7,enableWebSearch=False,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="sk-c8vTitQmVcwwB7MF1bD0XkzDxqFxFEcm68XHBEkOD6E7FENA", base_url="https://api.moonshot.cn/v1")
         if enableWebSearch:
@@ -50,7 +50,7 @@ def kimi_chat(messages,temperature=0.7,enableWebSearch=False):
         print(f"错误信息：{e}")
         return
 
-def moonshot_chat(messages,temperature=0.7,enableWebSearch=False):
+def moonshot_chat(messages,temperature=0.7,enableWebSearch=False,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="sk-c8vTitQmVcwwB7MF1bD0XkzDxqFxFEcm68XHBEkOD6E7FENA", base_url="https://api.moonshot.cn/v1")
         if enableWebSearch:
@@ -73,7 +73,10 @@ def moonshot_chat(messages,temperature=0.7,enableWebSearch=False):
             model="moonshot-v1-8k",
             messages=messages,  # 使用 messages 参数
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
             )
         for chunk in response:
             if chunk.choices[0].delta.content is not None:
@@ -82,14 +85,17 @@ def moonshot_chat(messages,temperature=0.7,enableWebSearch=False):
         print(f"错误信息：{e}")
         return
 
-def kimi_reasoner(messages,temperature=0.7,enableWebSearch=False):
+def kimi_reasoner(messages,temperature=0.7,enableWebSearch=False,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="sk-c8vTitQmVcwwB7MF1bD0XkzDxqFxFEcm68XHBEkOD6E7FENA", base_url="https://api.moonshot.cn/v1")
         response = client.chat.completions.create(
             model="kimi-thinking-preview",
             messages=messages,  # 使用 messages 参数
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         thinking = False
         for chunk in response:

@@ -1,5 +1,5 @@
 from openai import OpenAI
-def chatgpt_chat(model="gemini-2.5-flash-preview-04-17", messages=None, temperature=0.7):
+def chatgpt_chat(model="gemini-2.5-flash-preview-04-17", messages=None, temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     client = OpenAI(api_key="AIzaSyDfsvYh5Okgo-qQEyaLNZZLAoLnI9jkbMg",
                     base_url="https://generativelanguage.googleapis.com/v1beta/openai/") 
     messages1 = [{"role": "system", "content": "请详细展示推理过程，然后给出最终回答，格式如下：Reasoning: ... Contents: ..."}] + (messages or [])
@@ -7,7 +7,10 @@ def chatgpt_chat(model="gemini-2.5-flash-preview-04-17", messages=None, temperat
         model=model,
         messages=messages1,
         stream=True,
-        temperature=temperature
+        temperature=temperature,
+        max_tokens=max_tokens,
+        presence_penalty=presence_penalty,
+        top_p=top_p
     )
     current_type = None
     for chunk in response:
@@ -25,14 +28,17 @@ def chatgpt_chat(model="gemini-2.5-flash-preview-04-17", messages=None, temperat
                 elif current_type == "content":
                     yield {"type": "content", "content": delta_content}
 
-def gemini_chat(messages,temperature=0.7):
+def gemini_chat(messages,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(api_key="AIzaSyDfsvYh5Okgo-qQEyaLNZZLAoLnI9jkbMg", base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
         response = client.chat.completions.create(
             model="gemini-2.5-flash-preview-04-17",
             messages=messages,  # 使用 messages 参数
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in response:
             if chunk.choices[0].delta.content is not None:

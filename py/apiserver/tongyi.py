@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 api_key="sk-354859a6d3ae438fb8ab9b98194f5266"
 base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-def tongyi_chat(messages=None,temperature=0.7):
+def tongyi_chat(messages=None,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:        
         client = OpenAI(
             api_key="sk-354859a6d3ae438fb8ab9b98194f5266",
@@ -13,7 +13,10 @@ def tongyi_chat(messages=None,temperature=0.7):
             model="qwen-plus",
             messages=messages,
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in completion:
             yield{"type": "content", "content": chunk.choices[0].delta.content}
@@ -22,7 +25,7 @@ def tongyi_chat(messages=None,temperature=0.7):
         print("请参考文档：https://help.aliyun.com/zh/model-studio/developer-reference/error-code")
         return None
     
-def tongyi_mutichat(messages=None, temperature=0.7):
+def tongyi_mutichat(messages=None, temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     client = OpenAI(
         # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
         api_key=api_key,
@@ -55,7 +58,7 @@ def tongyi_gate(messages=None,temperature=0.7,model="qwen-plus"):
         case _:
             return tongyi_chat(model,messages,temperature)
         
-def tongyi_reasoner(messages=None, temperature=0.7, model="qwq-32b", api_key=None, base_url=None):
+def tongyi_reasoner(messages=None, temperature=0.7, model="qwq-32b", api_key=None, base_url=None,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
     base_url = base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
@@ -69,7 +72,10 @@ def tongyi_reasoner(messages=None, temperature=0.7, model="qwq-32b", api_key=Non
             model=model,
             messages=messages,
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
 
         for chunk in completion:

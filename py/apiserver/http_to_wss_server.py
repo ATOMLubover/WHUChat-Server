@@ -93,6 +93,9 @@ async def handle_wss_stream(data: dict, request: web.Request):
                 # talktype = parameters.get("type", "chat")
                 enableWebSearch = parameters.get("enableWebSearch", False)
                 frugalMode = parameters.get("frugalMode", False)
+                max_tokens = parameters.get("max_tokens", 1024)
+                presence_penalty = parameters.get("presence_penalty", 0.0)
+                top_p =  parameters.get("top_p", 1.0)
 
                 # prompt_data = data.get("prompt", {})
                 # prompt_data = await fetch_message_history(0, session_id)
@@ -191,88 +194,88 @@ async def handle_wss_stream(data: dict, request: web.Request):
 
                 match model_type:
                     case "deepseek-chat":
-                        result = deepseekfunc.deepseek_chat(promotes, temperature)
+                        result = deepseekfunc.deepseek_chat(promotes, temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p)
                     case "gpt-3.5":
                         result = gptfunc.chatgpt_chat3(
-                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "gpt-4.1":
                         result = gptfunc.chatgpt_chat4(
-                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "o4-mini":
                         result = gptfunc.chatgpt_chatreasoning(
-                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes
+                            temperature=temperature, enableWebSearch=enableWebSearch, messages=promotes,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "claude-v1.3":
-                        result = claude.stream_claude_response(messages=promotes)
+                        result = claude.stream_claude_response(messages=promotes,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p)
                     case "claude-3-7-sonnet-20250219":
                         result = claude.stream_claude_response(
-                            messages=promotes, model="claude-3-7-sonnet-20250219"
+                            messages=promotes, model="claude-3-7-sonnet-20250219",max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "deepseek-reasoner":
                         result = deepseekfunc.deepseek_chatreasoner(
-                            promotes, temperature
+                            promotes, temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "doubao-1-5-pro":
                         result = doubao.doubao_completion(
                             # model="doubao-1-5-pro",
                             messages=promotes,
-                            temperature=temperature,
+                            temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "doubao-1-5-thinking-pro":
                         result = doubao.doubao_reasoner(
                             # model="doubao-1-5-thinking-pro",
                             messages=promotes,
-                            temperature=temperature,
+                            temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "gemini-2.5-pro-exp-03-25":
                         result = gemini.gemini_chat(
-                            messages=promotes, temperature=temperature
+                            messages=promotes, temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "gemini-2.5-flash-preview-04-17":
                         result = geminireasoner.gemini_chat(
-                            messages=promotes, temperature=temperature
+                            messages=promotes, temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "kimi-latest":
                         result = kimi.kimi_chat(
                             messages=promotes,
                             temperature=temperature,
-                            enableWebSearch=enableWebSearch,
+                            enableWebSearch=enableWebSearch,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "moonshot-v1-128k":
                         result = kimi.moonshot_chat(
                             messages=promotes,
                             temperature=temperature,
-                            enableWebSearch=enableWebSearch,
+                            enableWebSearch=enableWebSearch,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "sonar":
                         result = sonar.sonar_chat(
-                            messages=promotes, temperature=temperature
+                            messages=promotes, temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "sonarpro":
                         result = sonar.sonarpro(
-                            messages=promotes, temperature=temperature
+                            messages=promotes, temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "qwen-max":
                         result = tongyi.tongyi_chat(
                             messages=promotes,
-                            temperature=temperature,
+                            temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "qwq-plus":
                         result = tongyi.tongyi_reasoner(
                             messages=promotes,
-                            temperature=temperature,
+                            temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case "kimi-reasoner":
                         result = kimi.kimi_reasoner(
                             messages=promotes,
                             temperature=temperature,
-                            enableWebSearch=enableWebSearch,
+                            enableWebSearch=enableWebSearch,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
                     case _:
                         result = default.get_chat_completion(
-                            api_key=api_key, base_url=URL, model_type=model_type, promotes=promotes, temperature=temperature
+                            api_key=api_key, base_url=URL, model_type=model_type, promotes=promotes, temperature=temperature,max_tokens=max_tokens,presence_penalty=presence_penalty,top_p=top_p
                         )
 
                 has_sent_reasoning_header = False

@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 baseurl = "https://ark.cn-beijing.volces.com/api/v3/"
 api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76"
-def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperature=0.7):
+def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(
             api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
@@ -12,7 +12,10 @@ def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperatu
             model=model,
             messages=messages,
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in completion:
             if chunk.choices[0].delta.content is not None:
@@ -21,7 +24,7 @@ def doubao_completion(model="doubao-1-5-pro-32k-250115", messages=None,temperatu
         print(f"错误信息：{e}")
         return
 
-def doubao_reasoner(model="doubao-1-5-thinking-pro-250415", messages=None,temperature=0.7):
+def doubao_reasoner(model="doubao-1-5-thinking-pro-250415", messages=None,temperature=0.7,max_tokens=1024,presence_penalty=0.0,top_p=1.0):
     try:
         client = OpenAI(
             api_key="2233b1d1-ac2d-4f94-afb4-ac2192568a76",
@@ -31,7 +34,10 @@ def doubao_reasoner(model="doubao-1-5-thinking-pro-250415", messages=None,temper
             model=model,
             messages=messages,
             stream=True,
-            temperature=temperature
+            temperature=temperature,
+            max_tokens=max_tokens,
+            presence_penalty=presence_penalty,
+            top_p=top_p
         )
         for chunk in response:
             if chunk.choices:

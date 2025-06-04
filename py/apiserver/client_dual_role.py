@@ -13,17 +13,13 @@ KEY_PATH = "py/apiserver/server.key"
 
 # 🔁 HTTPS 客户端：POST 请求服务端
 async def send_post_to_server():
-    url = "https://localhost:8443/get_response"
-    data = {
-        "uuid": 1,
-        "session_id": 1145,
-        "model_id": 1,
-        "model_class": "deepseek",
-        "prompt": {"role": "user", "content": "1+1等于几？"},
-        "api_key": None,
-        "URL": None,
-        "parameters": {"temperature": 0.7, "type": "chat"}
-    }
+    url = "https://localhost:8090/get_response"
+    data = {'model_id': 11, 
+            'parameters': {'frugalMode': True, 'reasonable': False, 'temperature': 0.7,'max_tokens': 1024, 'top_p': 1.0,'presence_penalty': 0.0}, 
+            'prompt': [{'text': '测试一下通信', 'type': 'text'}], 
+            'sender': 'user',
+            'session_id': 67, 
+            'uuid': 1}
 
     ssl_ctx = ssl.create_default_context()
     ssl_ctx.check_hostname = False
@@ -61,10 +57,10 @@ async def start_wss_server():
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "localhost", 8765, ssl_context=ssl_ctx)
+    site = web.TCPSite(runner, "localhost", 8081, ssl_context=ssl_ctx)
     await site.start()
 
-    logging.info("✅ WSS 监听启动 wss://localhost:8765/api/v1/ws/send_ans")
+    logging.info("✅ WSS 监听启动 wss://localhost:8081/api/v1/ws/send_ans")
     return runner
 
 # 主函数
